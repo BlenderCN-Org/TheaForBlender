@@ -1,0 +1,98 @@
+Thea Render, Plugins and Resources
+End User License Agreement
+
+
+The terms and conditions that follow form a legally binding agreement ("End User License Agreement", "EULA" or "Agreement") between you ("You", "User" or "End User"), an individual or an entity, and Solid Iris Technologies ("Solid Iris"), relating to Thea Render software and services ("Software") developed by Solid Iris.
+
+You may not install or use the Software in any computer, or copy it, without a license from Solid Iris. Solid Iris offers You a non-exclusive, non-transferable license for the Software on the terms set out in this Agreement.
+
+Carefully read this Agreement before downloading or installing the Software.  By installing or using the Software, You fully accept these terms and conditions and agree to be legally bound by this Agreement. The terms and conditions contained herein may be subject to change without prior notice when Solid Iris considers appropriate.
+
+
+
+1. License and Terms of Usage
+
+Solid Iris grants to You a personal, non-transferable, and non-exclusive license to download, install and use the Software and associated printed and/or electronic documentation accompanying the Software, in accordance with this agreement. This license does not under any circumstances grant ownership of the Software to You.
+
+In the case of Single license (Studio Application), a single copy of the Software may be installed and used by You, on one machine. If You wish to install the Software or use the Software concurrently on additional machines You must purchase additional licenses.
+
+In the case of Standard license (Studio Application + 2 Nodes), a single copy of the Software may be installed and used by You, on one machine. You can install the application on up to two more machines, provided that the application is not used or executed simultaneously on any machines. If You wish to install the Software or use the Software concurrently on additional machines You must purchase additional licenses.
+
+In the case of Node license, a single copy of the Software may be installed and used by You, on one machine. If You wish to install the Software on additional machines You must purchase additional Node licenses.
+
+In the case of Plugin license, a single copy of the Software may be installed and used by You, on one machine. You can install the application on up to two more machines, provided that the application is not used or executed simultaneously on any machines. If You wish to install the Software or use the Software concurrently on additional machines You must purchase additional licenses.
+
+In the case that the Software contains a Software Development Kit (SDK), You can use the SDK only for private non-commercial purpose. Any derived software based on the SDK may be distributed, installed and used only where a Software Single or Standard License is available and has been granted to You. In any other case, an additional permission (special agreement) is required.
+
+Software delivered as an update or upgrade to a previous version of the licensed Software must replace the previous version - no additional license is granted.  You may install only such number of updates/upgrades as equal to the number of licenses paid for.  If You wish to install more updated/upgraded versions than licenses held, You must purchase additional licenses.
+
+Software delivered in demo or evaluation mode, and any licenses classed as demo, evaluation, not-for-resale, educational (including student and faculty) and other licenses issued for non-commercial purposes may only be used by You in an appropriate non-commercial manner, and never used for commercial gain, unless otherwise agreed by Solid Iris in writing. You are not allowed to bypass or lift any functionality limitations imposed by the Software, including any output limitations (such as watermarks and resolution limit).
+
+
+
+2. Restrictions on Use
+
+Unless otherwise agreed separately in writing with Solid Iris or under a separate license agreement with Solid Iris, You agree that you will NOT:
+
+- Provide access to or use of the Software to any third party.
+
+- Sell, license, sub-license, transfer, assign, re-distribute, lend, lease or rent (including via a timeshare arrangement), the Software, its use, or the license granted by this agreement.
+
+- Install or use the Software over the internet, including, without limitation, use in connection with a web hosting or similar service, or make the Software available to third parties via the internet or otherwise. This includes installation and usage of the Software in non-private render farm, commercial or non-commercial, where an additional permission (special agreement) is required.
+
+- Modify, reverse engineer, decompile, disassemble or otherwise attempt to discover the source code of the Software.
+
+- Modify, reverse engineer, disassemble or otherwise attempt to discover the structure of any binary archives created or used by the Software.
+
+- Copy or reproduce the Software, partially or totally, except to make one copy of the Software solely for back-up purposes. You are liable for the safekeeping of this copy and for any misuse which may be made of it.
+
+- Copy or reproduce the manuals, user guides and any other material and documentation forming part of the Software.
+
+- Use any libraries (such as libraries containing materials, textures, models and any other material in general) shipped with the Software or as separate add-ons outside the Software. Usage of these libraries with other applications is permitted only within the context of creating images with Software.
+
+- Use demo, evaluation, not-for-resale, educational, student or faculty versions in any way for commercial gain.
+
+Unless otherwise agreed separately in writing with Solid Iris or under a separate license agreement with Solid Iris, Node licenses cannot be used for setting up or creating scenes, they can only be used for rendering a scene in a network rendering setup (creating a .img.thea image). 
+
+
+
+3. Ownership and Intellectual Property
+
+Solid Iris is the owner of all intellectual property relating to the Software for which the license is granted.  Solid Iris owns and retains all copyright, trademark, and other proprietary rights in and to the Software and documentation unless otherwise stated in said documentation.  The Software and documentation are protected by copyright laws and other intellectual property laws.
+
+No title to the intellectual property in the Software, documentation, names, logos, or other material provided is transferred to You by this agreement, and the license granted does not under any circumstances confer ownership of the Software to You.
+
+You must inform Solid Iris of any infringement of copyright and/or intellectual property rights, and adopt any and all necessary measures to assure the confidentiality and the respect of all property right corresponding to Solid Iris.
+
+You agree to maintain in good condition any property notices, labels, trademarks, copyright symbols, or any other property indications in the Software and documentation indicating that Solid Iris is the owner.
+
+Solid Iris is the exclusive publisher of the Software and you may not redistribute without any written permission. In the case of plugin software, copyrights remain to the corresponding plugin development party.
+
+
+
+4. Disclaimer of Warranty
+
+The Software and related materials are provided "AS IS" and without warranty or condition of any kind.  Solid Iris specifically disclaims, including but not limited to, the express or implied warranties or conditions of merchantable quality and fitness for a particular purpose.  Solid Iris does not warrant that the Software will meet your requirements, or that it can carry out any specific function, or that the operation of the Software will be uninterrupted or error free.
+
+In no event shall Solid Iris be liable to You or any third party for any direct, indirect, special, incidental, punitive or consequential damages (including but not limited to damages resulting from loss of use, loss of data, loss of profits, loss of goodwill, and loss of business), arising out of, or in connection with, the use of, or inability to use, or low performance of, the Software or documentation, even if Solid Iris has been advised of the possibility of such damages.
+
+Any liability assumed by Solid Iris arising out of or in connection with the Software or documentation shall not under any circumstances exceed the license fee You have paid for the Software. No returns or refunds will be accepted once the Software has been downloaded, installed or any package opened.  Your sole remedy under this warranty shall be termination of this license agreement. 
+
+You are responsible for the supervision, management and control of the use of the Software, and output of the Software including, but not limited to, selection of the Software to achieve your intended results, determining the appropriate uses of the Software and the output of the Software in your business, and establishing adequate back-up to prevent the loss of data in the event of a Software malfunction.
+
+
+
+5. Termination
+
+This Agreement is effective until terminated.  Solid Iris may terminate this Agreement at any time without notice to You if you fail to comply with any of its terms. You may terminate this Agreement at any time by destroying all copies of the Software and related materials.
+
+Upon termination by You, or upon receipt by You of written notice of termination from Solid Iris, You shall immediately cease using the Software, destroy all copies of the Software and all written documentation in your possession and within 5 days thereafter provide Solid Iris with a written confirmation that you have complied with these actions.
+
+ 
+
+6. Miscellaneous and General Conditions
+
+This Agreement shall be governed and interpreted in accordance with the laws of Greece, and any conflict arising from the same shall be submitted to Greek courts.  
+
+In the event that one or more of the provisions in this Agreement is found to be illegal or unenforceable by a court of competent jurisdiction, this Agreement shall not be rendered inoperative, the provision in question shall be enforced to the maximum extent permissible and the remaining provisions shall continue in full force and effect.
+
