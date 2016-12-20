@@ -6,24 +6,24 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>TheaForBlender package &#8212; Thea for Blender 1.5.07.743.1447 documentation</title>
+    <title>TheaForBlender package &#8212; Thea for Blender 1.5.07.755.1447 documentation</title>
     
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.5.07.743.1447',
+        VERSION:     '1.5.07.755.1447',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
         SOURCELINK_SUFFIX: '.txt'
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head>
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Thea for Blender 1.5.07.743.1447 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Thea for Blender 1.5.07.755.1447 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -902,6 +902,11 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="TheaForBlender.thea_exporter.CoatingBSDF.setAbsorptionEnable">
+<code class="descname">setAbsorptionEnable</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.CoatingBSDF.setAbsorptionEnable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="TheaForBlender.thea_exporter.CoatingBSDF.setAnisotropy">
 <code class="descname">setAnisotropy</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.CoatingBSDF.setAnisotropy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -979,6 +984,11 @@
 <dl class="method">
 <dt id="TheaForBlender.thea_exporter.CoatingBSDF.setThickness">
 <code class="descname">setThickness</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.CoatingBSDF.setThickness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="TheaForBlender.thea_exporter.CoatingBSDF.setThicknessAbsorptionTexture">
+<code class="descname">setThicknessAbsorptionTexture</code><span class="sig-paren">(</span><em>texture</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.CoatingBSDF.setThicknessAbsorptionTexture" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1443,6 +1453,11 @@
 </tbody>
 </table>
 <dl class="method">
+<dt id="TheaForBlender.thea_exporter.LayeredCoating.getThicknessAbsorptionTexture">
+<code class="descname">getThicknessAbsorptionTexture</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.LayeredCoating.getThicknessAbsorptionTexture" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="TheaForBlender.thea_exporter.LayeredCoating.getThicknessTexture">
 <code class="descname">getThicknessTexture</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.LayeredCoating.getThicknessTexture" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1455,6 +1470,11 @@
 <dl class="method">
 <dt id="TheaForBlender.thea_exporter.LayeredCoating.getWeightTexture">
 <code class="descname">getWeightTexture</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.LayeredCoating.getWeightTexture" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="TheaForBlender.thea_exporter.LayeredCoating.setThicknessAbsorptionTexture">
+<code class="descname">setThicknessAbsorptionTexture</code><span class="sig-paren">(</span><em>texture</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.LayeredCoating.setThicknessAbsorptionTexture" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2028,6 +2048,16 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="TheaForBlender.thea_exporter.ThMaterial.setDescription">
+<code class="descname">setDescription</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThMaterial.setDescription" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="TheaForBlender.thea_exporter.ThMaterial.setDirt">
+<code class="descname">setDirt</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThMaterial.setDirt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="TheaForBlender.thea_exporter.ThMaterial.setDisplacement">
 <code class="descname">setDisplacement</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThMaterial.setDisplacement" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2045,6 +2075,11 @@
 <dl class="method">
 <dt id="TheaForBlender.thea_exporter.ThMaterial.setName">
 <code class="descname">setName</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThMaterial.setName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="TheaForBlender.thea_exporter.ThMaterial.setRepaintable">
+<code class="descname">setRepaintable</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThMaterial.setRepaintable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2094,6 +2129,11 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Thin Film material component</p>
 <dl class="method">
+<dt id="TheaForBlender.thea_exporter.ThinFilm.getThinThicknessTexture">
+<code class="descname">getThinThicknessTexture</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThinFilm.getThinThicknessTexture" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="TheaForBlender.thea_exporter.ThinFilm.setBump">
 <code class="descname">setBump</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThinFilm.setBump" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2121,6 +2161,11 @@
 <dl class="method">
 <dt id="TheaForBlender.thea_exporter.ThinFilm.setThickness">
 <code class="descname">setThickness</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThinFilm.setThickness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="TheaForBlender.thea_exporter.ThinFilm.setThinThicknessTexture">
+<code class="descname">setThinThicknessTexture</code><span class="sig-paren">(</span><em>texture</em><span class="sig-paren">)</span><a class="headerlink" href="#TheaForBlender.thea_exporter.ThinFilm.setThinThicknessTexture" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2966,7 +3011,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_gui.MATERIAL_PT_Components.bl_label">
-<code class="descname">bl_label</code><em class="property"> = 'Materials'</em><a class="headerlink" href="#TheaForBlender.thea_gui.MATERIAL_PT_Components.bl_label" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_label</code><em class="property"> = 'Layer Weight'</em><a class="headerlink" href="#TheaForBlender.thea_gui.MATERIAL_PT_Components.bl_label" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3054,7 +3099,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_gui.MATERIAL_PT_Header.bl_label">
-<code class="descname">bl_label</code><em class="property"> = 'Thea material'</em><a class="headerlink" href="#TheaForBlender.thea_gui.MATERIAL_PT_Header.bl_label" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_label</code><em class="property"> = 'Material Settings'</em><a class="headerlink" href="#TheaForBlender.thea_gui.MATERIAL_PT_Header.bl_label" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3697,7 +3742,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_gui.RENDER_PT_theaMain.bl_label">
-<code class="descname">bl_label</code><em class="property"> = 'Thea Main'</em><a class="headerlink" href="#TheaForBlender.thea_gui.RENDER_PT_theaMain.bl_label" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_label</code><em class="property"> = 'Thea Engines'</em><a class="headerlink" href="#TheaForBlender.thea_gui.RENDER_PT_theaMain.bl_label" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3878,7 +3923,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_gui.RENDER_PT_theaRender.bl_label">
-<code class="descname">bl_label</code><em class="property"> = 'Thea Render'</em><a class="headerlink" href="#TheaForBlender.thea_gui.RENDER_PT_theaRender.bl_label" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_label</code><em class="property"> = 'Thea Production &amp; Export'</em><a class="headerlink" href="#TheaForBlender.thea_gui.RENDER_PT_theaRender.bl_label" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4552,7 +4597,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.MATERIAL_PT_thea_copyMaterialLocally.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.MATERIAL_PT_thea_copyMaterialLocally.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.MATERIAL_PT_thea_copyMaterialLocally.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4722,7 +4767,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_BackgroundMappingFile.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_BackgroundMappingFile.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_BackgroundMappingFile.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5034,6 +5079,11 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 <em class="property">class </em><code class="descclassname">TheaForBlender.thea_operators.</code><code class="descname">RENDER_PT_thea_ExportFrame</code><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">bpy_types.Operator</span></code></p>
 <dl class="attribute">
+<dt id="TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.bl_description">
+<code class="descname">bl_description</code><em class="property"> = 'Save current frame to scn.thea file'</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.bl_description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.bl_idname">
 <code class="descname">bl_idname</code><em class="property"> = 'thea.export_frame'</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.bl_idname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -5050,7 +5100,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.order">
-<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', 'bl_idname', 'bl_label', 'invoke']</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.order" title="Permalink to this definition">¶</a></dt>
+<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', 'bl_idname', 'bl_label', 'bl_description', 'invoke']</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ExportFrame.order" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -5129,7 +5179,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_IBLFile.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_IBLFile.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_IBLFile.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5191,7 +5241,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_ReflectionMappingFile.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ReflectionMappingFile.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_ReflectionMappingFile.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5227,7 +5277,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_RefractionMappingFile.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_RefractionMappingFile.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_RefractionMappingFile.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5326,6 +5376,11 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">bpy_types.Operator</span></code></p>
 <p>Save current frame to file</p>
 <dl class="attribute">
+<dt id="TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.bl_description">
+<code class="descname">bl_description</code><em class="property"> = 'Save current frame to XML-file'</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.bl_description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.bl_idname">
 <code class="descname">bl_idname</code><em class="property"> = 'thea.save_frame'</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.bl_idname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -5342,7 +5397,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5352,7 +5407,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.order">
-<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', '__doc__', 'bl_idname', 'bl_label', 'filepath', 'execute', 'invoke']</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.order" title="Permalink to this definition">¶</a></dt>
+<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', '__doc__', 'bl_idname', 'bl_label', 'bl_description', 'filepath', 'execute', 'invoke']</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame.order" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -5378,7 +5433,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame2.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame2.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_SaveFrame2.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5545,7 +5600,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_materialsPath.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_materialsPath.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_materialsPath.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5582,7 +5637,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_mergeFile.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_mergeFile.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_mergeFile.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5619,7 +5674,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 
 <dl class="attribute">
 <dt id="TheaForBlender.thea_operators.RENDER_PT_thea_saveIR.filepath">
-<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'maxlen': 1024, 'name': 'file path', 'description': 'getting file path', 'default': ''})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_saveIR.filepath" title="Permalink to this definition">¶</a></dt>
+<code class="descname">filepath</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'maxlen': 1024, 'description': 'getting file path', 'name': 'file path'})</em><a class="headerlink" href="#TheaForBlender.thea_operators.RENDER_PT_thea_saveIR.filepath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -6009,7 +6064,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
 <tr class="field-odd field"><th class="field-name">Example:</th><td class="field-body"><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prevImageOb</span> <span class="o">=</span> <span class="n">Preview</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tempDir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outputImage</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempDir</span><span class="p">,</span> <span class="s2">&quot;matPreview.bmp&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">prevImageOb</span><span class="o">.</span><span class="n">outFile</span> <span class="o">=</span> <span class="n">outputImage</span>            
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prevImageOb</span><span class="o">.</span><span class="n">outFile</span> <span class="o">=</span> <span class="n">outputImage</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">prevImageOb</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">extMatFile</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -6874,7 +6929,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/TheaForBlender.rst.txt"
+      <li><a href="sources/TheaForBlender.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -6901,7 +6956,7 @@ It contains blenderObject, matrix, name, meshName, isProxy and subobjects list</
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Thea for Blender 1.5.07.743.1447 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Thea for Blender 1.5.07.755.1447 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
