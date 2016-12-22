@@ -96,6 +96,7 @@ def getConfig():
             config.read(theaConfigFile)
             try:
                 useLUT = config.getboolean('main', 'useLUT')
+                bpy.context.scene.thea_IRFontSize = config.getint('main', 'irfontsize') 
             except:
                 useLUT = False
 

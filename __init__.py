@@ -28,7 +28,7 @@
 bl_info = {
     "name": "Thea Render",
     "author": "Grzegorz Rakoczy",
-    "version": (1,5,7,755,1447),
+    "version": (1,5,7,756,1447),
     "blender": (2, 7, 7),
     "location": "Render>Engine>Thea Render",
     "description": "Thea Render",
@@ -94,6 +94,8 @@ def load_post_handler(arg):
     else:
         thea_globals.log.setLevel(logging.INFO)
         thea_globals.fh.setLevel(logging.INFO)
+        
+    thea_globals.getConfig()
         
 #     bpy.context.scene.thea_useLUT = thea_globals.getUseLUT()
             

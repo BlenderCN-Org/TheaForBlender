@@ -4093,6 +4093,29 @@ Scene.thea_IRBlendAlpha = bpy.props.BoolProperty(
                 description="Smooth blend 3D view to IR result after scene update.",
                 default= True)
 
+def IRFontSizeUpdated(self, context):
+    '''Save IR font size section in config file when property is updated
+
+        :param context: context
+    '''
+    font_size = getattr(context.scene, 'thea_IRFontSize', 12)
+    config = configparser.ConfigParser()
+    configPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini")
+    config.read(configPath)
+    if not config.has_section("main"):
+        config.add_section('main')
+    config.set('main', 'IRFontSize', str(font_size))
+    with open(configPath, 'w') as configfile:
+        config.write(configfile)
+
+Scene.thea_IRFontSize = bpy.props.IntProperty(
+                min=10,
+                max=100,
+                default=12,
+                name="IR status font size",
+                description="IR status font size. Change it in case of using HDPI screens",
+                update=IRFontSizeUpdated)
+
 
 def updateFullExportSelected(self, context):
     '''It does nothing right now

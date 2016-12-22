@@ -2065,6 +2065,7 @@ class RENDER_PT_theaSetup(RenderButtonsPanel, bpy.types.Panel):
             layout.prop(scene,"thea_LogLevel")
             layout.prop(scene,"thea_ApplicationPath")
             layout.prop(scene,"thea_DataPath")
+            layout.prop(scene,"thea_IRFontSize")
             layout.label("Merge settigns:")
             layout.prop(scene,"thea_MerModels")
             layout.prop(scene,"thea_MerLights")

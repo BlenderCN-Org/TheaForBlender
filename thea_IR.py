@@ -981,7 +981,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                     self.view3dZoom = area.spaces.active.region_3d.view_camera_zoom
                     self.view3dOffset[0] = area.spaces.active.region_3d.view_camera_offset[0]
                     self.view3dOffset[1] = area.spaces.active.region_3d.view_camera_offset[1]
-                    draw_IR_string("Starting IR", 10, 20, 20, (1.0, 1.0, 1.0, 1.0))
+                    draw_IR_string("Starting IR", 10, 20, getattr(context.scene, 'thea_IRFontSize', 12)*1.8, (1.0, 1.0, 1.0, 1.0))
                     thea_globals.IrIsRunning = True
 
                       #load another scene and then merge exported one
@@ -1165,7 +1165,7 @@ def draw_IR_string(text, x, y, size, color):
     bgl.glLineWidth(2)
     bgl.glColor4f(*color)
     blf.position(font, x, y, 0)
-    blf.size(font, size, dpi)
+    blf.size(font, int(size), dpi)
     blf.draw(font, text)
     blf.disable(0, blf.SHADOW)
 
@@ -1341,9 +1341,9 @@ def draw_gl_content(self, context, region, area):
             if thea_globals.drawText.find("Ray Tracing") >=0:
                 draw_IR_preview(self, context, self.region,thea_globals.preview3DAlpha,area)
             if thea_globals.IrIsPaused:
-                draw_IR_string(thea_globals.drawText, 60, 25, 14, (1.0, 0.0, 0.0, 1))
+                draw_IR_string(thea_globals.drawText, 60, 25, getattr(context.scene, 'thea_IRFontSize', 12)*1.3, (1.0, 0.0, 0.0, 1))
             else:
-                draw_IR_string(thea_globals.drawText, 60, 25, 12, (1.0, 1.0, 1.0, 1))
+                draw_IR_string(thea_globals.drawText, 60, 25, getattr(context.scene, 'thea_IRFontSize', 12), (1.0, 1.0, 1.0, 1))
     return
 
 
