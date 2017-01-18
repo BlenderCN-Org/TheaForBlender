@@ -1984,7 +1984,9 @@ class RENDER_PT_IREngineSettings(RenderButtonsPanel, bpy.types.Panel):
        if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
            layout.prop(scene,"thea_RTGlossyDepth")
            layout.prop(scene,"thea_RTDiffuseDepth")
-       layout.prop(scene, "thea_GICaustics", text="Caustics")
+#       CHANGED > Caustics only for AMC engine
+       if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
+           layout.prop(scene, "thea_GICaustics", text="Caustics")
 #       CHANGED > Extended only for PResto engine
        if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
            layout.prop(scene, "thea_ExtendedTracing")
