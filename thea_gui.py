@@ -1724,6 +1724,7 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         colL = split.column()
         colR = split.column()
 #       CHANGED > added the new active/inactive menu's, new sharpness, bloom items and diaphgrama options
+#       CHANGED > Redid order
         colL.prop(scene,"thea_DispSharpness")
 #        if getattr(scene,"thea_DispSharpness"):
 #            colR.prop(scene,"thea_DispSharpnessWeight")
@@ -1744,19 +1745,25 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(scene,"thea_DispTemperature")
-#        if getattr(scene,"thea_DispTemperature"):
-#            colR.prop(scene,"thea_DispTemperatureWeight")
+        colL.prop(scene,"thea_DispVignetting")
         sub = colR.row()
-        sub.active = scene.thea_DispTemperature == True
-        sub.prop(scene,"thea_DispTemperatureWeight")
+        sub.active = scene.thea_DispVignetting == True
+        sub.prop(scene,"thea_DispVignettingWeight")
+
+        split = layout.split()
+        row = layout.row()
+        colL = split.column()
+        colR = split.column()
+        colL.prop(scene,"thea_DispChroma")
+        sub = colR.row()
+        sub.active = scene.thea_DispChroma == True
+        sub.prop(scene,"thea_DispChromaWeight")
+
         split = layout.split()
         row = layout.row()
         colL = split.column()
         colR = split.column()
         colL.prop(scene,"thea_DispContrast")
-#        if getattr(scene,"thea_DispContrast"):
-#            colR.prop(scene,"thea_DispContrastWeight")
         sub = colR.row()
         sub.active = scene.thea_DispContrast == True
         sub.prop(scene,"thea_DispContrastWeight")
@@ -1764,39 +1771,17 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(scene,"thea_DispVignetting")
-#        if getattr(scene,"thea_DispVignetting"):
-#            colR.prop(scene,"thea_DispVignettingWeight")
-        sub = colR.row()
-        sub.active = scene.thea_DispVignetting == True
-        sub.prop(scene,"thea_DispVignettingWeight")
+
         split = layout.split()
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(scene,"thea_DispChroma")
-#        if getattr(scene,"thea_DispChroma"):
-#            colR.prop(scene,"thea_DispChromaWeight")
+        colL.prop(scene,"thea_DispTemperature")
         sub = colR.row()
-        sub.active = scene.thea_DispChroma == True
-        sub.prop(scene,"thea_DispChromaWeight")
-        split = layout.split()
-        row = layout.row()
-        colL = split.column()
-        colR = split.column()
-        #        colL.prop(scene,"thea_DispBloom")
-        #        #        if getattr(scene,"thea_DispBloom"):
-        #        #            colR.prop(scene,"thea_DispBloomWeight")
-        #        #            colR.prop(scene,"thea_DispGlareRadius")
-        #        sub = colR.row()
-        #        sub.active = scene.thea_DispBloom != "0"
-        #        print("displayBloom: ", scene.thea_DispBloom)
-        #        sub.prop(scene,"thea_DispBloomWeight")
-        #        sub.prop(scene,"thea_DispGlareRadius")
+        sub.active = scene.thea_DispTemperature == True
+        sub.prop(scene,"thea_DispTemperatureWeight")
+
         colL.prop(scene,"thea_DispBloom")
-        #        if getattr(scene,"thea_DispBloom"):
-        #            colR.prop(scene,"thea_DispBloomWeight")
-        #            colR.prop(scene,"thea_DispGlareRadius")
         sub = colR.row()
         sub.active = scene.thea_DispBloom == True
         sub.prop(scene,"thea_DispBloomItems")
@@ -1999,7 +1984,9 @@ class RENDER_PT_IREngineSettings(RenderButtonsPanel, bpy.types.Panel):
        if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
            layout.prop(scene,"thea_RTGlossyDepth")
            layout.prop(scene,"thea_RTDiffuseDepth")
-       layout.prop(scene, "thea_GICaustics", text="Caustics")
+#       CHANGED > Caustics only for AMC engine
+       if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
+           layout.prop(scene, "thea_GICaustics", text="Caustics")
 #       CHANGED > Extended only for PResto engine
        if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
            layout.prop(scene, "thea_ExtendedTracing")
@@ -2387,14 +2374,11 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         layout.prop(scene,"thea_DispGamma")
         layout.prop(scene,"thea_DispBrightness")
         layout.prop(scene,"thea_DispCRFMenu")
-#       CHANGED > alle menus changed to active/inactive option and added the new sharpness and bloom menu items
-        split = layout.split()
-        row = layout.row()
-        colL = split.column()
-        colR = split.column()
+#       CHANGED > added the new active/inactive menu's, new sharpness, bloom items and diaphgrama options
+#       CHANGED > Redid order
         colL.prop(scene,"thea_DispSharpness")
-        #        if getattr(scene,"thea_DispSharpness"):
-        #            colR.prop(scene,"thea_DispSharpnessWeight")
+#        if getattr(scene,"thea_DispSharpness"):
+#            colR.prop(scene,"thea_DispSharpnessWeight")
         sub = colR.row()
         sub.active = scene.thea_DispSharpness == True
         sub.prop(scene, "thea_DispSharpnessWeight")
@@ -2403,8 +2387,8 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         colL = split.column()
         colR = split.column()
         colL.prop(scene,"thea_DispBurn")
-        #        if getattr(scene,"thea_DispBurn"):
-        #            colR.prop(scene,"thea_DispBurnWeight")
+#        if getattr(scene,"thea_DispBurn"):
+#            colR.prop(scene,"thea_DispBurnWeight")
         sub = colR.row()
         sub.active = scene.thea_DispBurn == True
         sub.prop(scene,"thea_DispBurnWeight")
@@ -2412,19 +2396,25 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(scene,"thea_DispTemperature")
-        #        if getattr(scene,"thea_DispTemperature"):
-        #            colR.prop(scene,"thea_DispTemperatureWeight")
+        colL.prop(scene,"thea_DispVignetting")
         sub = colR.row()
-        sub.active = scene.thea_DispTemperature == True
-        sub.prop(scene,"thea_DispTemperatureWeight")
+        sub.active = scene.thea_DispVignetting == True
+        sub.prop(scene,"thea_DispVignettingWeight")
+
+        split = layout.split()
+        row = layout.row()
+        colL = split.column()
+        colR = split.column()
+        colL.prop(scene,"thea_DispChroma")
+        sub = colR.row()
+        sub.active = scene.thea_DispChroma == True
+        sub.prop(scene,"thea_DispChromaWeight")
+
         split = layout.split()
         row = layout.row()
         colL = split.column()
         colR = split.column()
         colL.prop(scene,"thea_DispContrast")
-        #        if getattr(scene,"thea_DispContrast"):
-        #            colR.prop(scene,"thea_DispContrastWeight")
         sub = colR.row()
         sub.active = scene.thea_DispContrast == True
         sub.prop(scene,"thea_DispContrastWeight")
@@ -2432,39 +2422,17 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(scene,"thea_DispVignetting")
-        #        if getattr(scene,"thea_DispVignetting"):
-        #            colR.prop(scene,"thea_DispVignettingWeight")
-        sub = colR.row()
-        sub.active = scene.thea_DispVignetting == True
-        sub.prop(scene,"thea_DispVignettingWeight")
+
         split = layout.split()
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(scene,"thea_DispChroma")
-        #        if getattr(scene,"thea_DispChroma"):
-        #            colR.prop(scene,"thea_DispChromaWeight")
+        colL.prop(scene,"thea_DispTemperature")
         sub = colR.row()
-        sub.active = scene.thea_DispChroma == True
-        sub.prop(scene,"thea_DispChromaWeight")
-        split = layout.split()
-        row = layout.row()
-        colL = split.column()
-        colR = split.column()
-#        colL.prop(scene,"thea_DispBloom")
-#        #        if getattr(scene,"thea_DispBloom"):
-#        #            colR.prop(scene,"thea_DispBloomWeight")
-#        #            colR.prop(scene,"thea_DispGlareRadius")
-#        sub = colR.row()
-#        sub.active = scene.thea_DispBloom != "0"
-#        print("displayBloom: ", scene.thea_DispBloom)
-#        sub.prop(scene,"thea_DispBloomWeight")
-#        sub.prop(scene,"thea_DispGlareRadius")
+        sub.active = scene.thea_DispTemperature == True
+        sub.prop(scene,"thea_DispTemperatureWeight")
+
         colL.prop(scene,"thea_DispBloom")
-        #        if getattr(scene,"thea_DispBloom"):
-        #            colR.prop(scene,"thea_DispBloomWeight")
-        #            colR.prop(scene,"thea_DispGlareRadius")
         sub = colR.row()
         sub.active = scene.thea_DispBloom == True
         sub.prop(scene,"thea_DispBloomItems")
@@ -2982,4 +2950,4 @@ class DATA_PT_thea_spot(DataButtonsPanel, Panel):
         if lamp.shadow_method == 'BUFFER_SHADOW':
             sub.prop(lamp, "halo_step", text="Step")
 
-            
+
