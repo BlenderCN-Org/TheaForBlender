@@ -173,4 +173,4 @@ def getRemapIRKeys():
                 remapIRKeys = config.getboolean('main', 'remapIRKeys')
             except:
                 remapIRKeys = False
-    return remapIRKeys                            
+    return remapIRKeys

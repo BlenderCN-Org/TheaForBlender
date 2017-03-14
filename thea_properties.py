@@ -117,7 +117,8 @@ Scene.thea_RenderEngineMenu = bpy.props.EnumProperty(
 #                items=(("BSD","Adaptive (BSD)","Adaptive (BSD)"),("TR1","Unbiased (TR1)","Unbiased (TR1)"),("TR1+","Unbiased (TR1+)","Unbiased (TR1+)"),("TR2","Unbiased (TR2)", "Unbiased (TR2)"),("TR2+","Unbiased (TR2+)", "Unbiased (TR2+)")),
                 name="Engine Core",
                 description="Engine Core",
-                default="Presto (AO)")
+                default="Presto (AO)",
+                update=engineUpdated)
 
 Scene.thea_IRRenderEngineMenu = bpy.props.EnumProperty(
                 items=(("Presto (AO)","Presto (AO)","Presto (AO)"),("Presto (MC)","Presto (MC)","Presto (MC)"),("Adaptive (AMC)","Adaptive (AMC)","Adaptive (AMC)")),
@@ -131,23 +132,34 @@ Scene.thea_AASamp = bpy.props.EnumProperty(
                 items=(("0","Default","Default"),("1","None","None"),("2","Normal", "Normal"),("3", "High", "High")),
                 name="SuperSampling",
                 description="Value None corresponds to no supersampling at all, Normal to 2x2 and High to 3x3. Auto corresponds to 2x2 for unbiased engines. Setting supersampling to a higher level will generally improve antialiasing of the output but will increase memory demands for storing the image (4 times in Normal level and 9 times in High level)",
-                default="0")
+                default="0",
+                update=engineUpdated)
 
-#CHANGED > Added correct naming and more info on description from manual
+#CHANGED > Added missgin Adaptive Bias added Updatefunction
+Scene.thea_adaptiveBias = bpy.props.IntProperty(
+                min=0,
+                max=100,
+                default=25,
+                name="Adaptive Bias (%)",
+                description="Adds Bias to render",
+                update=engineUpdated)
 
+#CHANGED > Added correct naming and more info on description from manual added Updatefunction
 Scene.thea_RenderTime = bpy.props.IntProperty(
                 min=0,
                 max=1000,
                 default=0,
                 name="Time Limit (min)",
-                description="terminate the render process by specifying the render time")
+                description="terminate the render process by specifying the render time",
+                update=engineUpdated)
 
 Scene.thea_RenderMaxPasses = bpy.props.IntProperty(
                 min=1,
                 max=1000000,
                 default=10000,
                 name="Max Passes",
-                description="Max Passes")
+                description="Max Passes",
+                update=engineUpdated)
 
 #CHANGED > Added correct naming and more info on description from manual
 Scene.thea_RenderMaxSamples = bpy.props.IntProperty(
@@ -155,39 +167,67 @@ Scene.thea_RenderMaxSamples = bpy.props.IntProperty(
                 max=1000000,
                 default=512,
                 name="Sample Limit",
-                description="Max Samples, terminate the render by defining the maximum amount of samples")
+                description="Max Samples, terminate the render by defining the maximum amount of samples",
+                update=engineUpdated)
 
 Scene.thea_RenderMBlur = bpy.props.BoolProperty(
                 name="Motion Blur",
                 description="Motion Blur",
-                default= True)
+                default= True,
+                update=engineUpdated)
+#CHANGED> Added displacement
+Scene.thea_displacemScene = bpy.props.BoolProperty(
+                name="Displacement",
+                description="Displacement",
+                default= True,
+                update=engineUpdated)
 
 Scene.thea_RenderVolS = bpy.props.BoolProperty(
                 name="Volumetric Scattering",
                 description="Volumetric Scattering",
-                default= True)
+                default= True,
+                update=engineUpdated)
 
 Scene.thea_RenderLightBl = bpy.props.BoolProperty(
                 name="Relight",
                 description="Relight",
-                default= False)
+                default= False,
+                update=engineUpdated)
 
 Scene.thea_ImgTheaFile = bpy.props.BoolProperty(
                 name="Save img.thea",
-                description="Save img.thea for use wit relight",
-                default= False)
+                description="Save img.thea for use with relight",
+                default= False,
+                update=engineUpdated)
 #            CHANGED > Added clay render options
 Scene.thea_clayRender = bpy.props.BoolProperty(
                 name="Clay Render",
                 description="Enables clay rendering",
-                default= False)
+                default= False,
+                update=engineUpdated)
 
 Scene.thea_clayRenderReflectance = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=50,
                 name="Reflectance (%)",
-                description="Percentage of reflectance of clay")
+                description="Percentage of reflectance of clay",
+                update=engineUpdated)
+#CHANGED > Added markernaming + Custom naming
+Scene.thea_markerName = bpy.props.BoolProperty(
+                name="Marker naming",
+                description="Enables filenaming according to current marker",
+                default= False)
+
+Scene.thea_customOutputName = bpy.props.BoolProperty(
+                name="Custom output naming",
+                description="Enables custom output file naming",
+                default= False)
+
+Scene.thea_customName = bpy.props.StringProperty(
+                name="Output name",
+                description="Replace file output naming with custom naming",
+                default= "")
 
 Scene.thea_RenderRefreshResult = bpy.props.BoolProperty(
                 name="Auto Refresh result",
@@ -590,6 +630,14 @@ def worldUpdated(self, context):
 
     from . import thea_globals
     thea_globals.worldUpdated = True
+    try:
+        if (getattr(context.scene,"thea_IBLTypeMenu") == 'IBL Only') and getattr(context.scene,"thea_IBLEnable") or getattr(context.scene,"thea_locationEnable"):
+#            thea_globals.log.debug("Scene: %s" % bpy.data.scenes['Scene'])
+            setattr(bpy.data.lamps['Sun'], "thea_enableLamp", False)
+        else:
+            setattr(bpy.data.lamps['Sun'], "thea_enableLamp", True)
+    except:
+        pass
 
 def worldFilenameUpdated(self, context, origin=""):
     '''Create texture and set it when one of the world filename properties are updated
@@ -630,6 +678,146 @@ def worldFilenameUpdated(self, context, origin=""):
         tex.name = texName
         slot = world.texture_slots.add()
         slot.texture = tex
+
+Scene.thea_GlobalMediumEnable = bpy.props.BoolProperty(
+                name="Enable Global Medium",
+                description="Enable Global Medium",
+                default= False,
+                update=worldUpdated)
+
+Scene.thea_GlobalMediumIOR = bpy.props.FloatProperty(
+                min=0,
+                max=10,
+                precision=2,
+                default=1.0,
+                name="Index of Refraction (n)",
+                description="Index of Refraction (n)",
+                update=worldUpdated)
+
+Scene.thea_Medium = bpy.props.BoolProperty(
+                name="Medium",
+                description="Medium",
+                default= False,
+                update=worldUpdated)
+
+
+Scene.thea_MediumAbsorptionCol = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                name="Absorption Color",
+                default=(1,1,1),
+                description="Color",
+                subtype="COLOR",
+                update=worldUpdated)
+
+#Tex.thea_MediumAbsorptionTex = bpy.props.BoolProperty(
+#                name="Absorption Texture",
+#                description="Absorption Texture",
+#                default= False,
+#                update=worldUpdated)
+
+Scene.thea_MediumAbsorptionFilename = bpy.props.StringProperty(
+                  name = "Absorption texture",
+                  default = "",
+                  description = "File path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumAbsorptionFilename")
+                  )
+
+Scene.thea_MediumScatterCol = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                name="Scatter Color",
+                default=(1,1,1),
+                description="Color",
+                subtype="COLOR",
+                update=worldUpdated)
+
+#Scene.thea_MediumScatterTex = bpy.props.BoolProperty(
+#                name="Scatter Texture",
+#                description="Scatter Texture",
+#                default= False,
+#                update=worldUpdated)
+
+Scene.thea_MediumScatterFilename = bpy.props.StringProperty(
+                  name = "Scatter texture",
+                  default = "",
+                  description = "File path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumScatterFilename")
+                  )
+
+Scene.thea_MediumAbsorptionDensity = bpy.props.FloatProperty(
+                min=0,
+                max=1000,
+                precision=6,
+                default=0.000001,
+                name="Absorption Density",
+                description="Absorption Density",
+                update=worldUpdated)
+
+#Tex.thea_MediumAbsorptionDensityTex = bpy.props.BoolProperty(
+#                name="Absorption Density Texture",
+#                description="Absorption Density Texture",
+#                default= False,
+#                update=worldUpdated)
+
+Scene.thea_MediumAbsorptionDensityFilename = bpy.props.StringProperty(
+                  name = "Absorption Density texture",
+                  default = "",
+                  description = "File path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumAbsorptionDensityFilename")
+                  )
+
+Scene.thea_MediumScatterDensity = bpy.props.FloatProperty(
+                min=0,
+                max=1000,
+                precision=6,
+                default=0.00001,
+                name="Scatter Density",
+                description="Scatter Density",
+                update=worldUpdated)
+
+#tex.thea_MediumScatterDensityTex = bpy.props.BoolProperty(
+#                name="Scatter Density Texture",
+#                description="Scatter Density Texture",
+#                default= False,
+#                update=worldUpdated)
+
+Scene.thea_MediumScatterDensityFilename = bpy.props.StringProperty(
+                  name = "Scatter Density texture",
+                  default = "",
+                  description = "File path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumScatterDensityFilename")
+                  )
+
+Scene.thea_MediumCoefficient = bpy.props.BoolProperty(
+                name="Coefficient",
+                description="Coefficient",
+                default= False,
+                update=worldUpdated)
+
+Scene.thea_MediumMenu = bpy.props.EnumProperty(
+                items=getTheaMediumMenuItems(),
+                name="File",
+                description="File",
+                update=worldUpdated)
+
+Scene.thea_MediumPhaseFunction = bpy.props.EnumProperty(
+                items=(("Isotropic","Isotropic","Isotropic"),("Rayleigh","Rayleigh","Rayleigh"),("Mie Hazy","Mie Hazy","Mie Hazy"), ("Mie Murky", "Mie Murky", "Mie Murky"), ("Mie Retro", "Mie Retro", "Mie Retro"), ("Henyey Greenstein", "Henyey Greenstein", "Henyey Greenstein")),
+                name="Phase Function",
+                description="Phase Function",
+                default="Isotropic",
+                update=worldUpdated)
+
+Scene.thea_Asymetry = bpy.props.FloatProperty(
+                min=-1,
+                max=1,
+                precision=3,
+                default=0.0,
+                name="Asymetry",
+                description="Asymetry",
+                update=worldUpdated)
 
 
 Scene.thea_IBLEnable = bpy.props.BoolProperty(
@@ -871,31 +1059,32 @@ Scene.thea_EnvPSEnable = bpy.props.BoolProperty(
                 default= False,
                 update=worldUpdated)
 
+#CHANGED > Added description and editted default settings and max settings
 Scene.thea_EnvPSTurb = bpy.props.FloatProperty(
                 min=0.00,
-                max=100,
+                max=15,
                 precision=3,
                 default=2.500,
                 name="Turbidity",
-                description="Turbidity",
+                description="Turbidity is a term used to describe the scattering of the atmosphere that is caused by haze. The term haze refers to an atmosphere that scatters more than molecules alone, but less than fog. Haze is often referred to as a haze aerosol because the extra scattering is due to particles suspended in the molecular gas. Because the haze particles typically scatter more uniformly than molecules for all wavelengths, haze causes a whitening of the sky. The actual particles come from many sources such as volcanic eruptions, forest fires, cosmic bombardment, the oceans etc. A default value of this parameter is 2.5 Values should be kept under 10",
                 update=worldUpdated)
 
 Scene.thea_EnvPSOzone = bpy.props.FloatProperty(
                 min=0.00,
-                max=100,
+                max=15,
                 precision=3,
                 default=0.350,
                 name="Ozone",
-                description="Ozone",
+                description="This parameter defines the amount of ozone gas in the atmosphere. The standard way to determine the amount of total ozone is by measuring the amount of ozone gas in a column of air and is expressed in Dobson units. One Dobson unit indicates 0.01 millimeter thickness of ozone gas in a column. The default value in Thea is 0.350 cm. Higher values give the sky and the scene a blue color.",
                 update=worldUpdated)
 
 Scene.thea_EnvPSWatVap = bpy.props.FloatProperty(
                 min=0.00,
-                max=100,
+                max=15,
                 precision=3,
                 default=2.000,
                 name="Water Vapor",
-                description="Water Vapor",
+                description="User can define here the amount of water vapor in the atmosphere. In the same way as ozone, it is measured in centimeters. Default value is set to 2.0.",
                 update=worldUpdated)
 
 Scene.thea_EnvPSTurbCo = bpy.props.FloatProperty(
@@ -904,16 +1093,25 @@ Scene.thea_EnvPSTurbCo = bpy.props.FloatProperty(
                 precision=3,
                 default=0.046,
                 name="Turbidity Coefficient",
-                description="Turbidity Coefficient",
+                description="Turbidity coefficient is the power for exponential transmittance for atmospheric aerosol.",
                 update=worldUpdated)
 
 Scene.thea_EnvPSWaveExp = bpy.props.FloatProperty(
                 min=0.00,
-                max=100,
+                max=25,
                 precision=3,
                 default=1.300,
                 name="Wavelenght Exponent",
-                description="Wavelenght Exponent",
+                description="At this point the wavelength exponent can be defined. The default value is set to 1.3. This number shows the average size of the particles in the atmosphere.",
+                update=worldUpdated)
+#Changed> Added missing albedo
+Scene.thea_EnvPSalbedo = bpy.props.FloatProperty(
+                min=0.00,
+                max=1,
+                precision=3,
+                default=0.500,
+                name="Albedo",
+                description="Albedo option can influence the overall appearance of the sky. High albedo values can occur for example in winter scenes by the snow reflectance while small values occur at environment with grass. Especially in cases with high turbidity settings, changing the albedo value changes the overall brightness of the sky.",
                 update=worldUpdated)
 
 def locationUpdated(self, context):
@@ -926,6 +1124,11 @@ def locationUpdated(self, context):
         scene.thea_EnvLong = loc[1]
         scene.thea_EnvTZ = str(loc[2])
 
+Scene.thea_locationEnable = bpy.props.BoolProperty(
+                name="Location/Time",
+                description="Location/Time",
+                default= False,
+                update=locationUpdated)
 
 Scene.thea_EnvLocationsMenu = bpy.props.EnumProperty(
                 items=getLocations()[0],
@@ -1060,10 +1263,10 @@ Scene.thea_DispChromaWeight = bpy.props.FloatProperty(
                 name="Chroma",
                 description="Chroma",
                 update=displayUpdated)
-
+#CHANGED > Correct naming
 Scene.thea_DispTemperature = bpy.props.BoolProperty(
-                name="Temperature",
-                description="Temperature",
+                name="White Balance",
+                description="White Balance",
                 default= False,
                 update=displayUpdated)
 
@@ -1118,8 +1321,38 @@ Scene.thea_DispCRFMenu = bpy.props.EnumProperty(
                 default="0",
                 update=displayUpdated)
 
+#      CHANGED > Z-depth from camera clipping
+Scene.thea_ZdepthClip = bpy.props.BoolProperty(
+                name="Use Camera Clipping",
+                description="Use camera clipping for Z-depth numbers",
+                default= False,
+                update=displayUpdated)
+
+#Scene.thea_zdepthObj = bpy.props.StringProperty(
+#                name="Distance",
+#                description="Distonce for Zdepth",
+#                default= "",
+#                update=displayUpdated)
+
+#      CHANGED > Z-depth from ODF
+Scene.thea_ZdepthDOF = bpy.props.BoolProperty(
+                name="Use Camera DOF",
+                description="Use camera DOF for Z-depth numbers",
+                default= False,
+                update=displayUpdated)
+
+Scene.thea_ZdepthDOFmargin = bpy.props.FloatProperty(
+                min=-10000,
+                max=10000,
+                precision=1,
+                default=10,
+                name="Falloff (m)",
+                description="Use the fall as the min or max for Z-depth",
+                update=displayUpdated)
+
+#CHANGED > Added minus number for falloff Zdepth object
 Scene.thea_DispMinZ = bpy.props.FloatProperty(
-                min=0.0,
+                min=-10000,
                 max=100000000,
                 precision=3,
                 default=0.000,
@@ -1127,8 +1360,9 @@ Scene.thea_DispMinZ = bpy.props.FloatProperty(
                 description="Min Z (m)",
                 update=displayUpdated)
 
+#CHANGED > Added minus number for falloff Zdepth object
 Scene.thea_DispMaxZ = bpy.props.FloatProperty(
-                min=0.0,
+                min=-10000,
                 max=100000000,
                 precision=3,
                 default=10.000,
@@ -1403,6 +1637,11 @@ Scene.thea_channelSSS = bpy.props.BoolProperty(
                 description="SSS",
                 default= False)
 
+Scene.thea_channelSeparatePassesPerLight = bpy.props.BoolProperty(
+                name="Separate Passes Per Light",
+                description="Separate Passes Per Light",
+                default= False)
+
 Scene.thea_channelReflection = bpy.props.BoolProperty(
                 name="Reflection",
                 description="Reflection",
@@ -1421,11 +1660,6 @@ Scene.thea_channelTransparent = bpy.props.BoolProperty(
 Scene.thea_channelIrradiance = bpy.props.BoolProperty(
                 name="Irradiance",
                 description="Irradiance",
-                default= False)
-
-Scene.thea_channelSeparatePassesPerLight = bpy.props.BoolProperty(
-                name="Separate Passes Per Light",
-                description="Separate Passes Per Light",
                 default= False)
 
 Scene.thea_channelInvertMask = bpy.props.BoolProperty(
@@ -1590,7 +1824,7 @@ def materialFilenameUpdated(self, context, origin=""):
     '''
     thea_globals.log.debug("materialFilenameUpdated: %s, %s, %s, %s" % (self, context, origin, context.material.get(origin)))
     mat = context.material
-    #    CHANGED > Added material update here, now when textures are added changede whatever, ir updates as well
+#    CHANGED > Added material update here, now when textures are added changede whatever, ir updates as well
     thea_globals.materialUpdated = True
     imgName = context.material.get(origin)
     texName = mat.name+"_"+origin
@@ -1644,9 +1878,11 @@ def materialFilenameUpdated(self, context, origin=""):
             slot.use_map_color_diffuse=False
         if 'Anisotropy' in tex.name:
             slot.texture.thea_StructureAnisotropyTex=True
+            slot.texture.thea_CoatingStructureAnisotropyTex=True
             slot.use_map_color_diffuse=False
         if 'Rotation' in tex.name:
             slot.texture.thea_StructureRotationTex=True
+            slot.texture.thea_CoatingStructureRotationTex=True
             slot.use_map_color_diffuse=False
         if 'MediumAbsorption' in tex.name:
             slot.texture.thea_MediumAbsorptionTex=True
@@ -1722,7 +1958,8 @@ def updateUnbiasedPreview(self, context):
     thea_globals.unbiasedPreview = getattr(mat, "thea_EnableUnbiasedPreview")
 
 Mat.thea_EnableUnbiasedPreview = bpy.props.BoolProperty(
-                name="Use unbiased engine for rendering preview",
+#    CHANGED > Shorter button description
+                name="Unbiased",
                 description="Use unbiased engine for rendering preview",
                 default= False,
                 update=updateUnbiasedPreview)
@@ -1739,7 +1976,8 @@ def updatePreviewScene(self, context):
 
 Mat.thea_PreviewScenesMenu = bpy.props.EnumProperty(
                 items=getTheaPreviewScenesMenuItems(),
-                name="Thea preview scene",
+#                CHANGED > Shorter name liek studio
+                name="Room",
                 description="Thea preview scene",
                 update=updatePreviewScene)
 
@@ -2884,6 +3122,7 @@ Mat.thea_EmittancePower = bpy.props.FloatProperty(
                 min=0,
                 max=1000000000,
                 precision=3,
+
                 default=100.0,
                 name="Power",
                 description="Power",
@@ -3091,6 +3330,15 @@ Mat.thea_MediumPhaseFunction = bpy.props.EnumProperty(
                 default="Isotropic",
                 update=materialUpdated)
 
+Mat.thea_Asymetry = bpy.props.FloatProperty(
+                min=-1,
+                max=1,
+                precision=3,
+                default=0.0,
+                name="Asymetry",
+                description="Asymetry",
+                update=worldUpdated)
+
 Tex.thea_Basic = bpy.props.BoolProperty(
                 name="Basic",
                 description="Use with Basic component",
@@ -3135,6 +3383,21 @@ Tex.thea_Emittance = bpy.props.BoolProperty(
                 name="Emittance",
                 description="Use with Emittance component",
                 default= False)
+#CHANGED> Added better coordinates input
+Tex.thea_texture_coords = bpy.props.EnumProperty(
+                items=(('UV', 'UV', 'UV'),('Cubic', 'Cubic', 'Cubic'),('Cylindrical', 'Cylindrical', 'Cylindrical'),('Spherical', 'Spherical', 'Spherical'),('Flat', 'Flat', 'Flat'),('Front', 'Front', 'Front'),('Camera Map', 'Camera Map', 'Camera Map'),('Shrink Wrap', 'Shrink Wrap', 'Shrink Wrap'),('Cubic (Centered)', 'Cubic (Centered)', 'Cubic (Centered)'),('Flat (Centered)', 'Flat (Centered)', 'Flat (Centered)')),
+                name="",
+                description="Select method for mapping textures",
+                default="UV",
+                update=materialUpdated)
+
+#CHANGED> Added Camera mapping
+Tex.thea_camMapName = bpy.props.StringProperty(
+                name="",
+                description="FIle in camera name. Use IR view for active IR viewport test",
+                default= "",
+                update=materialUpdated)
+
 
 Tex.thea_TexUVChannel = bpy.props.EnumProperty(
                 items=(('0', '0', '0'),('1', '1', '1'),('2', '2', '2'),('3', '3', '3'),('4', '4', '4'),('5', '5', '5'),('6', '6', '6'),('7', '7', '7')),
@@ -3232,11 +3495,35 @@ Tex.thea_TexClampMax = bpy.props.FloatProperty(
 
 Tex.thea_TexRotation = bpy.props.FloatProperty(
                 min=-10000,
-                max=100000,
+                max=10000,
                 precision=2,
                 default=0,
                 name="Rotation",
                 description="Rotation",
+                update=materialUpdated)
+#CHANGED> Added repeat
+Tex.thea_TexRepeat = bpy.props.BoolProperty(
+                name="Repeat",
+                description="Set texture to repeat or not",
+                default= True,
+                update=materialUpdated)
+
+Tex.thea_TexSpatialXtex = bpy.props.FloatProperty(
+                min=-1000,
+                max=1000,
+                precision=3,
+                default=1,
+                name="Spatial X",
+                description="Spatial Size is used to correctly account for scaling when changing from UV to Cubic coordinates, while UV Scaling affects the scaling once UV projection is used.",
+                update=materialUpdated)
+
+Tex.thea_TexSpatialYtex = bpy.props.FloatProperty(
+                min=-1000,
+                max=1000,
+                precision=3,
+                default=1,
+                name="Spatial Y",
+                description="Spatial Size is used to correctly account for scaling when changing from UV to Cubic coordinates, while UV Scaling affects the scaling once UV projection is used.",
                 update=materialUpdated)
 
 Tex.thea_TexScaleXtex = bpy.props.BoolProperty(
@@ -3274,6 +3561,18 @@ Tex.thea_TexChannel = bpy.props.EnumProperty(
                 name="Channel",
                 description="Channel",
                 default="RGB",
+                update=materialUpdated)
+#CHANGED> Added coating anis and rotation
+Tex.thea_CoatingStructureAnisotropyTex = bpy.props.BoolProperty(
+                name="Anisotropy Texture",
+                description="Anisotropy Texture",
+                default= False,
+                update=materialUpdated)
+
+Tex.thea_CoatingStructureRotationTex = bpy.props.BoolProperty(
+                name="Rotation Texture",
+                description="Rotation Texture",
+                default= False,
                 update=materialUpdated)
 
 Mat.thea_Coating = bpy.props.BoolProperty(
@@ -3816,11 +4115,6 @@ Mat.thea_ThinFilmStructureNormal = bpy.props.BoolProperty(
                 default= False,
                 update=materialUpdated)
 
-
-
-
-
-
 Mat.thea_StrandRoot = bpy.props.FloatProperty(
                 min=0,
                 max=100,
@@ -3860,6 +4154,7 @@ Obj.aperture = bpy.props.FloatProperty(
                 default=5.6,
                 name="f-number",
                 description="Focal lenght/lens diameter, the higher the sharper the image")
+#,update=cameraUpdated)
 
 Obj.shutter_speed = bpy.props.FloatProperty(
                 min=0,
@@ -3904,6 +4199,20 @@ Obj.thea_zClippingFar = bpy.props.BoolProperty(
                 name="Z-Clipping Far",
                 description="Z-Clipping Far",
                 default= False)
+
+#      CHANGED > Z-Clip from DOF
+Obj.thea_ZclipDOF = bpy.props.BoolProperty(
+                name="Use Camera DOF",
+                description="Use camera DOF for Z-clipping Near",
+                default= False)
+
+Obj.thea_ZclipDOFmargin = bpy.props.FloatProperty(
+                min=-10000,
+                max=10000,
+                precision=1,
+                default=10,
+                name="Falloff (m)",
+                description="Use the fall as the min or max for Z-clipping Far")
 
 Obj.thea_diaphragma = bpy.props.EnumProperty(
                 items=(("Circular","Circular","Circular"),("Polygonal","Polygonal","Polygonal")),
@@ -3969,6 +4278,18 @@ Obj.thNoRecalcNormals = bpy.props.BoolProperty(
                 name="Don't recalculate Normals while exporting",
                 description="Don't recalculate Normals while exporting",
                 default= False)
+
+Obj.thMaskID = bpy.props.BoolProperty(
+                name="Mask Index",
+                description="Mask Index",
+                default= False)
+
+Obj.thMaskIDindex = bpy.props.IntProperty(
+                min=1,
+                max=1000,
+                default=1,
+                name="Index",
+                description="Index")
 
 def materialsList(scene, context):
     '''Return materials for object container
@@ -4419,13 +4740,46 @@ def lampFilenameUpdated(self, context, origin=""):
         tex.name = texName
         slot = lamp.texture_slots.add()
         slot.texture = tex
-    update=lampUpdated(context)
+        update=lampUpdated(context)
 
-Lamp.thea_EmittanceUnit = bpy.props.EnumProperty(
+Lamp.thea_EmittancePower = bpy.props.EnumProperty(
                 items=(("Lumens","Lumens","Lumens"),("Candelas","Candelas","Candelas"),("Watts","Watts","Watts"),("W/sr","W/sr","W/sr"),("W/nm","W/nm","W/nm"),("W/nm/sr","W/nm/sr","W/nm/sr")),
                 name="Unit",
                 description="Unit",
                 default="Watts",
+                update=lampUpdated)
+
+Lamp.thea_EmittancePower = bpy.props.FloatProperty(
+                min=0,
+                max=1000000000,
+                precision=3,
+#    CHANGED DEFAULT to 1
+                default=1.0,
+                name="Power",
+                description="Power",
+                update=lampUpdated)
+
+Lamp.thea_EmittanceEfficacy = bpy.props.FloatProperty(
+                min=0,
+                max=1000000000,
+                precision=3,
+                default=20.0,
+                name="Efficacy (lm/W)",
+                description="Efficacy (lm/W)",
+                update=lampUpdated)
+
+Lamp.thea_SunAttenuation = bpy.props.EnumProperty(
+                items=(("Inverse Square","Inverse Square","Inverse Square"),("Inverse","Inverse","Inverse"),("None","None","None")),
+                name="Attenuation",
+                description="Attenuation",
+                default="None",
+                update=lampUpdated)
+
+Lamp.thea_EmittanceAttenuation = bpy.props.EnumProperty(
+                items=(("Inverse Square","Inverse Square","Inverse Square"),("Inverse","Inverse","Inverse"),("None","None","None")),
+                name="Attenuation",
+                description="Attenuation",
+                default="Inverse Square",
                 update=lampUpdated)
 
 Lamp.thea_SunEmittanceUnit = bpy.props.EnumProperty(
@@ -4443,6 +4797,13 @@ Lamp.thea_TextureFilename = bpy.props.StringProperty(
                   update=lambda a,b: lampFilenameUpdated(a,b,"thea_TextureFilename")
                   )
 
+#CHANGED > Added IES checkbox
+Lamp.thea_enableIES = bpy.props.BoolProperty(
+                name="Enable IES",
+                description="Enable IES",
+                default= False,
+                update=lampUpdated)
+
 Lamp.thea_IESFilename = bpy.props.StringProperty(
                   name = "IES file",
                   default = "",
@@ -4450,6 +4811,46 @@ Lamp.thea_IESFilename = bpy.props.StringProperty(
                   subtype = 'FILE_PATH',
                   update=lampUpdated)
 
+Lamp.thea_IESMultiplier = bpy.props.FloatProperty(
+                min=0,
+                max=1000,
+                precision=3,
+                default=1.0,
+                name="Multiplier",
+                description="Multiplier IES Strength",
+                update=lampUpdated)
+
+#CHANGED > Added Projector checkbox
+Lamp.thea_enableProjector = bpy.props.BoolProperty(
+                name="Enable Projector",
+                description="Enable Projector",
+                default= False,
+                update=lampUpdated)
+
+Lamp.thea_ProjectorFilename = bpy.props.StringProperty(
+                  name = "IES file",
+                  default = "",
+                  description = "File path",
+                  subtype = 'FILE_PATH',
+                  update=lampUpdated)
+
+Lamp.thea_ProjectorWidth = bpy.props.FloatProperty(
+                min=0,
+                max=100000,
+                precision=3,
+                default=1.0,
+                name="Width",
+                description="Projector Width",
+                update=lampUpdated)
+
+Lamp.thea_ProjectorHeight = bpy.props.FloatProperty(
+                min=0,
+                max=100000,
+                precision=3,
+                default=1.0,
+                name="Height",
+                description="Projector Height",
+                update=lampUpdated)
 
 Lamp.thea_enableLamp = bpy.props.BoolProperty(
                 name="Enable",
@@ -4461,6 +4862,12 @@ Lamp.thea_enableShadow = bpy.props.BoolProperty(
                 name="Shadow",
                 description="Shadow",
                 default= True,
+                update=lampUpdated)
+#            CHANGED > Added manual sun
+Lamp.thea_manualSun = bpy.props.BoolProperty(
+                name="Manual Sun",
+                description="Manual Sun",
+                default= False,
                 update=lampUpdated)
 
 Lamp.thea_enableSoftShadow = bpy.props.BoolProperty(
@@ -4563,4 +4970,4 @@ Scene.thea_LogLevel = bpy.props.EnumProperty(
                 default="Basic",
                 update=logLevelUpdated)
 
-                                             
+

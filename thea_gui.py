@@ -359,7 +359,7 @@ class MATERIAL_PT_Color(MaterialButtonsPanel, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return (not thea_globals.showMatGui)and (engine in cls.COMPAT_ENGINES)
+        return (not thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
         #return (thea_globals.showMatGui)and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
@@ -372,6 +372,10 @@ class MATERIAL_PT_Color(MaterialButtonsPanel, bpy.types.Panel):
         colR = split.column()
         colL.prop(mat, "diffuse_color", text="")
         colR.operator("thea.refresh_diffuse_color", text="", icon="FILE_REFRESH")
+        if (getattr(mat,"diffuse_color") == mat.diffuse_color/255):
+            row.label(text="Preview to dark (hit E colorpicker)", icon="ERROR")(percentage=1)
+        else:
+             pass
 
 class MATERIAL_PT_Header(MaterialButtonsPanel, bpy.types.Panel):
     bl_label = "Material Settings"
@@ -384,8 +388,15 @@ class MATERIAL_PT_Header(MaterialButtonsPanel, bpy.types.Panel):
         if hasattr(bpy.context, 'active_object'):
             try:
                 extMat = os.path.exists(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat'))))
+                if extMat == False:
+                    context.window_manager.fileselect_add(self)
+#                    self.report({'ERROR'}, "Please save the scene before exporting!")
+                    thea_globals.log.debug( "Please relink material!")
+                else:
+                    pass
             except:
                 extMat = False
+#                thea_globals.report({'ERROR'}, "Please relink et material!")
             if getattr(bpy.context.active_object, 'active_material') is not None:
                 thea_globals.showMatGui = True
             else:
@@ -453,8 +464,8 @@ class MATERIAL_PT_Coating(MaterialButtonsPanel, bpy.types.Panel):
 #           colL.operator("thea.sync_glossy_to_blender", text="T>B")
 #           colR.operator("thea.sync_blender_to_glossy", text="B>T")
 #CHANGED > Delete double split and row here
-           if(mat.thea_CoatingWeightFilename==""):
-                row.prop(mat, "thea_CoatingWeight")
+#           if(mat.thea_CoatingWeightFilename==""):
+           row.prop(mat, "thea_CoatingWeight")
            row.prop(mat, "thea_CoatingWeightFilename")
 #CHANGED > Added split to set layer weight more to top
            split = layout.split()
@@ -1005,6 +1016,9 @@ class MATERIAL_PT_Medium(MaterialButtonsPanel, bpy.types.Panel):
                row.prop(mat, "thea_MediumMenu")
            row = layout.row()
            row.prop(mat, "thea_MediumPhaseFunction")
+           row = layout.row()
+           if (getattr(mat, "thea_MediumPhaseFunction") in ("Henyey Greenstein")):
+               row.prop(mat, "thea_Asymetry")
 
 
 class MATERIAL_PT_Displacement(MaterialButtonsPanel, bpy.types.Panel):
@@ -1071,7 +1085,8 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
         engine = context.scene.render.engine
         if hasattr(bpy.context, 'active_object'):
             try:
-                extMat = os.path.exists(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat'))))
+#               CHANGED > ADDED BETTER FILE CHECK
+                extMat = os.path.isfile(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat'))))
             except:
                 extMat = False
         return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
@@ -1089,8 +1104,15 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
        split = layout.split()
        row = layout.row()
        col = split.column()
-#        if (mat.get('thea_extMat')):
        col.prop(mat, "thea_extMat")
+# CHANGED > ADDED BETTER FILE CHECK
+       try:
+           if (os.path.exists(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat')))))==False:
+                colR = split.column()
+                row = layout.row()
+                colR.label(text="Missing link!", icon='ERROR')
+       except:
+                pass
        if len(getattr(mat, "thea_extMat"))>5:
            if not thea_render_main.isMaterialLinkLocal(getattr(mat, "thea_extMat")):
                 if os.path.exists(os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat")))):
@@ -1180,11 +1202,12 @@ class TEXTURE_PT_Thea_mapping(TextureSlotPanel, Panel):
 
         if tex.rna_type.identifier=="MaterialTextureSlot":
             split = layout.split(percentage=0.3)
-            col = split.column()
-            col.label(text="Coordinates:")
-            col = split.column()
-            col.prop(tex, "texture_coords", text="")
-            if tex.texture_coords == 'UV':
+#            col = split.column()
+            split.label(text="Coordinates:")
+            split.prop(tex.texture, "thea_texture_coords")
+            if getattr(tex.texture,"thea_texture_coords") == 'UV':
+#                row = layout.row()
+#                split = row
                 split = layout.split(percentage=0.3)
                 split.label(text="UV Channel:")
                 split.prop(tex.texture, 'thea_TexUVChannel', text="")
@@ -1193,12 +1216,28 @@ class TEXTURE_PT_Thea_mapping(TextureSlotPanel, Panel):
 #                     split.prop_search(tex, "uv_layer", ob.data, "uv_textures", text="")
 #                 else:
 #                     split.prop(tex, "uv_layer", text="")
-            split = layout.split(percentage=0.3)
-            split.label(text="Projection:")
-            split.prop(tex, "mapping", text="")
+#            split = layout.split(percentage=0.3)
+#            row = layout.row()
+            if getattr(tex.texture, "thea_texture_coords") == 'Camera Map':
+                split = layout.split(percentage=0.3)
+                split.label(text="Camera:")
+                split.prop(tex.texture, "thea_camMapName", text="")
+#           CHANGED> if UV active dont show other mappings
+#            if not tex.texture.thea_texture_coords == 'UV':
+#                split.label(text="Projection:")
+#                split.prop(tex, "mapping", text="")
             split = layout.split(percentage=0.3)
             split.label(text="Channel:")
             split.prop(tex.texture, "thea_TexChannel", text="")
+            row = layout.row()
+                #           CHANGED > Added repeat function textures
+            row.prop(tex.texture,"thea_TexRepeat")
+            if not getattr(tex.texture, "thea_texture_coords") == 'UV':
+                row = layout.row()
+#           CHANGED> Added spatial
+                row.label(text="Spatial:")
+                row.prop(tex.texture, "thea_TexSpatialXtex", text="X:")
+                row.prop(tex.texture, "thea_TexSpatialYtex", text="Y:")
 
         row = layout.row()
         row.column().prop(tex, "offset")
@@ -1359,6 +1398,12 @@ class RENDER_PT_theaRender(RenderButtonsPanel, bpy.types.Panel):
             if len(scene.get('thea_Warning')) > 5:
                 row = layout.row()
                 row.label(text=scene['thea_Warning'])
+#    CHANGED> Added render option window like cycles
+        split = layout.split(percentage=0.33)
+        split.label(text="Display:")
+        row = split.row(align=True)
+        row.prop(rd, "display_mode", text="")
+        row.prop(rd, "use_lock_interface", icon_only=True)
         split = layout.split()
         colL = split.column()
         colR = split.column()
@@ -1682,22 +1727,41 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
        if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
            col.prop(scene,"thea_IRDevice")
        col.prop(scene,"thea_AASamp")
+       if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
+           col.prop(scene,"thea_adaptiveBias")
+       col.prop(scene,"thea_RenderMBlur")
+#       CHANGED> added displacement
+       col.prop(scene,"thea_displacemScene")
+       col.prop(scene,"thea_RenderVolS")
+       col.prop(scene,"thea_RenderLightBl")
+#      CHANGED > Added Clay render
+       split = layout.split()
+       colL = split.column()
+       colR = split.column()
+       row.label("Clay Render:")
+       row = layout.row()
+       colL.prop(scene,"thea_clayRender", text="Enable")
+       sub = colR
+       sub.active = bpy.context.scene.thea_clayRender == True
+       sub.prop(bpy.context.scene, "thea_clayRenderReflectance")
+#       if getattr(scene, "thea_clayRender"):
+#           row = layout.row()
+#           colR.prop(scene,"thea_clayRenderReflectance")
+#       row = layout.row()
+       split = layout.split()
+       col.label("Termination:")
        col.prop(scene,"thea_RenderTime")
        #col.prop(scene,"thea_RenderMaxPasses")
        col.prop(scene,"thea_RenderMaxSamples")
-       col.prop(scene,"thea_RenderMBlur")
-       col.prop(scene,"thea_RenderVolS")
-       col.prop(scene,"thea_RenderLightBl")
+#      CHANGED > Added Marker names + Custom Name
+       col = split.column()
+       col.label("Extra's:")
 #      CHANGED > Added button to save img.thea file
        col.prop(scene,"thea_ImgTheaFile")
-#      CHANGED > Added Clay render
-       split = layout.split()
-       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-       colL.prop(scene,"thea_clayRender")
-       if getattr(scene, "thea_clayRender"):
-           colR.prop(scene,"thea_clayRenderReflectance")
+       col.prop(scene,"thea_markerName")
+       col.prop(scene,"thea_customOutputName")
+       if getattr(scene, "thea_customOutputName"):
+           col.prop(scene,"thea_customName")
 
 
 class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
@@ -1712,6 +1776,8 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
     def draw(self, context):
         scene = context.scene
         layout = self.layout
+#        CHANGED > added for object picker zdepth
+        obj = context.object
 
         layout.prop(scene,"thea_DispISO")
         layout.prop(scene,"thea_DispShutter")
@@ -1790,9 +1856,34 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         if getattr(scene,"thea_DispBloom"):
             colR.prop(scene,"thea_DispBloomWeight")
             colR.prop(scene,"thea_DispGlareRadius")
+#      CHANGED > Added label + Z-depth camera numbers
+        layout.label(text="Z-depth:")
+        sub = layout.row()
+        sub.active = scene.thea_ZdepthClip | scene.thea_ZdepthDOF == False
+        sub.prop(scene,"thea_DispMinZ")
+        sub.prop(scene,"thea_DispMaxZ")
+        row = layout.row()
+        colL = row.column()
+        colR = row.column()
+#        colL.prop(scene, "thea_zdepthObj", text="Distance")
+#        if not scene.thea_zdepthObj:
+#                view = context.space_data
+#                if view and view.camera == scene and view.region_3d.view_perspective == 'CAMERA':
+#                    props = layout.operator("ui.eyedropper_depth", text="DOF Distance (Pick)")
+#                else:
+#                    props = layout.operator("wm.context_modal_mouse", text="DOF Distance")
+#                    props.data_path_iter = "selected_editable_objects"
+#                    props.data_path_item = "data.zdepth_object"
+#                    props.input_scale = 0.02
+#                    props.header_text = "Z-depth Distance: %.3f"
+#                del view
+#        else:
+#            pass
 
-        layout.prop(scene,"thea_DispMinZ")
-        layout.prop(scene,"thea_DispMaxZ")
+#        colL.prop(cam, "thea_ZdepthObj", text="Distance")
+        colL.prop(scene, "thea_ZdepthDOF")
+        colL.prop(scene,"thea_ZdepthDOFmargin")
+        colR.prop(scene, "thea_ZdepthClip")
 
 
 
@@ -2161,8 +2252,6 @@ class RENDER_PT_theaChannels(RenderButtonsPanel, bpy.types.Panel):
                col.prop(scene,"thea_channelObjectId")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
                col.prop(scene,"thea_channelMaterialId")
-#            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-#                col.prop(scene,"thea_channelMask")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
                col.prop(scene,"thea_channelShadow")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
@@ -2179,8 +2268,11 @@ class RENDER_PT_theaChannels(RenderButtonsPanel, bpy.types.Panel):
                col.prop(scene,"thea_channelGI")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
                col.prop(scene,"thea_channelSelfIllumination")
-#            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
-#                col.prop(scene,"thea_channelSSS")
+#CHANGED> Turned this back on
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
+               col.prop(scene,"thea_channelSSS")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelSeparatePassesPerLight")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
                col.prop(scene,"thea_channelReflection")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
@@ -2189,10 +2281,63 @@ class RENDER_PT_theaChannels(RenderButtonsPanel, bpy.types.Panel):
                col.prop(scene,"thea_channelTransparent")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)")):
                col.prop(scene,"thea_channelIrradiance")
-#            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-#                col.prop(scene,"thea_channelSeparatePassesPerLight")
-#            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-#                col.prop(scene,"thea_channelInvertMask")
+#CHANGED> Turned mask id back ON
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelMask")
+#CHNAGED> Turned invert mask channel back ON
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelInvertMask")
+#CHANGED > Added GLobal Medium Panel
+class RENDER_PT_theaGlobMedium(WorldButtonsPanel, bpy.types.Panel):
+    bl_label = "Global Medium"
+    COMPAT_ENGINES = set(['THEA_RENDER'])
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        return (engine in cls.COMPAT_ENGINES)
+
+    def draw_header(self, context):
+       scene = context.scene
+       self.layout.prop(scene, "thea_GlobalMediumEnable", text="")
+
+    def draw(self, context):
+       layout = self.layout
+       scene = context.scene
+#       mat  = context.material
+       split = layout.split()
+       row = layout.row()
+
+       if scene.thea_GlobalMediumEnable:
+           row = layout.row()
+           row .prop(scene, "thea_GlobalMediumIOR")
+           row = layout.row()
+#           split = layout.split()
+           if(scene.thea_MediumAbsorptionFilename==""):
+                row.prop(scene, "thea_MediumAbsorptionCol")
+           row.prop(scene, "thea_MediumAbsorptionFilename")
+           row = layout.row()
+           if(scene.thea_MediumScatterFilename==""):
+                row.prop(scene, "thea_MediumScatterCol")
+           row.prop(scene, "thea_MediumScatterFilename")
+           row = layout.row()
+           if(scene.thea_MediumAbsorptionDensityFilename==""):
+               row.prop(scene, "thea_MediumAbsorptionDensity")
+           row.prop(scene, "thea_MediumAbsorptionDensityFilename")
+           row = layout.row()
+           if(scene.thea_MediumScatterDensityFilename==""):
+               row.prop(scene, "thea_MediumScatterDensity")
+           row.prop(scene, "thea_MediumScatterDensityFilename")
+           row = layout.row()
+           row.prop(scene, "thea_MediumCoefficient")
+           if(scene.thea_MediumCoefficient):
+               row.prop(scene, "thea_MediumMenu")
+           row = layout.row()
+           row.prop(scene, "thea_MediumPhaseFunction")
+           row = layout.row()
+           if (getattr(context.scene, "thea_MediumPhaseFunction") in ("Henyey Greenstein")):
+               row.prop(scene, "thea_Asymetry")
+
 
 
 class RENDER_PT_theaIBL(WorldButtonsPanel, bpy.types.Panel):
@@ -2217,6 +2362,7 @@ class RENDER_PT_theaIBL(WorldButtonsPanel, bpy.types.Panel):
            layout.prop(scene,"thea_IBLFilename")
            layout.prop(scene,"thea_IBLRotation")
            layout.prop(scene,"thea_IBLIntensity")
+
 
 class RENDER_PT_theaBackgroundMapping(WorldButtonsPanel, bpy.types.Panel):
     bl_label = "Background Mapping"
@@ -2296,6 +2442,21 @@ class RENDER_PT_theaRefractionMapipng(WorldButtonsPanel, bpy.types.Panel):
            col.prop(scene,"thea_RefractionMappingRotation")
            col.prop(scene,"thea_RefractionMappingIntensity")
 
+
+class OBJECT_OT_ResetPhysicalSky(bpy.types.Operator):
+    bl_idname = "reset.sky"
+    bl_label = "Reset Sky"
+
+    def execute(self, context):
+        scene = context.scene
+        scene.thea_EnvPSTurb = 2.5
+        scene.thea_EnvPSOzone = 0.35
+        scene.thea_EnvPSWatVap = 2.0
+        scene.thea_EnvPSTurbCo = 0.046
+        scene.thea_EnvPSWaveExp = 1.3
+        scene.thea_EnvPSalbedo = 0.5
+        return{'FINISHED'}
+
 class RENDER_PT_theaPhysicalSky(WorldButtonsPanel, bpy.types.Panel):
     bl_label = "Thea Physical Sky"
     COMPAT_ENGINES = set(['THEA_RENDER'])
@@ -2319,9 +2480,13 @@ class RENDER_PT_theaPhysicalSky(WorldButtonsPanel, bpy.types.Panel):
           col.prop(scene,"thea_EnvPSTurb")
           col.prop(scene,"thea_EnvPSOzone")
           col.prop(scene,"thea_EnvPSWatVap")
-          col.prop(scene,"thea_EnvPSWatVap")
           col.prop(scene,"thea_EnvPSTurbCo")
           col.prop(scene,"thea_EnvPSWaveExp")
+#        CHANGED > Added Abledo, deleted double water vapor
+          col.prop(scene,"thea_EnvPSalbedo")
+#        CHANGED > Added manual reset for all input
+          row = layout.row()
+          col.operator("reset.sky", text="Reset Sky", icon='X')
 
 class RENDER_PT_theaLocationTime(WorldButtonsPanel, bpy.types.Panel):
     bl_label = "Thea Location/Time"
@@ -2332,14 +2497,20 @@ class RENDER_PT_theaLocationTime(WorldButtonsPanel, bpy.types.Panel):
         engine = context.scene.render.engine
         return (engine in cls.COMPAT_ENGINES)
 
+    def draw_header(self, context):
+       scene = context.scene
+       self.layout.prop(scene, "thea_locationEnable", text="")
+
     def draw(self, context):
        layout = self.layout
        scene = context.scene
        split = layout.split()
        row = layout.row()
        colL = split.column()
-       #colR = split.column()
-       #colR.operator("thea.update_loc", text="Update Lat/Long")
+#CHANGED> Added enable check for better sun control
+#       if scene.thea_locationEnable:
+           #colR = split.column()
+           #colR.operator("thea.update_loc", text="Update Lat/Long")
        colL.prop(scene,"thea_EnvLocationsMenu")
        split = layout.split()
        row = layout.row()
@@ -2374,6 +2545,10 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         layout.prop(scene,"thea_DispGamma")
         layout.prop(scene,"thea_DispBrightness")
         layout.prop(scene,"thea_DispCRFMenu")
+        split = layout.split()
+        row = layout.row()
+        colL = split.column()
+        colR = split.column()
 #       CHANGED > added the new active/inactive menu's, new sharpness, bloom items and diaphgrama options
 #       CHANGED > Redid order
         colL.prop(scene,"thea_DispSharpness")
@@ -2537,6 +2712,15 @@ class OBJECT_PT_theaTools(ObjectButtonsPanel, bpy.types.Panel):
        col.prop(bpy.context.active_object, "thCausticsTransmitter")
        col.prop(bpy.context.active_object, "thCausticsReceiver")
        col.prop(bpy.context.active_object, "thNoRecalcNormals")
+       split = layout.split()
+#       row = layout.row()
+       colL = split.column()
+       colR = split.column()
+       active = colL
+       active.prop(bpy.context.active_object, "thMaskID")
+       sub = colR
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thMaskID == True
+       sub.prop(bpy.context.active_object, "thMaskIDindex")
 
 
 
@@ -2589,22 +2773,38 @@ class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
        colL.prop(bpy.context.active_object, "thea_diaphragma")
        if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
         colR.prop(bpy.context.active_object, "thea_diapBlades")
+#      CHANGED > Added label
+       layout.label(text="Camera Clipping:")
        split = layout.split()
        row = layout.row()
        colL = split.column()
        colR = split.column()
 #      CHANGED > Made active/inactive option
-       colL.prop(bpy.context.active_object, "thea_zClippingNear")
+#CHANGED> Added active/nonactive checker
+       sub = colL
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
+       sub.prop(bpy.context.active_object, "thea_zClippingNear")
+       sub = colR
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
+       sub.prop(bpy.context.active_object, "thea_zClippingFar")
+
+#       colL.prop(bpy.context.active_object, "thea_zClippingNear")
        sub = colL.row()
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingNear == True
        sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
 #       if getattr(bpy.context.active_object, "thea_zClippingNear"):
 #        colL.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
        row = layout.row()
-       colR.prop(bpy.context.active_object, "thea_zClippingFar")
+#       colR.prop(bpy.context.active_object, "thea_zClippingFar")
        sub = colR.row()
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingFar == True
        sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
+       split = layout.split()
+       sub = row
+#    CHANGED> Added camDOF for zclip near + zclip Far
+       row.prop(bpy.context.active_object, "thea_ZclipDOF")
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == True
+       sub.prop(bpy.context.active_object,"thea_ZclipDOFmargin")
 #       if getattr(bpy.context.active_object, "thea_zClippingFar"):
 #        colR.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
 #       split = layout.split()
@@ -2692,7 +2892,8 @@ class DATA_PT_thea_lamp(DataButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return (engine in cls.COMPAT_ENGINES)
+#        CHANGED > Added context.lamp so emttance wont show in other tabs
+        return context.lamp and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
         layout = self.layout
@@ -2705,12 +2906,18 @@ class DATA_PT_thea_lamp(DataButtonsPanel, Panel):
 
             layout.prop(lamp, "thea_enableLamp")
             layout.prop(lamp, "thea_enableShadow")
+#            CHANGED > Added manual sun
+            if lamp.type == "SUN":
+                layout.prop(lamp, "thea_manualSun")
             row = layout.row()
             row.prop(lamp, "thea_enableSoftShadow")
             if getattr(lamp, "thea_enableSoftShadow"):
-                row.prop(lamp, "thea_softRadius")
                 if lamp.type == "SUN":
+#                CHANGED> Deleted softradius doesnt do anything for sune
                     layout.prop(lamp, "thea_radiusMultiplier", text="Radius Multiplier")
+
+                else:
+                    row.prop(lamp, "thea_softRadius")
             row = layout.row()
             layout.prop(lamp, "thea_minRays")
             layout.prop(lamp, "thea_maxRays")
@@ -2727,10 +2934,11 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return (engine in cls.COMPAT_ENGINES)
+#        CHANGED > Added context.lamp so emttance wont show in other tabs
+        return context.lamp and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
-
+        checked = False
         layout = self.layout
         lamp = context.lamp
         row = layout.row()
@@ -2739,22 +2947,50 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
                 row.prop(lamp, "color", text="")
             row.prop(lamp, "thea_TextureFilename")
 
+            split = layout.split()
+            colL = split.column()
+            colR = split.column()
+            if lamp.type in {'SPOT'} :
+                sub = colL
+                sub.enabled = lamp.thea_enableProjector == False
+                sub.prop(lamp, "thea_enableIES")
+            if lamp.type in {'SPOT'} and lamp.thea_enableIES:
+                colR.prop(lamp, "thea_IESFilename")
+                layout.prop(lamp, "thea_IESMultiplier")
+
+            row = layout.row()
+            split = layout.split()
+            colL = split.column()
+            colR = split.column()
+            if lamp.type in {'SPOT'} :
+                sub = row
+                sub.enabled = lamp.thea_enableIES == False
+                sub.prop(lamp, "thea_enableProjector")
+            if lamp.type in {'SPOT'} and lamp.thea_enableProjector:
+                colL.prop(lamp, "thea_ProjectorWidth")
+                colR.prop(lamp, "thea_ProjectorHeight")
+                split = layout.split()
+
 
             split = layout.split()
-            col = split.column()
-            sub = col.column()
-            sub.prop(lamp, "energy")
+            colL = split.column()
+            colR = split.column()
+            split = layout.split()
+            if (lamp.thea_enableIES == False) and lamp.type != 'SUN':
+                colL.prop(lamp, "thea_EmittancePower")
+#                sub = row
+#                sub.enabled = lamp.thea_enableIES == False
+#                sub.prop(lamp, "thea_enableProjector")
+                layout.prop(lamp, "thea_EmittanceEfficacy")
             if lamp.type == 'SUN':
-                sub.prop(lamp, "thea_SunEmittanceUnit")
-            else:
-                sub.prop(lamp, "thea_EmittanceUnit")
-
-            if lamp.type in {'SPOT'}:
-                sub.prop(lamp, "thea_IESFilename")
-
+                colL.prop(lamp, "thea_EmittancePower")
+                colR.prop(lamp, "thea_SunEmittanceUnit")
+                layout.prop(lamp, "thea_SunAttenuation")
+            elif (lamp.thea_enableIES == False):
+                colR.prop(lamp, "thea_EmittanceUnit")
+#            CHANGED > Added Sun for attenuation
             if lamp.type in {'POINT', 'SPOT', 'AREA'}:
-                sub.label(text="Attenuation:")
-                sub.prop(lamp, "falloff_type", text="")
+                layout.prop(lamp, "thea_EmittanceAttenuation")
                 #sub.prop(lamp, "distance")
 
     #             if lamp.falloff_type == 'LINEAR_QUADRATIC_WEIGHTED':
@@ -2925,7 +3161,8 @@ class DATA_PT_thea_spot(DataButtonsPanel, Panel):
     def poll(cls, context):
         lamp = context.lamp
         engine = context.scene.render.engine
-        return (lamp and lamp.type == 'SPOT') and (engine in cls.COMPAT_ENGINES)
+#        changed > Added check for IES / Projecktor enable if true hide this
+        return (lamp and lamp.type == 'SPOT') and (getattr(lamp, "thea_enableProjector") == False) and (getattr(lamp, "thea_enableIES") == False) and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
         layout = self.layout
@@ -2933,7 +3170,6 @@ class DATA_PT_thea_spot(DataButtonsPanel, Panel):
         lamp = context.lamp
 
         split = layout.split()
-
         col = split.column()
         sub = col.column()
         sub.prop(lamp, "spot_size", text="Size")

@@ -233,7 +233,6 @@ class RENDER_PT_thea_ExportFrame(bpy.types.Operator):
             return {'FINISHED'}
 
 
-
         exporter=initExporter()
         #print("exporter: ", exporter)
         #print("scene.render.filepath: ",exportPath)
@@ -281,7 +280,6 @@ class RENDER_PT_thea_SaveFrame(bpy.types.Operator):
         if not os.path.isdir(exportPath):
             self.report({'ERROR'}, "Please set proper output path before exporting!")
             return {'FINISHED'}
-
 
         exporter=initExporter()
         scene.thea_startTheaAfterExport = False
@@ -641,7 +639,7 @@ class MATERIAL_PT_thea_copyMaterialLocally(bpy.types.Operator):
 #             os.mkdir(matDir)
         import shutil
         shutil.copy2(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material['thea_extMat'])), matDir)
-        bpy.context.active_object.active_material['thea_extMat'] = bpy.path.relpath(os.path.join(matDir, os.path.basename(bpy.context.active_object.active_material['thea_extMat'])))
+        bpy.context.active_object.active_material['thea_extMat'] = bpy.path.abspath(os.path.join(matDir, os.path.basename(bpy.context.active_object.active_material['thea_extMat'])))
 
         return {'FINISHED'}
 
@@ -1502,4 +1500,4 @@ class LAMP_PT_thea_refreshLamp(bpy.types.Operator):
     def invoke(self, context, event):
         thea_globals.lampUpdated = True
         return {'FINISHED'}
-                    
+

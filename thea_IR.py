@@ -177,6 +177,9 @@ def exportIRCamera(scene, area, exportPath):
             cam.blades = camOb.thea_diapBlades
         elif camData.type == "ORTHO":
             cam.projection = "Parallel"
+#           CHANGED > Added different calculation
+#             cam.filmHeight = camData.ortho_scale * 563.333333 #* 750
+#             cam.focalLength = camData.ortho_scale * 563.333333 #* 750
             cam.filmHeight = (camOb.scale*1000)/fac
         if camData.dof_distance > 0:
             cam.focusDistance = camData.dof_distance
@@ -764,6 +767,9 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
             if thea_globals.worldUpdated:
                 thea_globals.log.debug("world updated")
                 self.updateEnvironment(context)
+#                CHANGED > Added lamp update so sun also gets update with IR
+                self.updateLamp(context)
+                thea_globals.lampUpdated = False
                 thea_globals.worldUpdated = False
 #                 context.window_manager.event_timer_remove(RENDER_PT_thea_startIR._timer)
 #                 RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(RENDER_PT_thea_startIR.START_DELAY, context.window)

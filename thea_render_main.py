@@ -35,6 +35,7 @@ import runpy
 import socket
 import sys
 import time
+import datetime
 import struct
 import pickle
 import string
@@ -148,6 +149,7 @@ class Preview:
         importantcolors = struct.pack('<L',d['importantcolors'])
         #create the outfile
         outfile = open(self.outFile,'wb')
+
         #write the header + the_bytes
         outfile.write(mn1+mn2+filesize+undef1+undef2+offset+headerlength+width+height+\
                       colorplanes+colordepth+compression+imagesize+res_hor+res_vert+\
@@ -165,6 +167,7 @@ class Preview:
         matData = matFile.read()
         i = 0
         value = matData[i]+matData[i+1]+matData[i+2]+matData[i+3]
+
         if value == 3:
             i += 4
             value = matData[i]+matData[i+1]+matData[i+2]+matData[i+3]
@@ -213,7 +216,6 @@ class Preview:
                         i += 1
                         line.append((r,g,b))
                     pixelVals.append(line)
-
                 #flip render.image_settings.color_mode in y
                 flippedVals = []
                 for l in pixelVals[::-1]:
@@ -228,6 +230,7 @@ class Preview:
                 gavg = (pixs[0][1]+pixs[1][1]+pixs[2][1]+pixs[3][1])/3/255
                 bavg = (pixs[0][2]+pixs[1][2]+pixs[2][2]+pixs[3][2])/3/255
                 self.centerColor = (ravg, gavg, bavg)
+
 
                 the_bytes = b''
                 len(pixelVals)-1
@@ -491,6 +494,7 @@ def editMaterial(scene,material,exporter=None): #call Thea material editor to ed
             matFile = True
         else:
             matFile = False
+
     except: pass
 
 
@@ -506,7 +510,6 @@ def editMaterial(scene,material,exporter=None): #call Thea material editor to ed
         args.append(fileName)
         args.append("-savemat")
         args.append(fileName)
-
 
     else:
         ma = ThMaterial()
@@ -609,7 +612,7 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
     resY=int(renderData.resolution_y*renderData.resolution_percentage*0.01)
 
 #   CHANGED > added 'dist' variable for dof object check later in the script
-    global camOb, cam, camData, dist
+    global camOb, cam, camData, dist, zDist
     # export cameras
     for camOb in bpy.data.objects:
         if camOb.type == 'CAMERA':
@@ -641,9 +644,11 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                         obj1_loc = bpy.data.objects[obj1].location
                         obj2_loc = bpy.data.objects[obj2].location
                         dist = (obj1_loc - obj2_loc).length
-#                        print("***DOF CAMERA>OBJECT: ", dist)
+                        zDist = dist
+#                        thea_globals.log.debug("***DOF CAMERA>OBJECT: ", dist)
                     else:
                         dist = camData.dof_distance
+
 #                        print("***DOF Distance mode: ", dist)
 
 
@@ -694,7 +699,6 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                         cam.shiftLensX = sensor_width * camData.shift_x
                         cam.shiftLensY = sensor_width * camData.shift_y * -1
                     thea_globals.log.debug("width: %s, height: %s" % (sensor_width, sensor_height))
-                    time.sleep(1)
 #                     cam.filmHeight = camData.sensor_height
 #                     cam.shiftLensX = camData.sensor_width * camData.shift_x
 #                     cam.shiftLensY = camData.sensor_height * camData.shift_y * -1
@@ -702,6 +706,9 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 
                 elif camData.type == "ORTHO":
                     cam.projection = "Parallel"
+#                  CHANGED > Added different calculation
+#                     cam.filmHeight = camData.ortho_scale * 563.333333 #* 750
+#                     cam.focalLength = camData.ortho_scale * 563.333333 #* 750
                     cam.filmHeight = camData.ortho_scale * 750
                     cam.focalLength = camData.ortho_scale * 750
 #               CHANGED > New check for distance/distance_object and check if pinhole is active
@@ -720,11 +727,21 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                     #print("***PINHOLE CHECK: C", cam.pinhole)
                 cam.autofocus = camOb.autofocus
                 cam.shutterSpeed = camOb.shutter_speed
-
-                cam.zClippingNear = getattr(camOb, "thea_zClippingNear")
-                cam.zClippingNearDistance =  camData.clip_start
-                cam.zClippingFar = getattr(camOb, "thea_zClippingFar")
-                cam.zClippingFarDistance =  camData.clip_end
+                #      CHANGED > Z-Clip from DOF
+                if (getattr(camOb, "thea_ZclipDOF")== True):
+                    camData.clip_start = zDist
+                    cam.zClippingNear = setattr(camOb, "thea_zClippingNear", True)
+                    cam.zClippingFar = setattr(camOb, "thea_zClippingFar", True)
+#                    thea_globals.log.debug("*** ZdepthDOF Dist: %s" % zDist)
+                    camData.clip_end = camOb.thea_ZclipDOFmargin
+#                if (getattr(camOb, "thea_ZclipDOF")== True):
+#                    cam.zClippingNearDistance = camData.thea_ZclipDOF
+#                    cam.zClippingFarDistance =  camData.thea_ZclipDOFmargin
+                else:
+                    cam.zClippingNear = getattr(camOb, "thea_zClippingNear")
+                    cam.zClippingNearDistance =  camData.clip_start
+                    cam.zClippingFar = getattr(camOb, "thea_zClippingFar")
+                    cam.zClippingFarDistance =  camData.clip_end
 
                 camM = camOb.matrix_world
                 cam.frame = Transform(\
@@ -835,6 +852,8 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 #
         ##print("cam.focalLength: ", cam.focalLength, camData.lens,area.spaces.active.region_3d.view_camera_zoom, fac, " offset: ",cam.shiftLensX, cam.shiftLensY)
 #   CHANGED > added new distance check for object or distance
+#        if dist == 'None':
+#            dist = 1
         cam.focusDistance = dist
         thea_globals.log.debug("camData.camera: %s" % camData.camera)
         thea_globals.log.debug("area.spaces.active.region_3d.view_perspective: %s" % area.spaces.active.region_3d.view_perspective)
@@ -909,7 +928,7 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
             cam.blades = camData.thea_diapBlades
 
 
-            cam.frame = Transform(\
+            cam.frame = Transform(
                         camM[0][0], -camM[0][1], -camM[0][2],
                         camM[1][0], -camM[1][1], -camM[1][2],
                         camM[2][0], -camM[2][1], -camM[2][2],
@@ -1006,20 +1025,28 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
 
         bRgb = tuple([c for c in lightData.color])
         omni.emitter=RgbTexture(lightData.color[0], lightData.color[1], lightData.color[2])
-        omni.multiplier=lightData.energy#*10
-        if lightData.type != 'SUN' and lightData.type != 'AREA' and lightData.type != 'HEMI':
-            att = lightData.falloff_type
-            if att == 'INVERSE_SQARE':
+#        changed > to emittancePower like in studio and added efficacy
+        omni.multiplier=lightData.thea_EmittancePower#*10
+        omni.efficacy = lightData.thea_EmittanceEfficacy
+#        changed > to Attenuation checker like in studio
+        if lightData.type == 'SUN':
+            att = lightData.thea_SunAttenuation
+        else:
+#            lightData.type != 'SPOT' and lightData.type != 'AREA' and lightData.type != 'HEMI':
+            att = lightData.thea_EmittanceAttenuation
+            if att == 'Inverse Square':
                 omni.attenuation = 'Inverse Square'
-            if att == 'INVERSE_LINEAR':
+            if att == 'Inverse':
                 omni.attenuation = 'Inverse'
-            if att == 'CONSTANT':
+            if att == 'None':
                 omni.attenuation = 'None'
+
 
 
         if lightData.type == 'SPOT':
             ltextures = lightData.texture_slots
-            omni.multiplier=lightData.energy#*10
+    #        changed > to emittancePower like in studio
+            omni.multiplier=lightData.thea_EmittancePower#*10
             if len(ltextures) > 0:
                 omni.type = "Spot"
                 for ltex in ltextures:
@@ -1032,21 +1059,62 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
                         if extension == ".ies":
                             omni.type = "IES"
                             omni.iesfile = ltex.texture.image.filepath
-                            omni.multiplier=lightData.energy
-                        else:
+                    #        changed > to emittancePower like in studio
+                            omni.multiplier=lightData.thea_IESMultiplier#*10
+#                        CHANGED > Added check for projector, lights can also have texture
+                        if lightData.thea_enableProjector:
                             omni.type = "Projector"
                             omni.emitter = BitmapTexture(ltex.texture.image.filepath)
                             omni.emitter.scaleX = ltex.scale[0]
                             omni.emitter.scaleY = ltex.scale[1]
-                            omni.width = (lightData.spot_size * 57.3) / 48.5
-                            omni.height = ((lightData.spot_size * (1 - lightData.spot_blend)) * 57.3) / 48.5
+#                           CHANGED > Added wifth and height values for input
+                            omni.width = lightData.thea_ProjectorWidth
+                            omni.height = lightData.thea_ProjectorHeight
+#                       CHANGED > Added texture for spotlights
+                        if lightData.thea_TextureFilename != 'None':
+                            omni.type = "Spot"
+                            omni.emitter = BitmapTexture(ltex.texture.image.filepath)
+                            omni.emitter.scaleX = ltex.scale[0]
+                            omni.emitter.scaleY = ltex.scale[1]
+#                           CHANGED > Added wifth and height values for input
+                            omni.width = lightData.thea_ProjectorWidth
+                            omni.height = lightData.thea_ProjectorHeight
+#                        else:
+#                            omni.type = "Projector"
+#                            omni.emitter = BitmapTexture(ltex.texture.image.filepath)
+#                            omni.emitter.scaleX = ltex.scale[0]
+#                            omni.emitter.scaleY = ltex.scale[1]
+##                           CHANGED > Added wifth and height values for input
+#                            omni.width = lightData.thea_ProjectorWidth
+#                            omni.height = lightData.thea_ProjectorHeight
+#                            omni.width = (lightData.spot_size * 57.3) / 48.5
+#                            omni.height = ((lightData.spot_size * (1 - lightData.spot_blend)) * 57.3) / 48.5
 
+#                       CHANGED > Added Tone settings for lamp texture these where missing
+                        omni.emitter.invert = bpy.data.textures[ltex.name].thea_TexInvert
+                        omni.emitter.gamma = bpy.data.textures[ltex.name].thea_TexGamma
+                        omni.emitter.red = bpy.data.textures[ltex.name].thea_TexRed
+                        omni.emitter.green = bpy.data.textures[ltex.name].thea_TexGreen
+                        omni.emitter.blue = bpy.data.textures[ltex.name].thea_TexBlue
+                        omni.emitter.brightness = bpy.data.textures[ltex.name].thea_TexBrightness
+                        omni.emitter.contrast = bpy.data.textures[ltex.name].thea_TexContrast
+                        omni.emitter.saturation = bpy.data.textures[ltex.name].thea_TexSaturation
+                        omni.emitter.clampMax = bpy.data.textures[ltex.name].thea_TexClampMax
+                        omni.emitter.clampMin = bpy.data.textures[ltex.name].thea_TexClampMin
+
+            if lightData.thea_enableProjector:
+                omni.type = "Projector"
+#                           CHANGED > Added wifth and height values for input
+                omni.width = lightData.thea_ProjectorWidth
+                omni.height = lightData.thea_ProjectorHeight
             else:
                 omni.type = "Spot"
-            if getattr(lightData, "thea_IESFilename"):
+#                CHANGED > Added IES check here, light would still render as ies if IES was off
+            if getattr(lightData, "thea_IESFilename") and lightData.thea_enableIES:
                 omni.type = "IES"
                 omni.iesfile = os.path.abspath(bpy.path.abspath(getattr(lightData, "thea_IESFilename")))
-                omni.multiplier=lightData.energy
+        #        changed > to emittancePower like in studio
+                omni.multiplier=lightData.thea_IESMultiplier#*10
             omni.falloff = lightData.spot_size * 57.3
             omni.hotspot = (lightData.spot_size * (1 - lightData.spot_blend)) * 57.3
             #print("energy: ", lightData.energy)
@@ -1062,13 +1130,18 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
         omni.unit = getattr(lightData, "thea_EmittanceUnit")
 
         if lightData.type == 'SUN' and omni.name.lower() == "sun":
-            omni.multiplier=lightData.energy
+    #        changed > to emittancePower like in studio
+            omni.multiplier=lightData.thea_EmittancePower#*10
             omni.radiusMultiplier=getattr(lightData, "thea_radiusMultiplier")
             omni.unit = getattr(lightData, "thea_SunEmittanceUnit","W/nm/sr")
-            omni.attenuation = 'None'
-            omni.manualSun = 1
-            omni.sun = 1
-            exporter.environmentOptions.overrideSun = True
+#            CHANGED > Get sun Attenuation
+            omni.attenuation = lightData.thea_SunAttenuation
+            omni.efficacy = lightData.thea_EmittanceEfficacy
+            omni.sun = True
+            if lightData.thea_enableLamp == True:
+                exporter.environmentOptions.overrideSun = True
+            else:
+                exporter.environmentOptions.overrideSun = False
             exporter.environmentOptions.sunDirectionX = lM[0][2]
             exporter.environmentOptions.sunDirectionY = lM[1][2]
             exporter.environmentOptions.sunDirectionZ = lM[2][2]
@@ -1081,7 +1154,11 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
                else:
                    omni.layer = i
            i += 1
-
+#       CHANGED > Set manualSun here
+        omni.enableLamp = getattr(lightData, "thea_enableLamp")
+#        thea_globals.log.debug("Sun is enabled: %s" % omni.enableLamp)
+        omni.manualSun = getattr(lightData, "thea_manualSun")
+        thea_globals.log.debug("Sun is manual: %s" % omni.manualSun)
         omni.shadow = getattr(lightData, "thea_enableShadow")
         omni.softshadow = getattr(lightData, "thea_enableSoftShadow")
         omni.softradius = getattr(lightData, "thea_softRadius")
@@ -1186,7 +1263,16 @@ def exportLibraries(scene,frame, anim=False, exporter=None, obList=None):
                            expOb.isProxy = True
 #                            #print("expOb: ", expOb, expOb.blenderObject, expOb.name, expOb.meshName)
                            mainExpObject.subobjects.append(expOb)
+#                  CHANGED > Added better time notation
+                    t1 = datetime.datetime.now()
                     exporter.writeModelBinary(scn, mainExpObject, frame, anim)
+                    t2 = datetime.datetime.now()
+                    totalTime = t2-t1
+                    minutes = totalTime.seconds/60
+                    seconds = totalTime.seconds%60
+                    microseconds = totalTime.microseconds%1000000
+                    result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+                    thea_globals.log.debug("exporting object: %s > %s sec" % (ob.name, result))
                     package = Package()
                     package.name = ob.name
                     package.alias = "%s:%s" % (ob.dupli_group.name, os.path.basename(ob.dupli_group.library.filepath).replace('.blend','') if ob.dupli_group.library else "local")
@@ -1200,6 +1286,7 @@ def exportLibraries(scene,frame, anim=False, exporter=None, obList=None):
                 ob.dupli_list_clear()
                 prevOb = ob
                 firstOb = False
+
 
 def exportDupliObjects(scene,frame, anim=False, exporter=None, obList=None):
     '''Export dupli objects and add them to exporter objects lists
@@ -1264,7 +1351,17 @@ def exportDupliObjects(scene,frame, anim=False, exporter=None, obList=None):
 
 
     for ob in mesh_objects:
-        exporter.writeModelBinary(scn, ob, frame, anim)
+#       CHANGED > Added better time notation
+        t1 = datetime.datetime.now()
+        exporter.writeModelBinaryNew(scn, ob, frame, anim)
+        t2 = datetime.datetime.now()
+        totalTime = t2-t1
+        minutes = totalTime.seconds/60
+        seconds = totalTime.seconds%60
+        microseconds = totalTime.microseconds%1000000
+        result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+        thea_globals.log.debug("exporting object: %s > %s sec" % (ob.name, result))
+
 
 
 def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
@@ -1348,7 +1445,16 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                                        expOb.isProxy = True
             #                            #print("expOb: ", expOb, expOb.blenderObject, expOb.name, expOb.meshName)
                                        mainExpObject.subobjects.append(expOb)
-                                exporter.writeModelBinary(scn, mainExpObject, frame, anim)
+#                               CHANGED > Added time notation
+                                t1 = datetime.datetime.now()
+                                exporter.writeModelBinaryNew(scn, mainExpObject, frame, anim)
+                                t2 = datetime.datetime.now()
+                                totalTime = t2-t1
+                                minutes = totalTime.seconds/60
+                                seconds = totalTime.seconds%60
+                                microseconds = totalTime.microseconds%1000000
+                                result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+                                thea_globals.log.debug("exporting Particle: %s > %s sec" % (ob.name, result))
 #                                 package = Package()
 #                                 package.name = "%s:%s" % (psys.settings.dupli_group.name, ob.name)#psys.settings.dupli_group.name
 #                                 package.alias = "%s:%s" % (psys.settings.dupli_group.name, ob.name)#psys.settings.dupli_group.name, psys.settings.name)
@@ -1423,7 +1529,16 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
 
 
     for ob in mesh_objects:
-        exporter.writeModelBinary(scn, ob, frame, anim)
+#        CHANGED > Added time notation
+        t1 = datetime.datetime.now()
+        exporter.writeModelBinaryNew(scn, ob, frame, anim)
+        t2 = datetime.datetime.now()
+        totalTime = t2-t1
+        minutes = totalTime.seconds/60
+        seconds = totalTime.seconds%60
+        microseconds = totalTime.microseconds%1000000
+        result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+        thea_globals.log.debug("exporting Particle: %s > %s sec" % (ob.name, result))
 
     for mesh in particle_objects:
         exportModel = Model()
@@ -1474,7 +1589,7 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
             expOb.isProxy = isProxy
             partMesh = (bpy.context.active_object,obD_mat,None,obName,meshName, isProxy)
             #exporter.writeModelBinary(scn, partMesh, frame, anim)
-            exporter.writeModelBinary(scn, expOb, frame, anim)
+            exporter.writeModelBinaryNew(scn, expOb, frame, anim)
             bpy.context.scene.objects.active = tempObject
 
             #delete object when it's done
@@ -1616,10 +1731,20 @@ def exportMeshObjects(scene,frame, anim=False, exporter=None, obList=None):
 
 
     for ob in mesh_objects:
-        t1 = time.time()
-        exporter.writeModelBinary(scn, ob, frame, anim)
-        t2 = time.time()
-        thea_globals.log.debug("exporting object: %s time: %s" % (ob.name, t2-t1))
+#       CHANGED > Added better time notation
+        t1 = datetime.datetime.now()
+        exporter.writeModelBinaryNew(scn, ob, frame, anim)
+        t2 = datetime.datetime.now()
+        totalTime = t2-t1
+        minutes = totalTime.seconds/60
+        seconds = totalTime.seconds%60
+        microseconds = totalTime.microseconds%1000000
+        result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+#        thea_globals.log.debug("exporting object: %s time: %s" % (ob.name, time.strftime("%H:%M:%S",time.gmtime(t))))
+        thea_globals.log.debug("exporting object: %s > %s sec" % (ob.name, result))
+#        thea_globals.log.debug("exporting object: %s time: %s" % (ob.name, t2-t1))
+
+
 
 
 def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, exportMode="Full", xmlFile=None):
@@ -1815,6 +1940,11 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
 #    CHANGED > Added clay render options
     exporter.getRenderOptions().clayrender = scn.thea_clayRender
     exporter.getRenderOptions().clayrenderreflectance = scn.thea_clayRenderReflectance
+#   CHANGED > Added Markernaming output + custom output
+    exporter.getRenderOptions().markerName = scn.thea_markerName
+    exporter.getRenderOptions().customOutput = scn.thea_customOutputName
+    exporter.getRenderOptions().customName = scn.thea_customName
+
     exporter.getRenderOptions().checkChannels = scn.thea_showChannels
 
     exporter.getRenderOptions().threads = scn.thea_DistTh
@@ -1840,7 +1970,9 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
         exporter.getRenderOptions().supersampling = "NormalSS"
     if scn.thea_AASamp == '3':
         exporter.getRenderOptions().supersampling = "HighSS"
-
+#   CHANGED> Added adaptive bias +displacement
+    exporter.getRenderOptions().adaptiveBias = scn.thea_adaptiveBias / 100
+    exporter.getRenderOptions().displacemScene = scn.thea_displacemScene
     exporter.getRenderOptions().rayTracingDepth = scn.thea_RTTracingDepth
     exporter.getRenderOptions().rayDiffuseDepth = scn.thea_RTDiffuseDepth
     exporter.getRenderOptions().rayGlossyDepth = scn.thea_RTGlossyDepth
@@ -1927,6 +2059,13 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.getDisplayOptions().bloomWeight = scn.thea_DispBloomWeight / 100
     exporter.getDisplayOptions().glareRadius = scn.thea_DispGlareRadius / 100
 
+    if scn.thea_ZdepthClip == True :
+        scn.thea_DispMinZ = camData.clip_start
+        scn.thea_DispMaxZ = camData.clip_end
+    if scn.thea_ZdepthDOF == True :
+        scn.thea_DispMinZ = zDist
+        thea_globals.log.debug("*** ZdepthDOF Dist: %s" % zDist)
+        scn.thea_DispMaxZ = scn.thea_ZdepthDOFmargin
     exporter.getDisplayOptions().minZ = scn.thea_DispMinZ
     exporter.getDisplayOptions().maxZ = scn.thea_DispMaxZ
 
@@ -2106,6 +2245,8 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
                 iblMap.rotation = scn.thea_IBLRotation
                 exporter.getEnvironmentOptions().illuminationMap=iblMap
                 exporter.getEnvironmentOptions().illumination="IBL"
+#        if scn.thea_IBLTypeMenu == "IBL Only":
+#            omni.enableLamp = False
 #         else:
 #             exporter.getEnvironmentOptions().illumination="None"
 
@@ -2151,11 +2292,31 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.environmentOptions.waterVapor = scn.thea_EnvPSWatVap
     exporter.environmentOptions.turbidityCoefficient = scn.thea_EnvPSTurbCo
     exporter.environmentOptions.wavelengthExponent = scn.thea_EnvPSWaveExp
+#    changed> Added missing Albedo + ozone
+    exporter.environmentOptions.ozone = scn.thea_EnvPSOzone
+    exporter.environmentOptions.albedo = scn.thea_EnvPSalbedo
     exporter.environmentOptions.latitude = scn.thea_EnvLat
     exporter.environmentOptions.longitude = scn.thea_EnvLong
     exporter.environmentOptions.timezone = ("GT+"+scn.thea_EnvTZ if int(scn.thea_EnvTZ)>0 else "GT"+scn.thea_EnvTZ)
     exporter.environmentOptions.localtime = scn.thea_EnvTime
     exporter.environmentOptions.date = scn.thea_EnvDate
+
+#    CHANGED > Added Global Medium Options
+    exporter.environmentOptions.GlobalMediumEnable = scn.thea_GlobalMediumEnable
+    exporter.environmentOptions.GlobalMediumIOR = scn.thea_GlobalMediumIOR
+    colorMedS = RgbTexture(getattr(scn, "thea_MediumScatterCol")[0],getattr(scn, "thea_MediumScatterCol")[1],getattr(scn, "thea_MediumScatterCol")[2])
+    colorMed = RgbTexture(scn.thea_MediumScatterCol[0],scn.thea_MediumScatterCol[1],scn.thea_MediumScatterCol[2])
+    thea_globals.log.debug("GLobal Med Color: %s" % colorMedS)
+    exporter.environmentOptions.scatteringColor = colorMedS
+    exporter.environmentOptions.scatteringDensity = scn.thea_MediumScatterDensity
+    exporter.environmentOptions.scatteringDensityTexture = scn.thea_MediumScatterDensityFilename
+    exporter.environmentOptions.absorptionColor = scn.thea_MediumAbsorptionCol
+    exporter.environmentOptions.absorptionDensity = scn.thea_MediumAbsorptionDensity
+    exporter.environmentOptions.absorptionDensityTexture = scn.thea_MediumAbsorptionDensityFilename
+    exporter.environmentOptions.MediumCoefficentEnable = scn.thea_MediumCoefficient
+    exporter.environmentOptions.coefficientFilename = getTheaMediumMenuItems()[int(getattr(scn, "thea_MediumMenu"))-1][1]+".med"
+    exporter.environmentOptions.phaseFunction = scn.thea_MediumPhaseFunction
+    exporter.environmentOptions.asymetry = scn.thea_Asymetry
 
 
 
@@ -2310,6 +2471,7 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
 
     scriptFilename = currentBlendFile.replace('.blend', '_cameras.ipt.thea')
     scriptFile = open(os.path.join(exportPath,os.path.basename(scriptFilename)), "w")
+
     # export cameras
     for camOb in bpy.data.objects:
         if camOb.type == 'CAMERA':
@@ -2338,6 +2500,13 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                     #                    added this line to check none distance
                     if camData.dof_distance == 0 and camData.dof_object:
                         #                    cam.focusDistance = camData.dof_distance
+                        obj1 = cam.name
+                        obj2 = camData.dof_object.name
+                        #                    obj1_loc = bpy.data.objects[obj1].matrix_world.to_translation()
+                        #                    obj2_loc = bpy.data.objects[obj2].matrix_world.to_translation()
+                        obj1_loc = bpy.data.objects[obj1].location
+                        obj2_loc = bpy.data.objects[obj2].location
+                        dist = (obj1_loc - obj2_loc).length
                         cam.focusDistance = dist
                         #print("dof_distance: ", cam.focusDistance)
                         try:
@@ -2354,8 +2523,9 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                     cam.shiftLensX = camData.shift_x
                     cam.shiftLensY = camData.shift_y
                     cam.projection = getattr(camOb, 'thea_projection', 'Perspective')
-                    cam.diaphragm = camData.thea_diaphragma
-                    cam.blades = camData.thea_diapBlades
+                    if (getattr(camOb, 'thea_diaphragma') in ("Polygonal")):
+                        cam.diaphragma = camOb.thea_diaphragma
+                        cam.blades = camOb.thea_diapBlades
                 elif camData.type == "ORTHO":
                     cam.projection = "Parallel"
                     cam.filmHeight = (camOb.scale*1000)/fac
@@ -2372,7 +2542,8 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                     cam.fNumber = 0
 
                 camM = camOb.matrix_world
-                cam.frame = Transform(\
+#                CHANGED> removed forwardslash below, think was mistype orso
+                cam.frame = Transform(
                 camM[0][0], -camM[0][1], -camM[0][2],
                 camM[1][0], -camM[1][1], -camM[1][2],
                 camM[2][0], -camM[2][1], -camM[2][2],
@@ -2393,7 +2564,7 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                     fileFormat = ".tif"
                 exporter.addCamera(cam)
                 xmlFilename = currentBlendFile.replace('.blend', '_cam'+cam.name+'.xml')
-                imgFilename = currentBlendFile.replace('.blend', '_f'+cam.name+fileFormat)
+                imgFilename = currentBlendFile.replace('.blend', '_f'+cam.name)
                 tempDir = os.path.join(exportPath,"~thexport")
                 framesDir = os.path.join(exportPath,"~thexport","frames")
                 if not os.path.isdir(tempDir):
@@ -2407,8 +2578,76 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                 scriptFile.write(message)
                 message = 'message "Render"\n'
                 scriptFile.write(message)
-                message = 'message "SaveImage '+os.path.join(framesDir,os.path.basename(imgFilename))+'"\n'
+#                CHNAGED> Added fileformat here for better reuse variable imFilename
+                message = 'message "SaveImage '+os.path.join(framesDir,os.path.basename(imgFilename)+fileFormat)+'"\n'
                 scriptFile.write(message)
+                #    CHANGED> Added channels for still camera's'
+#                outputImage = os.path.join(framesDir, os.path.basename(imgFilename) + fileFormat)
+                outputIMG = os.path.join(framesDir, os.path.basename(imgFilename) +".img.thea")
+                outputChannelImage = os.path.join(framesDir, os.path.basename(imgFilename))
+                exporter.getRenderOptions().checkChannels = scn.thea_showChannels
+                checkChannels = exporter.getRenderOptions().checkChannels
+                try:
+                    alphaMode = scn.get('thea_channelAlpha')
+                except:
+                    alphaMode = False
+                if scn.thea_ImgTheaFile:
+                   scriptFile.write('message \"SaveImage %s\"\n' % outputIMG)
+                if checkChannels == True:
+                   try:
+                       if scn.thea_channelNormal:
+                           scriptFile.write('message \"SaveChannel \'Normal\' %s\"\n' % os.path.join(framesDir,"normal",outputChannelImage+"_Normal"+fileFormat ))
+                       if scn.thea_channelPosition:
+                           scriptFile.write('message \"SaveChannel \'Position\' %s\"\n' % os.path.join(framesDir,"position",outputChannelImage+"_Position"+ fileFormat))
+                       if scn.thea_channelUV:
+                           scriptFile.write('message \"SaveChannel \'UV\' %s\"\n' % os.path.join(framesDir,"uv",outputChannelImage+"_UV"+fileFormat))
+                       if scn.thea_channelDepth:
+                           scriptFile.write('message \"SaveChannel \'Depth\' %s\"\n' % os.path.join(framesDir, "depth", outputChannelImage+"_Depth"+fileFormat))
+                       if alphaMode:
+                           scriptFile.write('message \"SaveChannel \'Alpha\' %s\"\n' % os.path.join(framesDir, "alpha", outputChannelImage+"_ALpha"+fileFormat))
+                       if scn.thea_channelObjectId:
+                           scriptFile.write('message \"SaveChannel \'Object Id\' %s\"\n' % os.path.join(framesDir, "object_id", outputChannelImage+"_Object"+fileFormat))
+                       if scn.thea_channelMaterialId:
+                           scriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage+"_MaterID"+fileFormat))
+                       if scn.thea_channelShadow:
+                           scriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage+"_Shadow"+fileFormat))
+            #            CHANGED> Added mask back in CHECK numbering system
+                       if scn.thea_channelMask:
+                           maskIndexList = []
+                           for obName in scn.objects:
+                               ob = obName
+                               if ob.thMaskID == True:
+                                   maskIndex = ob.thMaskIDindex
+                                   if not maskIndex in maskIndexList:
+                                       scriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_Mask" + str(maskIndex) + fileFormat)))
+                                       maskIndexList.append(maskIndex)
+                       if scn.thea_channelRawDiffuseColor:
+                           scriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage+"_rawDiffuseColor"+fileFormat))
+                       if scn.thea_channelRawDiffuseLighting:
+                           scriptFile.write('message \"SaveChannel \'Raw Diffuse Lighting\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_lighting",outputChannelImage+"_rawDiffuseLight"+fileFormat))
+                       if scn.thea_channelRawDiffuseGI:
+                           scriptFile.write('message \"SaveChannel \'Raw Diffuse GI\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_gi",outputChannelImage+"_rawDiffuseGI"+fileFormat))
+                       if scn.thea_channelSelfIllumination:
+                           scriptFile.write('message \"SaveChannel \'Self Illumination\' %s\"\n' % os.path.join(framesDir,"self_illumination",outputChannelImage+"_SelfIllumunitation"+fileFormat))
+                       if scn.thea_channelDirect:
+                           scriptFile.write('message \"SaveChannel \'Direct\' %s\"\n' % os.path.join(framesDir, "direct", outputChannelImage+"_Direct"+fileFormat))
+                       if scn.thea_channelAO:
+                           scriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % os.path.join(framesDir, "ao", outputChannelImage+"_AO"+fileFormat))
+                       if scn.thea_channelGI:
+                            scriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage+"_GI"+fileFormat))
+                       if scn.thea_channelSSS:
+                            scriptFile.write('message \"SaveChannel \'SSS\' %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage+"_SSS"+fileFormat))
+                       if scn.thea_channelSeparatePassesPerLight:
+                            scriptFile.write('message \"SaveChannel Separate Passes Per Light %s\"\n' % os.path.join(framesDir, "PassesPerLight", outputChannelImage+"_PassesPerLight+"+fileFormat))
+                       if scn.thea_channelReflection:
+                           scriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage+"_Reflection"+fileFormat))
+                       if scn.thea_channelRefraction:
+                           scriptFile.write('message \"SaveChannel \'Refraction\' %s\"\n' % os.path.join(framesDir, "refraction", outputChannelImage+"_Refraction"+fileFormat))
+                       if scn.thea_channelTransparent:
+                           scriptFile.write('message \"SaveChannel \'Transparent\' %s\"\n' % os.path.join(framesDir, "transparent", outputChannelImage+"_Transparent"+fileFormat))
+                       if scn.thea_channelIrradiance:
+                           scriptFile.write('message \"SaveChannel \'Irradiance\' %s\"\n' % os.path.join(framesDir,"irradiance",outputChannelImage+"_Irradiance"+fileFormat))
+                   except: pass
                 firstFrame = False
 
 
@@ -2427,7 +2666,8 @@ def renderFrame(scene,frame,anim=True):
 
     global guiSets
     global scn, exportPath, command, tmpTheaRenderFile, outputImage
-
+    maskIndex = []
+    maskIndexList = []
     exporter=initExporter()
     scn = scene
     (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene)
@@ -2463,7 +2703,7 @@ def renderFrame(scene,frame,anim=True):
         alphaMode = False
 
 
-    channels = ('normal','position','uv','depth','alpha','object_id','material_id','shadow','mask','raw_diffuse_color','raw_diffuse_lighting','raw_diffuse_gi','self_illumination','direct','ao','gi','sss','reflection','refraction','transparent','irradiance')
+    channels = ('normal','position','uv','depth','alpha','object_id','material_id','shadow','mask','raw_diffuse_color','raw_diffuse_lighting','raw_diffuse_gi','self_illumination','direct','ao','gi','sss','passes per light','reflection','refraction','transparent','irradiance')
     if anim:
         framesDir = os.path.join(exportPath,"~thexport","frames")
         if not os.path.isdir(framesDir):
@@ -2588,8 +2828,19 @@ def renderFrame(scene,frame,anim=True):
                 saveScriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage + fileFormat))
             if exporter.getRenderOptions().shadowChannel:
                 saveScriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage + fileFormat))
-    #         if exporter.getRenderOptions().maskChannel:
-    #             scriptFile.write('message \"SaveChannel Mask %s\"\n' % os.path.join(framesDir,"mask",outputChannelImage + fileFormat))
+#            CHANGED> Added mask back in CHECK numbering system
+            if exporter.getRenderOptions().maskChannel:
+                maskIndexList = []
+                for obName in scn.objects:
+                    ob = obName
+                    if ob.thMaskID == True:
+                        maskIndex = ob.thMaskIDindex
+                        if not maskIndex in maskIndexList:
+                            saveScriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_Mask" + str(maskIndex) + fileFormat)))
+                            maskIndexList.append(maskIndex)
+    #                    thea_globals.log.debug("Mask Index Number: %s" % maskIndex)
+#            if exporter.getRenderOptions().invertMaskChannel:
+#                scriptFile.write('message \"SaveChannel Mask %s\"\n' % os.path.join(framesDir,"mask",outputChannelImage + fileFormat))
             if exporter.getRenderOptions().rawDiffuseColorChannel:
                 saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage + fileFormat))
             if exporter.getRenderOptions().rawDiffuseLightingChannel:
@@ -2604,8 +2855,11 @@ def renderFrame(scene,frame,anim=True):
                 saveScriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % os.path.join(framesDir, "ao", outputChannelImage + fileFormat))
             if exporter.getRenderOptions().giChannel:
                 saveScriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage + fileFormat))
-    #         if exporter.getRenderOptions().sssChannel:
-    #             scriptFile.write('message \"SaveChannel SSS %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage + fileFormat))
+#            CHANGED> Turned this backon + light passes
+            if exporter.getRenderOptions().sssChannel:
+                scriptFile.write('message \"SaveChannel SSS %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage + fileFormat))
+            if exporter.getRenderOptions().separatePassesPerLightChannel:
+                scriptFile.write('message \"SaveChannel Passes Per Light %s\"\n' % os.path.join(framesDir, "passes per light", outputChannelImage + fileFormat))
             if exporter.getRenderOptions().reflectionChannel:
                 saveScriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage + fileFormat))
             if exporter.getRenderOptions().refractionChannel:
@@ -2617,10 +2871,32 @@ def renderFrame(scene,frame,anim=True):
 
 #         args.append("-exit")
 
-        #save rendered image also in exportPath dir
-        outputImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + fileFormat)
-        outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + ".img.thea")
-        outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name )
+
+#       CHANGED > ADDED MARKER NAMING AND CUSTOM NAMING
+        if exporter.getRenderOptions().customOutput:
+            prefix = exporter.getRenderOptions().customName
+            prefix = prefix + "_"
+            xmlFilename = prefix
+        else:
+            prefix = ""
+        if exporter.getRenderOptions().markerName:
+            frame_current = scn.frame_current
+            markers = scn.timeline_markers
+            for m in markers:
+                if m.frame == frame_current:
+    #                for k,v in scn.timeline_markers.items():
+#                    frame = v.frame
+                    name = m.name
+                    outputImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + fileFormat)
+                    outputIMG = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + ".img.thea")
+                    outputChannelImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name )
+                    thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
+        else:
+            #save rendered image also in exportPath dir
+            outputImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + fileFormat)
+            outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + ".img.thea")
+            outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name )
+
         if color_mode == "RGBA":
             saveScriptFile.write('message \"SaveChannel +Alpha %s\"\n' % outputImage)
             exporter.getRenderOptions().alphaChannel = True
@@ -2648,8 +2924,19 @@ def renderFrame(scene,frame,anim=True):
                 saveScriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % (outputChannelImage + "_material_id" + fileFormat))
             if exporter.getRenderOptions().shadowChannel:
                 saveScriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % (outputChannelImage + "_shadow" + fileFormat))
-    #         if exporter.getRenderOptions().maskChannel:
-    #             scriptFile.write('message \"SaveChannel Mask %s\"\n' % (outputChannelImage + "_mask" + fileFormat))
+#            CHANGED> Added mask back in CHECK numbering system
+            if exporter.getRenderOptions().maskChannel:
+                maskIndexList = []
+                for obName in scn.objects:
+                    ob = obName
+                    if ob.thMaskID == True:
+                        maskIndex = ob.thMaskIDindex
+                        if not maskIndex in maskIndexList:
+                            saveScriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, outputChannelImage + "_Mask" + str(maskIndex) + fileFormat))
+                            maskIndexList.append(maskIndex)
+                        thea_globals.log.debug("Mask Index Number: %s" % maskIndexList)
+#            if exporter.getRenderOptions().maskChannel:
+#                saveScriptFile.write('message \"SaveChannel \'Mask %s\' %s\"\n' % ("#3", outputChannelImage + "_mask" + fileFormat))
             if exporter.getRenderOptions().rawDiffuseColorChannel:
                 saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % (outputChannelImage + "_raw_diffuse_color" + fileFormat))
             if exporter.getRenderOptions().rawDiffuseLightingChannel:
@@ -2664,8 +2951,11 @@ def renderFrame(scene,frame,anim=True):
                 saveScriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % (outputChannelImage + "_ao" + fileFormat))
             if exporter.getRenderOptions().giChannel:
                 saveScriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % (outputChannelImage + "_gi" + fileFormat))
-    #         if exporter.getRenderOptions().sssChannel:
-    #             scriptFile.write('message \"SaveChannel SSS %s\"\n' % (outputChannelImage + "_sss" + fileFormat))
+            #CHANGED> turned back on + added passes per light
+            if exporter.getRenderOptions().sssChannel:
+                scriptFile.write('message \"SaveChannel SSS %s\"\n' % (outputChannelImage + "_sss" + fileFormat))
+            if exporter.getRenderOptions().separatePassesPerLightChannel:
+                scriptFile.write('message \"SaveChannel Passes Per Light %s\"\n' % (outputChannelImage + "_PassesLight" + fileFormat))
             if exporter.getRenderOptions().reflectionChannel:
                 saveScriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % (outputChannelImage + "_reflection" + fileFormat))
             if exporter.getRenderOptions().refractionChannel:
@@ -2840,6 +3130,7 @@ def renderPreview(scene,):
                     <Parameter Name="Shift Y (mm)" Type="Real" Value="-0"/>\n\
                     <Parameter Name="Resolution" Type="String" Value="%sx%s"/>\n\
                     <Parameter Name="Frame" Type="Transform" Value="1 -2.6783e-09 7.39087e-09 0.0226645 -7.81677e-09 -0.238969 0.971027 -3.96692 -8.34513e-10 -0.971027 -0.238969 1.376 "/>\n\
+                    message "./Scenes/Active/Cameras/camera/Make Active"/>\n\
                     <Parameter Name="Focus Distance" Type="Real" Value="1"/>\n\
                     <Parameter Name="Shutter Speed" Type="Real" Value="500"/>\n\
                     <Parameter Name="f-number" Type="String" Value="Pinhole"/>\n\
@@ -2862,9 +3153,12 @@ def renderPreview(scene,):
     scriptFile.write('message \"Load ' + theaPreviewFilename + '\"\n')
     #if thea_globals.previewScene.startswith("Addon"):
     if previewScene.startswith("Addon"):
-        scriptFile.write('message \"Merge %s 0 0 1 0 0 \"\n' % camFilename )
+#        CHANGED Added add command for merge
+        scriptFile.write('message \"Merge %s 0 0 2 0 0 \"\n' % camFilename )
     else:
         scriptFile.write('set \"./Scenes/Active/Cameras/Active/Resolution\" = \"%sx%s\"\n' % (x,y))
+#    CHANGED > Added make active for better preview
+    scriptFile.write('message "./Scenes/Active/Cameras/Camera/Make Active\"\n')
     scriptFile.write('message \"LoadObject \'./Scenes/Active/Proxies/Appearance/@Material@\' \'%s\'\" \n' % matFilename)
     scriptFile.write('message "./UI/Viewport/Tweak Material"\n')
     if getattr(material, "thea_EnableUnbiasedPreview"):
@@ -3788,6 +4082,7 @@ def updateActiveMaterialColor():
         prevImageOb = Preview()
         tempDir = tempfile.gettempdir()
         outputImage = os.path.join(tempDir, "matPreview.bmp")
+        thea_globals.log.debug("TempDIr Preview: %s" % tempDir)
         prevImageOb.outFile = outputImage
         prevImageOb.read(extMatFile)
         setattr(material, 'diffuse_color', prevImageOb.centerColor)
@@ -4083,6 +4378,7 @@ class TheaRender(bpy.types.RenderEngine):
                 time.sleep(1)
                 message = b'version'
                 data = sendSocketMsg('localhost', port, message)
+
                 if data.find('v')>0:
                     socketServerIsRunning = True
 
@@ -4101,9 +4397,10 @@ class TheaRender(bpy.types.RenderEngine):
                         message = bytes(line.rstrip('\n'), 'UTF-8')
                         data = sendSocketMsg('localhost', port, message)
 
+
             message = b'Render'
             data = sendSocketMsg('localhost', port, message)
-
+#            if (data=="Warning:"):
 #             sys.path.append(theaDir)
             #sys.path.append(theaDir+"/Plugins/Presto")
             ##print(sys.path)
@@ -4150,12 +4447,13 @@ class TheaRender(bpy.types.RenderEngine):
                             self.update_stats(status, "THEA: Saving output images " )
                             fileName = args[1]
                             if os.path.exists(fileName):
-                                trFile = open(fileName, "r")
+                                trFile = open(fileName, "r", encoding='UTF-8')
                                 i = 0
                                 for line in trFile:
-                                    message = bytes(line.rstrip('\n'), 'UTF-8')
+                                    message = bytes(line.rstrip('\n'), 'utf-8')
 #                                   CHANGED > move data = sendSocket.... to top, channels and image where not loadded into Blender else
                                     data = sendSocketMsg('localhost', port, message)
+                                    thea_globals.log.debug("save: %s" % message)
                                     # try to find messages saving channels and if found create or reload image with channel
                                     if (line.find("SaveChannel") > 0) and (line.find("~thexport")>0):
                                         channelName = ""
@@ -4166,30 +4464,41 @@ class TheaRender(bpy.types.RenderEngine):
                                         else:
                                             channelName = line.split(" ")[2]
                                             channelFile = line.split(" ")[3].replace("\"", "").rstrip()
-                                        #print("Channel: %s, file: %s" %(channelName, channelFile))
+#                                       CHANGED > Added saving output channel to to send to blender
+                                        thea_globals.log.debug("Channel MaskList %s" % channelFile)
+                                        self.update_stats(status, "Saving: " + channelName + " channel")
                                         img = None
                                         img = bpy.data.images.get("Channel %s" % channelName)
-                                        self.update_stats(status, "Saving: " + channelName + " channel")
                                         if img == None:
                                             try:
                                                 img = bpy.data.images.load(channelFile)
                                                 img.name = "Channel %s" % channelName
                                             except:
                                                 img = None
+#                                        CHANGED> Added reload, new renders wont reload otherwise
+                                        try:
+                                            img = bpy.data.images["Channel %s" % channelName].reload()
+                                        except:
+                                            img = None
 
                                     if (line.find("SaveImage") > 0) or (line.find("SaveLayeredImage") > 0):
                                         message = 'message "SaveImage %s"' % tmpTheaRenderFile
                                         data = sendSocketMsg('localhost', port, message.encode())
                                         update_image(tmpTheaRenderFile, 0, 0, 0, x, y);
-                                        imageFile = line.split(" ")[2].replace("\"", "").rstrip()
+#                                       CHANGED > Redid stripping. scnes with spaces would get loaded otherwise
+                                        imageFile = line.replace("message \"SaveImage ","").replace("\"", "").rstrip()
+#                                        imageFile = line.split(" ")[2].replace("\"", "").rstrip()
                                         img = None
                                         img = bpy.data.images.get("TheaRenderResult")
                                         if img == None:
                                             try:
                                                 img = bpy.data.images.load(imageFile)
                                                 img.name = "TheaRenderResult"
+                                                thea_globals.log.debug("ThearenderResult Imagea: %s" % imageFile)
                                             except:
                                                 img = None
+#                                       CHANGED> Added reload, new renders wont reload otherwise
+                                        img = bpy.data.images["TheaRenderResult"].reload()
 
                                     data = sendSocketMsg('localhost', port, message)
 #                             update_image(outputImage, 0, 0, 0, x, y);
