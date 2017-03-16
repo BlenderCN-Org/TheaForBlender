@@ -4020,10 +4020,13 @@ class XMLExporter:
                         if do_uvs:
                             uvlayers = mesh.uv_layers
                             uvtextures = mesh.uv_textures
-                            t_uv = [None] * len(mesh.loops) * 2
-                            for uvindex, (uvlayer, uvtexture) in enumerate(zip(uvlayers, uvtextures)):
-                                uvlayer.data.foreach_get("uv", t_uv)
+                            for uv_layer in mesh.uv_layers:
+                                t_uv = [None] * len(mesh.loops) * 2
+                                uv_layer.data.foreach_get("uv", t_uv)
                                 modelUVs.append(t_uv)
+#                             for uvindex, (uvlayer, uvtexture) in enumerate(zip(uvlayers, uvtextures)):
+#                                 uvlayer.data.foreach_get("uv", t_uv)
+#                                 modelUVs.append(t_uv)
                     
                     #print("----------------\n\n")
                     
