@@ -39,6 +39,7 @@ from TheaForBlender.thea_render_main import *
 from . import thea_globals
 import mathutils
 import re
+import numpy as np
 
 if os.name == "nt":
     try:
@@ -4005,7 +4006,7 @@ class XMLExporter:
                                             uv_layer = mesh.uv_layers[u].data
                     #                        print("    UV: %r" % uv_layer[j].uv)
                                             modelUVs[u][(i+n )*2+0] = uv_layer[j].uv[0]
-                                            modelUVs[u][(i+n )*2+1] = uv_layer[j].uv[1]
+                                            modelUVs[u][(i+n )*2+1] = 1-uv_layer[j].uv[1]
                                     for m in (0,1,2):
                                         nt_no[(i+n )*3+m] = mesh.loops[j].normal[m]
                                     n += 1
@@ -4023,16 +4024,12 @@ class XMLExporter:
                             for uv_layer in mesh.uv_layers:
                                 t_uv = [None] * len(mesh.loops) * 2
                                 uv_layer.data.foreach_get("uv", t_uv)
-                                modelUVs.append(t_uv)
-#                             for uvindex, (uvlayer, uvtexture) in enumerate(zip(uvlayers, uvtextures)):
-#                                 uvlayer.data.foreach_get("uv", t_uv)
-#                                 modelUVs.append(t_uv)
+                                x = np.array(t_uv[0::2])
+                                y = np.array(t_uv[1::2])
+                                n_y = 1-y
+                                n_t_uv = np.insert(n_y, np.arange(len(x)),x)                                                                
+                                modelUVs.append(n_t_uv)
                     
-                    #print("----------------\n\n")
-                    
-                    #print("t_co: ", len(t_co), t_co)
-                    #print("t_vn: ", len(t_vn), t_vn)
-                    #print("t_uv: ", len(modelUVs), modelUVs)
                     
                     modelFile = open(modelPath, "wb")
                     
