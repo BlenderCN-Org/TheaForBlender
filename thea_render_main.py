@@ -620,8 +620,9 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
             if camOb.is_visible(scene):
                 cam = ThCamera()
                 cam.name = camOb.name
-#               CHANGED > Added pinhole
+#               CHANGED > Added pinhole + added DOFpercentage
                 cam.pinhole = camOb.thea_pinhole
+                cam.enableDOFpercentage = camOb.thea_enableDOFpercentage
                 cam.pixels = resX
                 cam.lines = resY
 
@@ -660,6 +661,7 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 #                   CHANGED > to try, was getting error when nothing was changed from startup file
                     try:
                         aperture = camOb["aperture"]
+                        DOFpercentage = camOb["thea_DOFpercentage"]
                     except: pass
 #                    added this line to check none distance
                     if camData.dof_distance == 0 and camData.dof_object:
@@ -675,6 +677,13 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                                 cam.fNumber = aperture
                             else:
                                 cam.fNumber = "Pinhole"
+                        except: pass
+                        try:
+                            if cam.enableDOFpercentage == 1:
+                                #print("***PINHOLE CHECK: ", cam.pinhole)
+                                cam.DOFpercentage = DOFpercentage
+                            else:
+                                cam.DOFpercentage = 0
                         except: pass
                     else:
                             cam.fNumber = 0
@@ -721,6 +730,13 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                         else:
                             cam.fNumber = "Pinhole"
                         #print("***PINHOLE CHECK: B", cam.pinhole)
+                    except: pass
+                    try:
+                        if cam.enableDOFpercentage == 1:
+                            #print("***PINHOLE CHECK: ", cam.pinhole)
+                            cam.DOFpercentage = DOFpercentage
+                        else:
+                            cam.DOFpercentage = 0
                     except: pass
                 else:
                     cam.fNumber = aperture
@@ -1714,12 +1730,13 @@ def exportMeshObjects(scene,frame, anim=False, exporter=None, obList=None):
                       expOb.blenderObject = ob
                       expOb.matrix = obD_mat
                       #expOb.name = ob.data.name
+#                      CHANGED> Deleted "C" and "T" for curve and FONT>Object Settings are not applied cause of no name match due to extra letters
                       if obType == 'CURVE':
-                          expOb.name = "C"+ob.name
-                          expOb.meshName = "C"+ob.data.name
+                          expOb.name = ob.name
+                          expOb.meshName = ob.data.name
                       elif obType == 'FONT':
-                          expOb.name = "T"+ob.name
-                          expOb.meshName = "T"+ob.data.name
+                          expOb.name = ob.name
+                          expOb.meshName = ob.data.name
                       else:
                           expOb.name = ob.name
                           expOb.meshName = ob.data.name
@@ -2492,10 +2509,12 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                 if camData.type == "PERSP":
                     cam.focalLength = camData.lens
                     cam.pinhole = camOb.thea_pinhole
+                    cam.enableDOFpercentage = camOb.thea_enableDOFpercentage
 #                    cam.focusDistance = 1
 #                   CHANGED > to try, was getting error when nothing was changed from startup file
                     try:
                         aperture = camOb["aperture"]
+                        DOFpercentage = camOb["thea_DOFpercentage"]
                     except: pass
                     #                    added this line to check none distance
                     if camData.dof_distance == 0 and camData.dof_object:
@@ -2516,6 +2535,13 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                             else:
                                 cam.fNumber = "Pinhole"
                         except: pass
+                        try:
+                            if cam.enableDOFpercentage == 1:
+                                #print("***PINHOLE CHECK: ", cam.pinhole)
+                                cam.DOFpercentage = DOFpercentage
+                            else:
+                                cam.DOFpercentage = 0
+                        except: pass
                     else:
                         cam.fNumber = 0
                         #print("APERTURE B - ALL 0:", aperture)
@@ -2533,10 +2559,18 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                     cam.focusDistance = camData.dof_distance
                     try:
                         aperture = camOb["aperture"]
+                        DOFpercentage = camOb["thea_DOFpercentage"]
                         if cam.pinhole == 0:
                             cam.fNumber = aperture
                         else:
                             cam.fNumber = "Pinhole"
+                    except: pass
+                    try:
+                        if cam.enableDOFpercentage == 1:
+                            #print("***PINHOLE CHECK: ", cam.pinhole)
+                            cam.DOFpercentage = DOFpercentage
+                        else:
+                            cam.DOFpercentage = 0
                     except: pass
                 else:
                     cam.fNumber = 0
@@ -2574,7 +2608,10 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                 fileName = os.path.join(framesDir,os.path.basename(xmlFilename))
                 exporter.write(fileName, "Blender Scene")
                 mergeString = (" 0 0 1 0 0")
-                message = 'message "Merge '+fileName+mergeString+'"\n'
+                if platform.system() == "Darwin":
+                    message = 'message "Merge \''+fileName+'\''+mergeString+'"\n'
+                else:
+                    message = 'message "Merge '+fileName+mergeString+'"\n'
                 scriptFile.write(message)
                 message = 'message "Render"\n'
                 scriptFile.write(message)
