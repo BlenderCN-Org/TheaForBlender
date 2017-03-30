@@ -2752,10 +2752,12 @@ class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
        split = layout.split()
        row.prop(bpy.context.active_object, "autofocus")
 #       split = layout.split()
-       row = layout.row()
+#       row = layout.row()
        colL = split.column()
        colR = split.column()
-       colL.prop(bpy.context.active_object, "thea_pinhole")
+       sub = colL
+       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+       sub.prop(bpy.context.active_object, "thea_pinhole")
        sub = colR.row()
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
 #       print(bpy.data.objects[bpy.context.active_object.name].pinhole)
@@ -2766,11 +2768,30 @@ class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
 #        colL.prop(bpy.context.active_object, "aperture")
 #       colL.prop(bpy.context.active_object, "aperture")
 #       colR.prop(bpy.context.active_object, "pinhole")
+
        split = layout.split()
-       row = layout.row()
+#       row = layout.row()
        colL = split.column()
        colR = split.column()
-       colL.prop(bpy.context.active_object, "thea_diaphragma")
+       colL.label(text="Distance:")
+       colR.prop(bpy.data.cameras[bpy.context.active_object.name], "dof_distance")
+       split = layout.split()
+#       row = layout.row()
+       colL = split.column()
+       colR = split.column()
+       sub = colL
+       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+#       sub.enabled = bpy.data.objects[bpy.context.active_object.name].aperture == False
+       sub.prop(bpy.context.active_object,"thea_enableDOFpercentage")
+       sub = colR.row()
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True
+       sub.prop(bpy.context.active_object, "thea_DOFpercentage")
+       split = layout.split()
+#       row = layout.row()
+       colL = split.column()
+       colR = split.column()
+       colL.label(text="Diaphragm:")
+       colR.prop(bpy.context.active_object, "thea_diaphragma")
        if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
         colR.prop(bpy.context.active_object, "thea_diapBlades")
 #      CHANGED > Added label
@@ -2801,6 +2822,9 @@ class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
        sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
        split = layout.split()
        sub = row
+#    CHANGED> Added better code for GUI
+       row = split.column()
+       sub = split.column()
 #    CHANGED> Added camDOF for zclip near + zclip Far
        row.prop(bpy.context.active_object, "thea_ZclipDOF")
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == True

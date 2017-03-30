@@ -1755,6 +1755,9 @@ class ThCamera:
         self.focusDistance=1 #in meters
         self.shutterSpeed=500
         self.fNumber=5.6
+#       CHANGED> Added DOF %
+        self.enableDOFpercentage = False
+        self.DOFpercentage = 30
 #       CHANGED > Added new sharpness here
         self.sharpness=True
         self.sharpnessWeight=50
@@ -1769,6 +1772,7 @@ class ThCamera:
         self.frame = Transform()
         self.renderRegion = False
         self.region = ""
+        self.camLocked = 1
         self.zClippingNear = False
         self.zClippingFar = False
         self.zClippingNearDistance = 1
@@ -1790,11 +1794,16 @@ class ThCamera:
         file.write('<Parameter Name=\"Auto-Focus\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.autofocus)
         file.write('<Parameter Name=\"Shutter Speed\" Type=\"Real\" Value=\"%s\"/>\n' % self.shutterSpeed)
         file.write('<Parameter Name=\"f-number\" Type=\"String\" Value=\"%s\"/>\n' % self.fNumber)
+#        CHANGED> Added DOF %
+        file.write('<Parameter Name=\"Depth of Field\" Type=\"Real\" Value=\"%s\"/>\n' % (self.DOFpercentage / 100))
+        file.write('<Parameter Name=\"DOF Lock\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.enableDOFpercentage else '0'))
 #       CHANGED > added blades and diaphgrama here
         file.write('<Parameter Name=\"Blades\" Type=\"Integer\" Value=\"%s\"/>\n' % self.blades)
         file.write('<Parameter Name=\"Diaphragm\" Type=\"String\" Value=\"%s\"/>\n' % self.diaphragm)
         file.write('<Parameter Name=\"Projection\" Type=\"String\" Value=\"%s\"/>\n' % self.projection)
         file.write('<Parameter Name=\"Region\" Type=\"String\" Value=\"%s\"/>\n' % self.region)
+#        CHANGED>Added camera lock (handy when its eported so you dont accidently move the camera)
+        file.write('<Parameter Name=\"Locked\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.camLocked)
         file.write('<Parameter Name=\"Render Region\" Type=\"String\" Value=\"%s\"/>\n' % ('1' if self.renderRegion else '0'))
         file.write('<Parameter Name=\"Z-Clipping Near\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.zClippingNear else '0'))
         file.write('<Parameter Name=\"Z-Clipping Far\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.zClippingFar else '0'))
@@ -2789,7 +2798,7 @@ class XMLExporter:
 
         thea_globals.log.debug("Closing file")
         self.file.close()
-        
+
     def mesh_triangulate(self, mesh):
         import bmesh
         bm = bmesh.new()
@@ -2797,15 +2806,15 @@ class XMLExporter:
         bmesh.ops.triangulate(bm, faces=bm.faces)
         bm.to_mesh(mesh)
         bm.free()
-        
+
     def get_materials(self, mesh):
         materials = [0] * len(mesh.materials)
         materials_dict = {}
-    
+
         for p in mesh.polygons:
-            materials[p.material_index] += 1   
+            materials[p.material_index] += 1
         i = 0
-        for m in materials: 
+        for m in materials:
             if m > 0:
                 materials_dict[i] = {"name":mesh.materials[i].name, "face_count":m}
             i+=1
@@ -3547,7 +3556,7 @@ class XMLExporter:
 
 
     def writeModelBinaryNew(self, scn, expOb, frame, anim):
-        '''write model using binary mesh.thea format - new version 
+        '''write model using binary mesh.thea format - new version
 
             :param scn: Blender scene
             :type: scn: bpy_types.Scene
@@ -3665,7 +3674,7 @@ class XMLExporter:
             if not exportGeometry and thea_globals.forceExportGeometry:
                 exportGeometry = True
 
-            mesh = ob.blenderObject.data    
+            mesh = ob.blenderObject.data
 
             try:
                 meshMaterials = mesh.materials
@@ -3752,12 +3761,12 @@ class XMLExporter:
                 self.materialList[self.findMaterial(matName)].blenderMat = bpy.data.materials.get(matName)
                 meshMaterials = mesh.materials
 
-            # check if there are more material slots than 1 
+            # check if there are more material slots than 1
             # and we should do this before triangulating the mesh
-            # and applying the modifiers to work with lower face number 
-            if len(mesh.materials) > 1: 
+            # and applying the modifiers to work with lower face number
+            if len(mesh.materials) > 1:
                 materials_dict = self.get_materials(mesh)
-            elif len(mesh.materials) == 1: 
+            elif len(mesh.materials) == 1:
                 materials_dict = {0: {"name":mesh.materials[0].name, "face_count":1}}
             else:
                 materials_dict = {None:{"name":None, "face_count":None}}
@@ -3773,7 +3782,7 @@ class XMLExporter:
                 exportGeometry = False
 
             thea_globals.log.debug("materials_dict %s" % materials_dict)
-            
+
 
             t4 = time.time()
 #             thea_globals.log.debug("*t4-t3: %s" % (t4-t3))
@@ -3792,7 +3801,7 @@ class XMLExporter:
 #                 mesh.calc_normals()
             except:
                 pass
-            
+
 #             thea_globals.log.debug("mesh %s" % mesh)
 
 
@@ -3837,14 +3846,14 @@ class XMLExporter:
 #             thea_globals.log.debug("exportGeometry2: %s, force: %s" % (exportGeometry, thea_globals.forceExportGeometry))
 
             model = "S"
-            mat_count = 0               
+            mat_count = 0
             for mat_index, mat_desc in materials_dict.items():
                 if mat_desc['face_count'] > 0:
                     mat_count += 1
             if mat_count > 1:
-                model = "C"  
-            thea_globals.log.debug("model: %s", model)  
-                
+                model = "C"
+            thea_globals.log.debug("model: %s", model)
+
 
             for matKey, mat_desc in materials_dict.items():
                 thea_globals.log.debug("matKey: %s, name: %s, faces: %s" % (matKey, mat_desc['name'], mat_desc['face_count']))
@@ -3957,7 +3966,7 @@ class XMLExporter:
                 t9 = time.time()
 #                 thea_globals.log.debug("*t9-t8: %s" % (t9-t8))
 
-#                 thea_globals.log.debug("matFaces: %s %s" % (matFaces, len(matFaces)))            
+#                 thea_globals.log.debug("matFaces: %s %s" % (matFaces, len(matFaces)))
 #                 if exportGeometry and len(matFaces) > 0: #if we should export geometry too
                 if exportGeometry and mat_desc['face_count'] > 0: #if we should export geometry too
 #                     thea_globals.log.debug("mesh3 %s" % mesh)
@@ -3969,30 +3978,30 @@ class XMLExporter:
                     modelUVs = []
                     do_uvs = bool(mesh.uv_layers)
 #                     print("do_uvs: ", do_uvs)
-                   
-                    
+
+
                     # NOTE: Here we assume that loops order matches polygons order!
                     mesh.loops.foreach_get("normal", t_vn)
 #                     thea_globals.log.debug("t_co: %s, t_vi: %s, t_vn: %s" % (len(t_co), len(t_vi), len(t_vn)))
-                    
+
 #                     print("model: %s, materials: %s" % (model, mat_count))
 #                     thea_globals.log.debug("mesh.polygons: %s" % len(mesh.polygons))
                     if model == "C":
                         mat_index = matKey
-                    
+
                         index_num = 0
                         for p in mesh.polygons:
                             if p.material_index == mat_index:
                                 index_num += 3
-                                
-                    
+
+
                         nt_no = [None] * index_num * 3
                         nt_vi = [None] * index_num
                         if do_uvs:
                             modelUVs = [None] * len(mesh.uv_layers)
                             for i in range(0, len(mesh.uv_layers)):
                                 modelUVs[i] = [None] * index_num * 2
-                    
+
                         i=0
                         for p in mesh.polygons:
                             if p.material_index == mat_index:
@@ -4013,7 +4022,7 @@ class XMLExporter:
                                 i += 3
 #                         thea_globals.log.debug("nt_vi: %s", len(nt_vi))
 #                         thea_globals.log.debug("nt_no: %s", len(nt_no))
-                        
+
                     else:
                         modelUVs = []
                         uvlayers = []
@@ -4027,34 +4036,34 @@ class XMLExporter:
                                 x = np.array(t_uv[0::2])
                                 y = np.array(t_uv[1::2])
                                 n_y = 1-y
-                                n_t_uv = np.insert(n_y, np.arange(len(x)),x)                                                                
+                                n_t_uv = np.insert(n_y, np.arange(len(x)),x)
                                 modelUVs.append(n_t_uv)
-                    
-                    
+
+
                     modelFile = open(modelPath, "wb")
-                    
-                    
+
+
                     if len(modelUVs)>1 :
                         magicHeader = 0x54524d02
                     else:
                         magicHeader = 0x54524d01
-                    
+
                     modelFile.write(struct.pack('<l',magicHeader))
-                    
+
                     vertexCount = len(t_co)
                     if vertexCount > 0:
                         modelFile.write(struct.pack('<l',int(vertexCount/3)))
                         modelFile.write(struct.pack("<%df" % (vertexCount), *t_co))
                     #    print("t_co: ", len(t_co), t_co)
-                    
-                    
+
+
                     if model == "C":
                         normalCount = len(nt_no)
                         if normalCount > 0:
                             modelFile.write(struct.pack('<l',int(normalCount/3)))
-                            modelFile.write(struct.pack("<%df" % (normalCount), *nt_no))        
+                            modelFile.write(struct.pack("<%df" % (normalCount), *nt_no))
                     #        print("nt_no: ", len(t_co), t_co)
-                            
+
                         triangleCount = len(nt_vi)
                         if triangleCount > 0:
                             modelFile.write(struct.pack('<l',int(triangleCount/3)))
@@ -4065,12 +4074,12 @@ class XMLExporter:
                         if normalCount > 0:
                             modelFile.write(struct.pack('<l',int(normalCount/3)))
                             modelFile.write(struct.pack("<%df" % (normalCount), *t_vn))
-                        
+
                         triangleCount = len(t_vi)
                         if triangleCount > 0:
                             modelFile.write(struct.pack('<l',int(triangleCount/3)))
                             modelFile.write(struct.pack("<%dl" % (triangleCount), *t_vi))
-                    
+
                     if len(modelUVs)>1:
                         modelFile.write(struct.pack('<l',len(modelUVs)))
                         for modelU in modelUVs:
@@ -4078,17 +4087,17 @@ class XMLExporter:
                             modelFile.write(struct.pack('<l',int(uvCount/2)))
                             modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
                     #        print("modelU: ", len(modelU), modelU)
-                            
+
                     elif len(modelUVs)==1:
                         uvCount = len(modelUVs[0])
                         if vertexCount > 0:
                             modelFile.write(struct.pack('<l',int(uvCount/2)))
                             modelFile.write(struct.pack("<%df" % (uvCount), *modelUVs[0]))
-                    
+
                     modelFile.write(struct.pack('<l',0))
-                    
+
                     modelFile.close()
-                    
+
 
                     if len(materials_dict) > 1:
                         modelGroupFile.write('</Object>\n')
@@ -4954,11 +4963,11 @@ class XMLExporter:
                         tex.offsetY = mtex.offset[1]
                         tex.scaleX = mtex.scale[0]
                         tex.scaleY = mtex.scale[1]
-                        tex.projection = mtex.texture.thea_texture_coords
+                        tex.projection = getattr(bpy.data.textures[mtex.name],"thea_texture_coords")
                         if tex.projection == 'Camera Map':
-                            tex.cameraMapName = mtex.texture.thea_camMapName
+                            tex.cameraMapName = getattr(bpy.data.textures[mtex.name],"thea_camMapName")
                         thea_globals.log.debug("*** Texture Coordinates: %s" % tex.projection)
-                        if mtex.texture_coords == 'UV':
+                        if getattr(bpy.data.textures[mtex.name],"thea_texture_coords") == 'UV':
                             tex.projection = "UV"
                             tex.UVChannel = getattr(bpy.data.textures[mtex.name], "thea_TexUVChannel")
 #                        if mtex.texture_coords == 'GLOBAL':

@@ -630,14 +630,16 @@ def worldUpdated(self, context):
 
     from . import thea_globals
     thea_globals.worldUpdated = True
-    try:
-        if (getattr(context.scene,"thea_IBLTypeMenu") == 'IBL Only') and getattr(context.scene,"thea_IBLEnable") or getattr(context.scene,"thea_locationEnable"):
-#            thea_globals.log.debug("Scene: %s" % bpy.data.scenes['Scene'])
-            setattr(bpy.data.lamps['Sun'], "thea_enableLamp", False)
-        else:
-            setattr(bpy.data.lamps['Sun'], "thea_enableLamp", True)
-    except:
-        pass
+    for sunOb in bpy.data.objects:
+       if sunOb.type == 'LAMP' and sunOb.data.type == 'SUN':
+           sunName = sunOb.data.name
+       try:
+           if (getattr(context.scene,"thea_IBLTypeMenu") == 'IBL Only') and getattr(context.scene,"thea_IBLEnable") or getattr(context.scene,"thea_locationEnable"):
+               setattr(bpy.data.lamps[sunName], "thea_enableLamp", False)
+           else:
+               setattr(bpy.data.lamps[sunName], "thea_enableLamp", True)
+       except:
+           pass
 
 def worldFilenameUpdated(self, context, origin=""):
     '''Create texture and set it when one of the world filename properties are updated
@@ -4155,6 +4157,29 @@ Obj.aperture = bpy.props.FloatProperty(
                 name="f-number",
                 description="Focal lenght/lens diameter, the higher the sharper the image")
 #,update=cameraUpdated)
+#CHANGED> Added DOF distance %
+Obj.thea_enableDOFpercentage = bpy.props.BoolProperty(
+                name="Depth of Field (%)",
+                description="Describes the relative space that stays sharp in the image",
+                default= False)
+
+Obj.thea_DOFpercentage = bpy.props.FloatProperty(
+                min=0,
+#               CHANGED > to lower max setting and better precision
+                max=100,
+                precision=1,
+                default=20,
+                name="DOF (%)",
+                description="Describes the relative space that stays sharp in the image")
+#CHANGED> Added distance (= double bu makes more logic here)
+Obj.dof_distance = bpy.props.FloatProperty(
+                min=0,
+#               CHANGED > to lower max setting and better precision
+                max=10000,
+                precision=1,
+                default=0,
+                name="Distance",
+                description="Distance to the focal point for depth of field")
 
 Obj.shutter_speed = bpy.props.FloatProperty(
                 min=0,
@@ -4213,10 +4238,10 @@ Obj.thea_ZclipDOFmargin = bpy.props.FloatProperty(
                 default=10,
                 name="Falloff (m)",
                 description="Use the fall as the min or max for Z-clipping Far")
-
+#CHANGED > Removed label
 Obj.thea_diaphragma = bpy.props.EnumProperty(
                 items=(("Circular","Circular","Circular"),("Polygonal","Polygonal","Polygonal")),
-                name="Diaphragma",
+                name="",
                 description="The generic shape of the lens",
                 default="Circular")
 

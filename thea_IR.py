@@ -183,10 +183,16 @@ def exportIRCamera(scene, area, exportPath):
             cam.filmHeight = (camOb.scale*1000)/fac
         if camData.dof_distance > 0:
             cam.focusDistance = camData.dof_distance
-            try:
-                aperture = camOb["aperture"]
-                cam.fNumber = aperture
-            except: pass
+            if camData.thea_pinhole == True:
+                try:
+                    aperture = camOb["aperture"]
+                    cam.fNumber = aperture
+                except: pass
+            elif camData.thea_enableDOFpercentage == True:
+                try:
+                    DOFpercentage = camOb["DOFpercentage"]
+                    cam.DOFpercentage = DOFpercentage
+                except:pass
         else:
             cam.fNumber = 0
 #       CHANGED > Added zClipping options here for camera IR render mode
