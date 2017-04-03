@@ -3774,6 +3774,7 @@ class XMLExporter:
 
             if exportGeometry:
                 mesh = ob.blenderObject.to_mesh(scn,True, 'RENDER',calc_tessface=True)
+                self.mesh_triangulate(mesh)
             else:
                 mesh = ob.blenderObject.data
 
@@ -3790,7 +3791,7 @@ class XMLExporter:
 
 
 #             mesh.update(calc_tessface=True)
-            self.mesh_triangulate(mesh)
+#             self.mesh_triangulate(mesh)
 #             thea_globals.log.debug("mesh %s" % mesh)
             try:
                 if getattr(object, 'thNoRecalcNormals', False):
