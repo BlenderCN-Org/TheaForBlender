@@ -4171,6 +4171,7 @@ Obj.thea_DOFpercentage = bpy.props.FloatProperty(
                 default=20,
                 name="DOF (%)",
                 description="Describes the relative space that stays sharp in the image")
+
 #CHANGED> Added distance (= double bu makes more logic here)
 Obj.dof_distance = bpy.props.FloatProperty(
                 min=0,
