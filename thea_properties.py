@@ -4161,7 +4161,7 @@ Obj.aperture = bpy.props.FloatProperty(
 Obj.thea_enableDOFpercentage = bpy.props.BoolProperty(
                 name="Depth of Field (%)",
                 description="Describes the relative space that stays sharp in the image",
-                default= True)
+                default= False)
 
 Obj.thea_DOFpercentage = bpy.props.FloatProperty(
                 min=0,
@@ -4171,6 +4171,7 @@ Obj.thea_DOFpercentage = bpy.props.FloatProperty(
                 default=20,
                 name="DOF (%)",
                 description="Describes the relative space that stays sharp in the image")
+
 #CHANGED> Added distance (= double bu makes more logic here)
 Obj.dof_distance = bpy.props.FloatProperty(
                 min=0,
