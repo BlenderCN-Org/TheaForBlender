@@ -2109,7 +2109,7 @@ class RenderOptions:
         self.lightBlending = False
         self.imageSaving = True
         self.clayrender = False
-        self.clayrenderreflactance = 0
+        self.clayrenderreflectance = 0
         self.filmSaving = True
         self.threads = 0
         self.priority = 0
@@ -2292,7 +2292,7 @@ class RenderOptions:
             file.write('<Parameter Name=\"./Render/Relight\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.lightBlending else '0'))
 #            CHANGED > Added clay render options
             file.write('<Parameter Name=\"./Render/Clay Render/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.clayrender else '0'))
-            file.write('<Parameter Name=\"./Render/Clay Render/Reflectance\" Type=\"Real\" Value=\"%s\"/>\n' % (self.clayrenderreflactance / 100))
+            file.write('<Parameter Name=\"./Render/Clay Render/Reflectance\" Type=\"Real\" Value=\"%s\"/>\n' % (self.clayrenderreflectance / 100))
             file.write('<Parameter Name=\"./Render/Image Saving\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.imageSaving else '0'))
             file.write('<Parameter Name=\"./Render/Film Saving\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.filmSaving else '0'))
             file.write('<Parameter Name=\"./Render/Threads\" Type=\"String\" Value=\"')
