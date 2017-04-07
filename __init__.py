@@ -29,7 +29,7 @@ bl_info = {
     "name": "Thea Render",
     "author": "Grzegorz Rakoczy",
     "version": (1,5,8,759,1455),
-    "blender": (2, 7, 7),
+    "blender": (2, 7, 8),
     "location": "Render>Engine>Thea Render",
     "description": "Thea Render",
     "warning": "",
