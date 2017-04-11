@@ -4690,7 +4690,8 @@ class XMLExporter:
 #             #print("num parents: " + str(num_parents))
 #             #print("num children: " + str(num_children))
 
-            for pindex in range(0, num_parents + num_children):
+            loop_start = 0 if getattr(partSystem.settings, "use_parent_particles", False) else num_parents
+            for pindex in range(loop_start,  num_children + num_parents):
                 #uv_on_emitter works only with real particles, not with children
 #                 thea_globals.log.debug("pindex: %s" % pindex)
 #                 if getattr(partMat, 'thea_ColoredHair', False):
