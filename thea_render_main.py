@@ -1560,27 +1560,34 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
         exportModel = Model()
         ob = mesh[0]
         exportModel.name = mesh[3]
+        thea_globals.log.debug("exporting Particle: %s " % (exportModel.name))
+        
         partSystem = mesh[5]
         partSettings = partSystem.settings
         partMatIdx = partSettings.material
         partMat = ob.material_slots[partMatIdx-1].material
         modifierName = mesh[6]
         fastExport=False
-        #if partMat.get('thea_FastHairExport') == True or partMat.get('thea_FastHairExport') == None:
-        if partMat.thea_FastHairExport:
+        #if partMat.get('thea_FastHairExport') == True or partMat.get('thea_FastHairExport') == None:        
+        if getattr(partMat, 'thea_FastHairExport'):
             fastExport = True
-
+        thea_globals.log.debug("fastExport: %s partMat: %s" % (fastExport, partMat.name))
         if fastExport:
+            t1 = datetime.datetime.now()
             selected = bpy.context.selected_objects
             active = bpy.context.active_object
             # select active object
+            ob.select = True
             bpy.context.scene.objects.active = ob
+            bpy.ops.object.mode_set(mode='EDIT')           
+            bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.modifier_convert(modifier=modifierName)
             bpy.ops.object.mode_set(mode='OBJECT')
             for v in bpy.context.active_object.data.vertices:
                     v.select = True
-            bpy.ops.object.mode_set(mode='EDIT')
             tempObject = bpy.context.active_object
+            bpy.ops.object.mode_set(mode='EDIT')
+            
             if partMat.get('thea_StrandRoot'):
                 rootSize = partMat.get('thea_StrandRoot')
             else:
@@ -1589,6 +1596,8 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.shade_smooth()
             bpy.context.active_object.data.materials.append(partMat)
+            t2 = datetime.datetime.now()
+            thea_globals.log.debug("exporting Particle t2-t1: %s " % (t2-t1))
             name = ob.name+"_"+partSystem.name
             meshName = ob.data.name+"_"+partSystem.name
             obName = name
@@ -1606,17 +1615,23 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
             partMesh = (bpy.context.active_object,obD_mat,None,obName,meshName, isProxy)
             #exporter.writeModelBinary(scn, partMesh, frame, anim)
             exporter.writeModelBinaryNew(scn, expOb, frame, anim)
+            t3 = datetime.datetime.now()
+            thea_globals.log.debug("exporting Particle t3-t2: %s " % (t3-t2))
             bpy.context.scene.objects.active = tempObject
 
             #delete object when it's done
             bpy.ops.object.delete()
             #select back objects
-            for selOb in bpy.context.scene.objects:
-                selOb.select = False
+#             for selOb in bpy.context.scene.objects:
+#                 selOb.select = False
             for selOb in selected:
                 selOb.select = True
             bpy.context.scene.objects.active = active
         else:
+            # something is wrong when exporting particles, but entering edit mode and leaving it fixes the problem
+            bpy.context.scene.objects.active = ob 
+            bpy.ops.object.mode_set(mode='EDIT')           
+            bpy.ops.object.mode_set(mode='OBJECT')
             exporter.writeHairParticlesBinaryNew(scn, mesh, exportModel, frame, anim)
 
 def exportMeshObjects(scene,frame, anim=False, exporter=None, obList=None):
