@@ -1061,7 +1061,7 @@ class MATERIAL_PT_Thea_Strand(MaterialButtonsPanel, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
+        return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
        layout = self.layout
