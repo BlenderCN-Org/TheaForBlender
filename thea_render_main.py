@@ -1408,59 +1408,62 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                 for mod in ob.modifiers:
                     if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
                         psys = mod.particle_system
-                        if psys.settings.type == 'EMITTER':
-                            if psys.settings.render_type=='OBJECT' and psys.settings.dupli_object:
-                                  obj = psys.settings.dupli_object
-                                  name = obj.name
-                                  meshName = obj.data.name
-                                  obName = name
-                                  obD_mat = obj.matrix_world
-                                  obD_mat = ((1.0, 0.0, 0.0, 0.0), #export simple proxy matrix
-                                               (0.0, 1.0, 0.0, 0.0),
-                                               (0.0, 0.0, 1.0, 0.0),
-                                               (0.0, 0.0, 0.0, 1.0))
-                                  expOb = exportObject()
-                                  expOb.blenderObject = obj
-                                  expOb.matrix = obD_mat
-                                  expOb.name = obName
-                                  #expOb.meshName = meshName
-                                  expOb.meshName = obName
-                                  expOb.isProxy = True
-                                  mesh_objects.append(expOb)
-                                  del(expOb)
-                            if psys.settings.render_type=='GROUP' and psys.settings.dupli_group:
-                                mainExpObject = exportObject()
-                                mainExpObject.name = "%s:%s" % (psys.settings.dupli_group.name, ob.name)
-                                mainExpObject.meshName = mainExpObject.name
-                                mainExpObject.matrix = ((1.0, 0.0, 0.0, 0.0), #export simple proxy matrix
-                                                 (0.0, 1.0, 0.0, 0.0),
-                                                 (0.0, 0.0, 1.0, 0.0),
-                                                 (0.0, 0.0, 0.0, 1.0))
+#                         if psys.settings.type == 'EMITTER':
+                        thea_globals.log.debug("psys.settings.render_type: %s" % psys.settings.render_type)
+                        if psys.settings.render_type=='OBJECT' and psys.settings.dupli_object:
+                              obj = psys.settings.dupli_object
+                              thea_globals.log.debug("psys.settings.dupli_object: %s" % psys.settings.dupli_object)
+                              name = obj.name
+                              meshName = obj.data.name
+                              obName = name
+                              obD_mat = obj.matrix_world
+                              obD_mat = ((1.0, 0.0, 0.0, 0.0), #export simple proxy matrix
+                                           (0.0, 1.0, 0.0, 0.0),
+                                           (0.0, 0.0, 1.0, 0.0),
+                                           (0.0, 0.0, 0.0, 1.0))
+                              expOb = exportObject()
+                              expOb.blenderObject = obj
+                              expOb.matrix = obD_mat
+                              expOb.name = obName
+                              #expOb.meshName = meshName
+                              expOb.meshName = obName
+                              expOb.isProxy = True
+                              mesh_objects.append(expOb)
+                              del(expOb)
+                        if psys.settings.render_type=='GROUP' and psys.settings.dupli_group:
+                            mainExpObject = exportObject()
+                            mainExpObject.name = "%s:%s" % (psys.settings.dupli_group.name, ob.name)
+                            mainExpObject.meshName = mainExpObject.name
+                            mainExpObject.matrix = ((1.0, 0.0, 0.0, 0.0), #export simple proxy matrix
+                                             (0.0, 1.0, 0.0, 0.0),
+                                             (0.0, 0.0, 1.0, 0.0),
+                                             (0.0, 0.0, 0.0, 1.0))
 #                                 dupobs = [(dob.object, dob.matrix, dob.object.matrix_basis) for dob in psys.settings.dupli_group.objects]
-                                dupobs = psys.settings.dupli_group.objects
+                            dupobs = psys.settings.dupli_group.objects
 #                                 for obG, dupob_mat, dupob_mat_orig in dupobs:
-                                for obG in dupobs:
-                                    obGType = obG.type
-                                    #print("obG: ", obG.name, obGType)
-                                    if obGType in ('MESH', 'CURVE', 'FONT'):
-                                       name = "%s:%s:%s" %(ob.name,psys.settings.dupli_group.name,obG.name)
-                                       meshName = obG.data.name
-                                       obName = name
-                                       emptyMatrix = ob.matrix_world
-                                       obGMatrix = obG.matrix_world
-                                       multMatrix = emptyMatrix * obGMatrix
-                                       mat = emptyMatrix.inverted() * obG.matrix_local
-                                       expOb = exportObject()
-                                       expOb.blenderObject = obG
-                                       expOb.matrix = mat
-                                       expOb.name = obName
-                                       expOb.meshName = meshName
-                                       #expOb.meshName = obName
-                                       #expOb.name = "obName"
-                                       #expOb.meshName = "meshName"
-                                       expOb.isProxy = True
-            #                            #print("expOb: ", expOb, expOb.blenderObject, expOb.name, expOb.meshName)
-                                       mainExpObject.subobjects.append(expOb)
+                            for obG in dupobs:
+                                obGType = obG.type
+                                #print("obG: ", obG.name, obGType)
+                                if obGType in ('MESH', 'CURVE', 'FONT'):
+                                   name = "%s:%s:%s" %(ob.name,psys.settings.dupli_group.name,obG.name)
+                                   meshName = obG.data.name
+                                   obName = name
+                                   emptyMatrix = ob.matrix_world
+                                   obGMatrix = obG.matrix_world
+                                   multMatrix = emptyMatrix * obGMatrix
+                                   mat = emptyMatrix.inverted() * obG.matrix_local
+#                                    mat = obG.matrix_local
+                                   expOb = exportObject()
+                                   expOb.blenderObject = obG
+                                   expOb.matrix = mat
+                                   expOb.name = obName
+                                   expOb.meshName = meshName
+                                   #expOb.meshName = obName
+                                   #expOb.name = "obName"
+                                   #expOb.meshName = "meshName"
+                                   expOb.isProxy = True
+        #                            #print("expOb: ", expOb, expOb.blenderObject, expOb.name, expOb.meshName)
+                                   mainExpObject.subobjects.append(expOb)
 #                               CHANGED > Added time notation
                                 t1 = datetime.datetime.now()
                                 exporter.writeModelBinaryNew(scn, mainExpObject, frame, anim)
@@ -1485,8 +1488,9 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                 for mod in ob.modifiers:
                     if mod.type == 'PARTICLE_SYSTEM' and mod.show_render:
                         psys = mod.particle_system
+                        thea_globals.log.debug("packages: psys.settings.render_type: %s" % psys.settings.render_type)
                         #print("psys.name: %s " % psys.name)
-                        if psys.settings.type == 'HAIR':
+                        if psys.settings.type == 'HAIR' and psys.settings.render_type not in ('OBJECT', 'GROUP'):
                             render = False
                             modifierName = None
                             for mod in ob.modifiers:
@@ -1508,39 +1512,65 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                                     mesh = (ob,obD_mat,None,obName,meshName,psys, modifierName)
                                 particle_objects.append(mesh)
 
-                        if psys.settings.type == 'EMITTER':
+#                         if psys.settings.type == 'EMITTER':
 #                             if psys.settings.dupli_object:
-                            if psys.settings.render_type=='OBJECT' and psys.settings.dupli_object:
-                              name = psys.settings.dupli_object.name
-                              package = Package()
-                              package.name = name
-                              package.alias = name
-                              for p in psys.particles:
-                                if p.alive_state=="ALIVE":
-                                    pm = p.rotation.to_matrix()*p.size
-                                    frame =          [pm[0][0],pm[0][1],pm[0][2],p.location[0],
-                                                      pm[1][0],pm[1][1],pm[1][2],p.location[1],
-                                                      pm[2][0],pm[2][1],pm[2][2],p.location[2]
-                                                      ]
-                                    package.addFrame(frame)
-                              exporter.addPackage(package)
+                        if psys.settings.render_type=='OBJECT' and psys.settings.dupli_object:
+                          name = psys.settings.dupli_object.name
+                          package = Package()
+                          package.name = name
+                          package.alias = name
+                          i = 0
+                          for p in psys.particles:
+                            if (psys.settings.type == 'EMITTER' and p.alive_state=="ALIVE"):
+                                pm = p.rotation.to_matrix()*p.size
+                                frame =          [pm[0][0],pm[0][1],pm[0][2],p.location[0],
+                                                  pm[1][0],pm[1][1],pm[1][2],p.location[1],
+                                                  pm[2][0],pm[2][1],pm[2][2],p.location[2]
+                                                  ]
+                                package.addFrame(frame)
+                            if psys.settings.type == 'HAIR':
+                                p_scale_mat = mathutils.Matrix.Scale(p.size*psys.settings.hair_length, 4)
+                                p_loc_mat = mathutils.Matrix.Translation(p.hair_keys[0].co_object(ob, mod, p))
+                                ob_loc, ob_rot, ob_sc_mat = ob.matrix_world.decompose()
+                                ob_loc_mat = mathutils.Matrix.Translation(ob_loc)
+                                ob_rot_mat = ob_rot.to_matrix().to_4x4()   
+                                p_loc_rot_mat = (ob_rot.inverted() * p.rotation).to_matrix().to_4x4()
+                                obD_mat = ob_loc_mat *ob_rot_mat * p_loc_mat * p_loc_rot_mat * p_scale_mat    
+                                frame =   [obD_mat[0][0], obD_mat[0][1], obD_mat[0][2], obD_mat[0][3],
+                                       obD_mat[1][0], obD_mat[1][1], obD_mat[1][2], obD_mat[1][3],
+                                       obD_mat[2][0], obD_mat[2][1], obD_mat[2][2], obD_mat[2][3]]
+                                package.addFrame(frame)
+                          exporter.addPackage(package)
 #                             elif psys.settings.dupli_group:
-                            elif psys.settings.render_type=='GROUP' and psys.settings.dupli_group:
-                              name = psys.settings.dupli_group.name
-                              package = Package()
-                              package.name = "%s:%s" % (psys.settings.dupli_group.name, ob.name)#name
-                              package.alias = "%s:%s" % (psys.settings.dupli_group.name, ob.name)#"%s:%s" % (psys.settings.dupli_group.name, psys.settings.name)
-                              #print("2object: %s, package.name: %s, package.alias: %s" %(ob.name, package.name, package.alias))
-                              for p in psys.particles:
-                                    if p.alive_state=="ALIVE":
-                                        pm = p.rotation.to_matrix()*p.size
-                                        frame =          [pm[0][0],pm[0][1],pm[0][2],p.location[0],
-                                                          pm[1][0],pm[1][1],pm[1][2],p.location[1],
-                                                          pm[2][0],pm[2][1],pm[2][2],p.location[2]
-                                                          ]
-                                        package.addFrame(frame)
-                              package.addFrame(frame)
-                              exporter.addPackage(package)
+                        elif psys.settings.render_type=='GROUP' and psys.settings.dupli_group:
+                          name = psys.settings.dupli_group.name
+                          package = Package()
+                          package.name = "%s:%s" % (psys.settings.dupli_group.name, ob.name)#name
+                          package.alias = "%s:%s" % (psys.settings.dupli_group.name, ob.name)#"%s:%s" % (psys.settings.dupli_group.name, psys.settings.name)
+                          #print("2object: %s, package.name: %s, package.alias: %s" %(ob.name, package.name, package.alias))
+                          for p in psys.particles:
+                            if (psys.settings.type == 'EMITTER' and p.alive_state=="ALIVE"):
+#                                 pm = p.rotation.to_matrix()*p.size
+                                pm = (p.rotation.to_matrix()*p.size)*ob.rotation_euler.to_matrix()
+                                frame =          [pm[0][0],pm[0][1],pm[0][2],p.location[0],
+                                                  pm[1][0],pm[1][1],pm[1][2],p.location[1],
+                                                  pm[2][0],pm[2][1],pm[2][2],p.location[2]
+                                                  ]
+                                package.addFrame(frame)
+                            if psys.settings.type == 'HAIR':
+                                p_scale_mat = mathutils.Matrix.Scale(p.size*psys.settings.hair_length, 4)
+                                p_loc_mat = mathutils.Matrix.Translation(p.hair_keys[0].co_object(ob, mod, p))
+                                ob_loc, ob_rot, ob_sc_mat = ob.matrix_world.decompose()
+                                ob_loc_mat = mathutils.Matrix.Translation(ob_loc)
+                                ob_rot_mat = ob_rot.to_matrix().to_4x4()   
+                                p_loc_rot_mat = (ob_rot.inverted() * p.rotation).to_matrix().to_4x4()
+                                obD_mat = ob_loc_mat *ob_rot_mat * p_loc_mat * p_loc_rot_mat * p_scale_mat    
+                                frame =   [obD_mat[0][0], obD_mat[0][1], obD_mat[0][2], obD_mat[0][3],
+                                       obD_mat[1][0], obD_mat[1][1], obD_mat[1][2], obD_mat[1][3],
+                                       obD_mat[2][0], obD_mat[2][1], obD_mat[2][2], obD_mat[2][3]]
+                                package.addFrame(frame)
+                          package.addFrame(frame)
+                          exporter.addPackage(package)
 
 
 
