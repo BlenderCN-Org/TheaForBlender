@@ -329,8 +329,8 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
     bl_idname = "thea.start_ir"
     bl_label = "Start IR"
 #     bl_options = {'REGISTER', 'UNDO'}
-    START_DELAY = 0.1
-    DELAY = START_DELAY
+    START_DELAY = 0.3
+    DELAY = 0.1
     _handle = None
     _timer = None
     region = None
@@ -363,8 +363,8 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
         '''Add timer handler
         '''
         RENDER_PT_thea_startIR._handle = bpy.types.SpaceView3D.draw_handler_add(draw_gl_content, (self, context, self.region, context.area), 'WINDOW', 'POST_PIXEL')
-#         RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(self.DELAY, context.window)
-        RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(self.START_DELAY, context.window)
+        RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(self.DELAY, context.window)
+#         RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(self.START_DELAY, context.window)
 
     @staticmethod
     def handle_remove(context):
@@ -1074,7 +1074,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                             self.report({'INFO'}, "Interactive render started")
                             thea_globals.IRScale = 4
 
-                            time.sleep(self.DELAY)
+                            time.sleep(self.START_DELAY)
                             self.IRStartTime = os.times()[4]
 #                             try:
 #                                 img = bpy.data.images['IR Result']
@@ -1118,26 +1118,26 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                             message = b'version'
                             data = sendSocketMsg('localhost', port, message)
                             ##print("data: ",data)
-                            if data.find('v1.3')>0:
-                                exportIRCamera(context.scene, area, self.exportPath)
-
-                                message = ('message "Merge %s 0 0 1 0 0"' % os.path.join(self.exportPath, 'ir.xml')).encode()
-                                #message = ('message "Merge %s 0 0 1 1 0"' % os.path.join(self.exportPath, 'ir.xml')).encode()
-                                data = sendSocketMsg('localhost', port, message)
-                                #print("message: ",message)
-                                if data.find('Ok'):
-                                    message = 'set "./Cameras/Active" = "%s"' % ("Camera")
-                                    #switch to camera frame
-                                    message = b'message "./UI/Viewport/Theme/RW_CMFR"'
-                                    data = sendSocketMsg('localhost', port, message)
-                                    #print("message: ",message)
-                                    message = 'set "./UI/Viewport/Camera/Resolution" = "%sx%s"' % (resX, resY)
-                                    #print("message: ",message)
-                                    data = sendSocketMsg('localhost', port, message.encode())
-                                    bpy.context.scene.thea_ir_update = True
-                                    #draw_IR_preview(self, context, self.region, self.previewAlpha, self.img, area)
-                                    #time.sleep(0.2) #small delay to give thea time to render anything after merge
-                                    thea_globals.IrIsRunning = True
+#                             if data.find('v1.3')>0:
+#                                 exportIRCamera(context.scene, area, self.exportPath)
+# 
+#                                 message = ('message "Merge %s 0 0 1 0 0"' % os.path.join(self.exportPath, 'ir.xml')).encode()
+#                                 #message = ('message "Merge %s 0 0 1 1 0"' % os.path.join(self.exportPath, 'ir.xml')).encode()
+#                                 data = sendSocketMsg('localhost', port, message)
+#                                 #print("message: ",message)
+#                                 if data.find('Ok'):
+#                                     message = 'set "./Cameras/Active" = "%s"' % ("Camera")
+#                                     #switch to camera frame
+#                                     message = b'message "./UI/Viewport/Theme/RW_CMFR"'
+#                                     data = sendSocketMsg('localhost', port, message)
+#                                     #print("message: ",message)
+#                                     message = 'set "./UI/Viewport/Camera/Resolution" = "%sx%s"' % (resX, resY)
+#                                     #print("message: ",message)
+#                                     data = sendSocketMsg('localhost', port, message.encode())
+#                                     bpy.context.scene.thea_ir_update = True
+#                                     #draw_IR_preview(self, context, self.region, self.previewAlpha, self.img, area)
+#                                     #time.sleep(0.2) #small delay to give thea time to render anything after merge
+#                                     thea_globals.IrIsRunning = True
                                     #print("data: ", data)
 
 
