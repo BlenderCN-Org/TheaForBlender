@@ -1545,6 +1545,8 @@ class VIEW3D_PT_theaIR_Advanced(bpy.types.Panel):
         row.prop(scene,"thea_DrawPreviewto3dView")
         row = box.row()
         row.prop(scene,"thea_SavePreviewtoImage")
+        row = box.row()
+        row.prop(scene,"thea_RefreshDelay")
         if getattr(scene,"thea_DrawPreviewto3dView"):# or getattr(scene,"thea_SavePreviewtoImage"):
             row = box.row()
             row.prop(scene,"thea_Fit3dView")

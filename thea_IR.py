@@ -890,7 +890,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
     def invoke(self, context, event):
 
 
-
+        self.START_DELAY = getattr(bpy.context.scene, 'thea_RefreshDelay')
         self.view3dOffset = [0,0]
         thea_globals.preview3DAlpha = 0.0
         thea_globals.materialUpdated = False
