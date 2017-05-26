@@ -231,6 +231,11 @@ class RENDER_PT_thea_ExportFrame(bpy.types.Operator):
         if not os.path.isdir(exportPath):
             self.report({'ERROR'}, "Please set proper output path before exporting!")
             return {'FINISHED'}
+        from TheaForBlender.thea_render_main import checkTheaExtMat
+        if (checkTheaExtMat()==False):
+            self.report({'ERROR'}, "Please check linked materials")
+#            thea_globals.log.debug("*** CheckMaterials = %s ***" % checkTheaExtMat())
+            return {'FINISHED'}
 
 
         exporter=initExporter()

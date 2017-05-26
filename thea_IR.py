@@ -698,6 +698,10 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                     thea_globals.preview3DAlpha = 0.0
 #                 context.window_manager.event_timer_remove(RENDER_PT_thea_startIR._timer)
 #                 RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(RENDER_PT_thea_startIR.START_DELAY, context.window)
+                if(getattr(context.scene, "theaIRsyncDisplay")):
+#                   message = "RW_DTRB"
+                   message = b'message "./UI/Viewport/Theme/RW_DTRB"'
+                   data = sendSocketMsg('localhost', port, message)
 
             if thea_globals.materialUpdated:
                 thea_updateIR(context)
@@ -919,10 +923,22 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
         if(checkTheaMaterials()==False):
             self.report({'ERROR'}, "Please set materials and lights to get proper render")
             #return {'FINISHED'}
+#        global matExtLink, matNameExt
+#        matExtLink = ""
+#        matNameExt = "TestName"
+        from TheaForBlender.thea_render_main import checkTheaExtMat
+#        checkTheaExtMat(matExtLink, matNameExt)
+#        thea_globals.log.debug("*** CheckMaterials = %s ***" % checkTheaExtMat.matNameExt)
+        if (checkTheaExtMat()==False):
+            self.report({'ERROR'}, "Please check linked materials")
+#            thea_globals.log.debug("*** CheckMaterials = %s ***" % matExtLink)
+            return {'FINISHED'}
         if not os.path.isdir(self.exportPath):
             self.report({'ERROR'}, "Please set proper output path before exporting!")
             return {'FINISHED'}
-
+        if bpy.context.scene.render.use_border:
+            self.report({'ERROR'}, "Please disable Render Border")
+            return {'FINISHED'}
         if context.area.type == 'VIEW_3D':
 
 #             #print("############ area.spaces.active.local_view: ",context.area.spaces.active.local_view)
@@ -1120,7 +1136,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                             ##print("data: ",data)
 #                             if data.find('v1.3')>0:
 #                                 exportIRCamera(context.scene, area, self.exportPath)
-# 
+#
 #                                 message = ('message "Merge %s 0 0 1 0 0"' % os.path.join(self.exportPath, 'ir.xml')).encode()
 #                                 #message = ('message "Merge %s 0 0 1 1 0"' % os.path.join(self.exportPath, 'ir.xml')).encode()
 #                                 data = sendSocketMsg('localhost', port, message)
