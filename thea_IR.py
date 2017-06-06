@@ -1074,7 +1074,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                             self.report({'INFO'}, "Interactive render started")
                             thea_globals.IRScale = 4
 
-                            time.sleep(self.START_DELAY)
+#                             time.sleep(self.START_DELAY)
                             self.IRStartTime = os.times()[4]
 #                             try:
 #                                 img = bpy.data.images['IR Result']
