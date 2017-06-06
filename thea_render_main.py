@@ -1533,9 +1533,9 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                                 p_loc_mat = mathutils.Matrix.Translation(p.hair_keys[0].co_object(ob, mod, p))
                                 ob_loc, ob_rot, ob_sc_mat = ob.matrix_world.decompose()
                                 ob_loc_mat = mathutils.Matrix.Translation(ob_loc)
-                                ob_rot_mat = ob_rot.to_matrix().to_4x4()   
+                                ob_rot_mat = ob_rot.to_matrix().to_4x4()
                                 p_loc_rot_mat = (ob_rot.inverted() * p.rotation).to_matrix().to_4x4()
-                                obD_mat = ob_loc_mat *ob_rot_mat * p_loc_mat * p_loc_rot_mat * p_scale_mat    
+                                obD_mat = ob_loc_mat *ob_rot_mat * p_loc_mat * p_loc_rot_mat * p_scale_mat
                                 frame =   [obD_mat[0][0], obD_mat[0][1], obD_mat[0][2], obD_mat[0][3],
                                        obD_mat[1][0], obD_mat[1][1], obD_mat[1][2], obD_mat[1][3],
                                        obD_mat[2][0], obD_mat[2][1], obD_mat[2][2], obD_mat[2][3]]
@@ -1562,9 +1562,9 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                                 p_loc_mat = mathutils.Matrix.Translation(p.hair_keys[0].co_object(ob, mod, p))
                                 ob_loc, ob_rot, ob_sc_mat = ob.matrix_world.decompose()
                                 ob_loc_mat = mathutils.Matrix.Translation(ob_loc)
-                                ob_rot_mat = ob_rot.to_matrix().to_4x4()   
+                                ob_rot_mat = ob_rot.to_matrix().to_4x4()
                                 p_loc_rot_mat = (ob_rot.inverted() * p.rotation).to_matrix().to_4x4()
-                                obD_mat = ob_loc_mat *ob_rot_mat * p_loc_mat * p_loc_rot_mat * p_scale_mat    
+                                obD_mat = ob_loc_mat *ob_rot_mat * p_loc_mat * p_loc_rot_mat * p_scale_mat
                                 frame =   [obD_mat[0][0], obD_mat[0][1], obD_mat[0][2], obD_mat[0][3],
                                        obD_mat[1][0], obD_mat[1][1], obD_mat[1][2], obD_mat[1][3],
                                        obD_mat[2][0], obD_mat[2][1], obD_mat[2][2], obD_mat[2][3]]
@@ -1591,14 +1591,14 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
         ob = mesh[0]
         exportModel.name = mesh[3]
         thea_globals.log.debug("exporting Particle: %s " % (exportModel.name))
-        
+
         partSystem = mesh[5]
         partSettings = partSystem.settings
         partMatIdx = partSettings.material
         partMat = ob.material_slots[partMatIdx-1].material
         modifierName = mesh[6]
         fastExport=False
-        #if partMat.get('thea_FastHairExport') == True or partMat.get('thea_FastHairExport') == None:        
+        #if partMat.get('thea_FastHairExport') == True or partMat.get('thea_FastHairExport') == None:
         if getattr(partMat, 'thea_FastHairExport'):
             fastExport = True
         thea_globals.log.debug("fastExport: %s partMat: %s" % (fastExport, partMat.name))
@@ -1609,7 +1609,7 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
             # select active object
             ob.select = True
             bpy.context.scene.objects.active = ob
-            bpy.ops.object.mode_set(mode='EDIT')           
+            bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.modifier_convert(modifier=modifierName)
             bpy.ops.object.mode_set(mode='OBJECT')
@@ -1617,7 +1617,7 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                     v.select = True
             tempObject = bpy.context.active_object
             bpy.ops.object.mode_set(mode='EDIT')
-            
+
             if partMat.get('thea_StrandRoot'):
                 rootSize = partMat.get('thea_StrandRoot')
             else:
@@ -1659,8 +1659,8 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
             bpy.context.scene.objects.active = active
         else:
             # something is wrong when exporting particles, but entering edit mode and leaving it fixes the problem
-            bpy.context.scene.objects.active = ob 
-            bpy.ops.object.mode_set(mode='EDIT')           
+            bpy.context.scene.objects.active = ob
+            bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.object.mode_set(mode='OBJECT')
             exporter.writeHairParticlesBinaryNew(scn, mesh, exportModel, frame, anim)
 
@@ -4114,6 +4114,27 @@ def checkTheaMaterials(): #check if any Thea material was modified by the user
                 return modified
     return modified
 
+
+def checkTheaExtMat():
+    '''check if Thea linked materials are live
+
+        :return: False if missing link
+        :rtype: bool
+    '''
+    matExtLink = True
+    for mat in bpy.data.materials:
+        if getattr(mat, "thea_extMat"):
+            extMat = os.path.exists(os.path.abspath(bpy.path.abspath(mat.get('thea_extMat'))))
+            if extMat == False:
+                thea_globals.log.debug("Missing Mat ExtMat: %s = %s" % (mat.name, extMat))
+                matExtLink = False
+#                matNameExt = mat.name
+#                return (matExtLink, matNameExt)
+                return matExtLink
+            else:
+                pass
+    return True
+
 def updateActiveMaterialColor():
     '''Update active material diffuse color using color values from center of the embeded material preview
     '''
@@ -4200,6 +4221,10 @@ class TheaRender(bpy.types.RenderEngine):
             if(checkTheaMaterials()==False):
                 self.report({'ERROR'}, "Please set materials and lights to get proper render")
                 #return {'FINISHED'}
+            if (checkTheaExtMat()==False):
+                self.report({'ERROR'}, "Please check linked materials")
+#            thea_globals.log.debug("*** CheckMaterials = %s ***" % checkTheaExtMat())
+                return {'FINISHED'}
             if not os.path.isdir(exportPath):
                 self.report({'ERROR'}, "Please set proper output path before exporting!")
                 return {'FINISHED'}
