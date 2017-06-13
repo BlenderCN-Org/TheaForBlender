@@ -698,10 +698,10 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                     thea_globals.preview3DAlpha = 0.0
 #                 context.window_manager.event_timer_remove(RENDER_PT_thea_startIR._timer)
 #                 RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(RENDER_PT_thea_startIR.START_DELAY, context.window)
-                if(getattr(context.scene, "theaIRsyncDisplay")):
-#                   message = "RW_DTRB"
-                   message = b'message "./UI/Viewport/Theme/RW_DTRB"'
-                   data = sendSocketMsg('localhost', port, message)
+#                 if(getattr(context.scene, "theaIRsyncDisplay")):
+# #                   message = "RW_DTRB"
+#                    message = b'message "./UI/Viewport/Theme/RW_DTRB"'
+#                    data = sendSocketMsg('localhost', port, message)
 
             if thea_globals.materialUpdated:
                 thea_updateIR(context)
