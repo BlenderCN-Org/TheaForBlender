@@ -1848,7 +1848,8 @@ class EnvironmentOptions:
             if self.wrapping == "Spherical":
                 file.write("Spherical")
             file.write("\"/>\n")
-            file.write('<Parameter Name=\"IBL Type\" Type="String" Value=\"%s\"/>\n' % (self.iblType))
+            if identifier == "Illumination Mapping":
+                file.write('<Parameter Name=\"IBL Type\" Type="String" Value=\"%s\"/>\n' % (self.iblType))
             file.write('<Parameter Name=\"./%s/Intensity\" Type=\"Real\" Value=\"%s\"/>\n' % (identifier,self.intensity))
             file.write('<Parameter Name=\"./%s/Rotation" Type=\"Real\" Value="%s"/>\n' % (identifier, self.rotation))
             if self.enabledParameter:
