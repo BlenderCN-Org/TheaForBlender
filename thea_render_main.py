@@ -1393,7 +1393,6 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
         :type exporter: thea_exporter.XMLExporter
         :param obList: list of objects to export
         :type obList: list
-
     '''
 
     particle_objects = []
@@ -1463,6 +1462,7 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
                                    #expOb.meshName = "meshName"
                                    expOb.isProxy = True
         #                            #print("expOb: ", expOb, expOb.blenderObject, expOb.name, expOb.meshName)
+#                                   thea_globals.log.debug("*** mainExpObject: %s" % mainExpObject.name)
                                    mainExpObject.subobjects.append(expOb)
 #                               CHANGED > Added time notation
                                 t1 = datetime.datetime.now()
@@ -1660,8 +1660,9 @@ def exportParticles(scene,frame, anim=False, exporter=None, obList=None):
         else:
             # something is wrong when exporting particles, but entering edit mode and leaving it fixes the problem
             bpy.context.scene.objects.active = ob
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.object.mode_set(mode='OBJECT')
+            # Temp turned this off, caused errors in production renders with certain setups
+#            bpy.ops.object.mode_set(mode='EDIT')
+#            bpy.ops.object.mode_set(mode='OBJECT')
             exporter.writeHairParticlesBinaryNew(scn, mesh, exportModel, frame, anim)
 
 def exportMeshObjects(scene,frame, anim=False, exporter=None, obList=None):
@@ -4117,23 +4118,33 @@ def checkTheaMaterials(): #check if any Thea material was modified by the user
 
 def checkTheaExtMat():
     '''check if Thea linked materials are live
-
         :return: False if missing link
         :rtype: bool
     '''
+    missing_Materials = []
+    matNameExt = ""
+    matMesh = ""
     matExtLink = True
     for mat in bpy.data.materials:
         if getattr(mat, "thea_extMat"):
             extMat = os.path.exists(os.path.abspath(bpy.path.abspath(mat.get('thea_extMat'))))
             if extMat == False:
-                thea_globals.log.debug("Missing Mat ExtMat: %s = %s" % (mat.name, extMat))
+#                matMesh = bpy.context.active_object.name
                 matExtLink = False
-#                matNameExt = mat.name
-#                return (matExtLink, matNameExt)
-                return matExtLink
+                matNameExt = mat.name
+                MNAME = matNameExt
+                obs = []
+                for o in bpy.data.objects:
+                    if isinstance(o.data, bpy.types.Mesh) and MNAME in o.data.materials:
+#                        obs.append(o.name)
+                        matMesh = o.name
+                missing_Materials.append("%s > Mesh obj: %s" % (matNameExt, matMesh))
+#                return [matExtLink, matNameExt, matMesh]
             else:
                 pass
-    return True
+        missing_Materials = sorted(list(set(missing_Materials)))
+#    thea_globals.log.debug("*** Missing Material list: %s" % missing_Materials)
+    return [matExtLink, matNameExt, matMesh, missing_Materials]
 
 def updateActiveMaterialColor():
     '''Update active material diffuse color using color values from center of the embeded material preview

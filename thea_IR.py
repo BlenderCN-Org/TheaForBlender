@@ -922,16 +922,18 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
         from TheaForBlender.thea_render_main import checkTheaMaterials
         if(checkTheaMaterials()==False):
             self.report({'ERROR'}, "Please set materials and lights to get proper render")
-            #return {'FINISHED'}
-#        global matExtLink, matNameExt
-#        matExtLink = ""
-#        matNameExt = "TestName"
+            return {'FINISHED'}
+
         from TheaForBlender.thea_render_main import checkTheaExtMat
-#        checkTheaExtMat(matExtLink, matNameExt)
-#        thea_globals.log.debug("*** CheckMaterials = %s ***" % checkTheaExtMat.matNameExt)
-        if (checkTheaExtMat()==False):
-            self.report({'ERROR'}, "Please check linked materials")
-#            thea_globals.log.debug("*** CheckMaterials = %s ***" % matExtLink)
+        checkTheaExtMat()
+        valuesExt = checkTheaExtMat()
+        if (valuesExt[0]==False):
+#            self.report({'ERROR'}, "Please link Material: %s > Object: %s" % (valuesExt[1], valuesExt[2]))
+            missing_Mat = ""
+            for mat in valuesExt[3]:
+                missing_Mat = missing_Mat+"\n"+mat
+            self.report({'ERROR'}, "Please link Material:%s" % missing_Mat)
+#            thea_globals.log.debug("*** CheckMaterials = %s ***" % valuesExt[1])
             return {'FINISHED'}
         if not os.path.isdir(self.exportPath):
             self.report({'ERROR'}, "Please set proper output path before exporting!")
