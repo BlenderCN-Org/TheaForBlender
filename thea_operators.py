@@ -231,10 +231,21 @@ class RENDER_PT_thea_ExportFrame(bpy.types.Operator):
         if not os.path.isdir(exportPath):
             self.report({'ERROR'}, "Please set proper output path before exporting!")
             return {'FINISHED'}
+#        from TheaForBlender.thea_render_main import checkTheaExtMat
+#        if (checkTheaExtMat()==False):
+#            self.report({'ERROR'}, "Please check linked materials")
+##            thea_globals.log.debug("*** CheckMaterials = %s ***" % checkTheaExtMat())
+#            return {'FINISHED'}
         from TheaForBlender.thea_render_main import checkTheaExtMat
-        if (checkTheaExtMat()==False):
-            self.report({'ERROR'}, "Please check linked materials")
-#            thea_globals.log.debug("*** CheckMaterials = %s ***" % checkTheaExtMat())
+        checkTheaExtMat()
+        valuesExt = checkTheaExtMat()
+        if (valuesExt[0]==False):
+#            self.report({'ERROR'}, "Please link Material: %s > Object: %s" % (valuesExt[1], valuesExt[2]))
+            missing_Mat = ""
+            for mat in valuesExt[3]:
+                missing_Mat = missing_Mat+"\n"+mat
+            self.report({'ERROR'}, "Please link Material:%s" % missing_Mat)
+#            thea_globals.log.debug("*** CheckMaterials = %s ***" % valuesExt[1])
             return {'FINISHED'}
 
 
@@ -285,6 +296,18 @@ class RENDER_PT_thea_SaveFrame(bpy.types.Operator):
         if not os.path.isdir(exportPath):
             self.report({'ERROR'}, "Please set proper output path before exporting!")
             return {'FINISHED'}
+        from TheaForBlender.thea_render_main import checkTheaExtMat
+        checkTheaExtMat()
+        valuesExt = checkTheaExtMat()
+        if (valuesExt[0]==False):
+#            self.report({'ERROR'}, "Please link Material: %s > Object: %s" % (valuesExt[1], valuesExt[2]))
+            missing_Mat = ""
+            for mat in valuesExt[3]:
+                missing_Mat = missing_Mat+"\n"+mat
+            self.report({'ERROR'}, "Please link Material:%s" % missing_Mat)
+#            thea_globals.log.debug("*** CheckMaterials = %s ***" % valuesExt[1])
+            return {'FINISHED'}
+
 
         exporter=initExporter()
         scene.thea_startTheaAfterExport = False
@@ -1337,7 +1360,43 @@ class RENDER_PT_thea_RefreshRender(bpy.types.Operator):
 #         #print("refresh")
 #         return {'FINISHED'}
 
+class MATERIAL_PT_thea_checkTheaExtMat(bpy.types.Operator):
+    '''check if Thea linked materials are live
+        :return: False if missing link
+        :rtype: bool
+    '''
+    bl_idname = "thea.check_thea_mat"
+    bl_label = "check external linked materials for links"
 
+    def invoke(self, context, event):
+        missing_Materials = []
+        matNameExt = ""
+        matMesh = ""
+        matExtLink = True
+        for mat in bpy.data.materials:
+            if getattr(mat, "thea_extMat"):
+                extMat = os.path.exists(os.path.abspath(bpy.path.abspath(mat.get('thea_extMat'))))
+                if extMat == False:
+    #                matMesh = bpy.context.active_object.name
+                    matExtLink = False
+                    matNameExt = mat.name
+                    MNAME = matNameExt
+                    obs = []
+                    for o in bpy.data.objects:
+                        if isinstance(o.data, bpy.types.Mesh) and MNAME in o.data.materials:
+    #                        obs.append(o.name)
+                            matMesh = o.name
+#                    missing_Materials.append("%s > Mesh obj: %s" % (matNameExt, matMesh))
+#                    missing_Materials += matNameExt + "> Mesh obj:"+ matMesh+"\n"
+                    missing_Materials = matNameExt + "\n"
+    #                return [matExtLink, matNameExt, matMesh]
+                else:
+                    pass
+#            missing_Materials = sorted(list(set(missing_Materials)))
+    #    thea_globals.log.debug("*** Missing Material list: %s" % missing_Materials)
+#        return [matExtLink, matNameExt, matMesh, missing_Materials]
+        self.report({'ERROR'}, missing_Materials)
+        return {'FINISHED'}
 
 class MATERIAL_PT_thea_listLinkedMaterials(bpy.types.Operator):
     '''List materials using the same Thea material file'''
