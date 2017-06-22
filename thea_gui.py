@@ -1092,6 +1092,7 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
         return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
+       missing_Materials = []
        layout = self.layout
        scene = context.scene
        mat  = context.material
@@ -1109,10 +1110,34 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
        try:
            if (os.path.exists(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat')))))==False:
                 colR = split.column()
-                row = layout.row()
+#                row = layout.row()
                 colR.label(text="Missing link!", icon='ERROR')
+                if getattr(mat, "thea_extMat"):
+#                    row = layout.row()
+                    layout.operator("thea.check_thea_mat")
+#           if missing_Materials:
+#                row = col.row(align=True)
+#                row.alignment = "LEFT"
+##                row.prop(
+##                    scene,
+##                    "amaranth_debug_scene_list_missing_images",
+##                    icon="%s" %
+##                    "TRIA_DOWN" if list_missing_images else "TRIA_RIGHT",
+##                    emboss=False)
+##
+##                split = split.split()
+#                col = split.column()
+#                missing_Mat = ""
+#                for mat in missing_Materials:
+#                    missing_Mat = missing_Mat+"\n"+mat
+##                col.label(text="%s missing %s" % (
+##                          str(len(missing_Materials)),
+##                          'image' if len(missing_Materials) == 1 else "images"),
+##                          icon="ERROR")
+#                col.label(text="%s missing %s" % missing_Mat, icon="ERROR")
        except:
                 pass
+#       split = layout.split()
        if len(getattr(mat, "thea_extMat"))>5:
            if not thea_render_main.isMaterialLinkLocal(getattr(mat, "thea_extMat")):
                 if os.path.exists(os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat")))):
@@ -1121,8 +1146,10 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
            if getattr(mat, "thea_extMat"):
                 row = layout.row()
                 row.operator("thea.list_linked_materials")
-#        print("local: ", thea_render_main.isMaterialLinkLocal(getattr(mat, "thea_extMat")))
-#        print("exists: ", os.path.exists(os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat")))), os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat"))))
+
+#
+##        print("local: ", thea_render_main.isMaterialLinkLocal(getattr(mat, "thea_extMat")))
+##        print("exists: ", os.path.exists(os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat")))), os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat"))))
 
 from bl_ui.properties_material import active_node_mat
 
