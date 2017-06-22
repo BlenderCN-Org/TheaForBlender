@@ -4239,6 +4239,16 @@ class TheaRender(bpy.types.RenderEngine):
             if not os.path.isdir(exportPath):
                 self.report({'ERROR'}, "Please set proper output path before exporting!")
                 return {'FINISHED'}
+            checkTheaExtMat()
+            valuesExt = checkTheaExtMat()
+            if (valuesExt[0]==False):
+    #            self.report({'ERROR'}, "Please link Material: %s > Object: %s" % (valuesExt[1], valuesExt[2]))
+                missing_Mat = ""
+                for mat in valuesExt[3]:
+                    missing_Mat = missing_Mat+"\n"+mat
+                self.report({'ERROR'}, "Please link Material:%s" % missing_Mat)
+    #            thea_globals.log.debug("*** CheckMaterials = %s ***" % valuesExt[1])
+                return {'FINISHED'}
 
         calculatePreview = True
         previewGeneratorPort = 30001
