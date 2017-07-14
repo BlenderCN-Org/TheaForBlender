@@ -218,6 +218,11 @@ Scene.thea_markerName = bpy.props.BoolProperty(
                 name="Marker naming",
                 description="Enables filenaming according to current marker",
                 default= False)
+# CHANGED added export save only
+Scene.thea_save2Export = bpy.props.BoolProperty(
+                name="Save to export folder",
+                description="Prevents saving with frame numbers. Leave OFF for animation rendering.",
+                default= False)
 
 Scene.thea_customOutputName = bpy.props.BoolProperty(
                 name="Custom output naming",
@@ -868,14 +873,14 @@ Scene.thea_IBLRotation = bpy.props.FloatProperty(
                 description="Rotation (deg)",
                 update=worldUpdated)
 
-Scene.thea_IBLIntensity = bpy.props.FloatProperty(
-                min=0.00,
-                max=10000000,
-                precision=2,
-                default=1,
-                name="Intensity",
-                description="Intensity",
-                update=worldUpdated)
+#Scene.thea_IBLIntensity = bpy.props.FloatProperty(
+#                min=0.00,
+#                max=10000000,
+#                precision=2,
+#                default=1,
+#                name="Intensity",
+#                description="Intensity",
+#                update=worldUpdated)
 
 Scene.thea_BackgroundMappingEnable = bpy.props.BoolProperty(
                 name="Enable Background Mapping",
@@ -1782,11 +1787,12 @@ def materialLutUpdated(self, context):
     mat = context.material
     print("mat.get('thea_LUT')", mat.get('thea_LUT'))
     if mat.use_cubic:
-        mat.use_cubic = False
+       mat.use_cubic = False
     else:
-        mat.use_cubic = True
+       mat.use_cubic = True
     if thea_globals.getNameBasedLUT() and mat.get('thea_LUT') > 0:
        mat.name = lut[mat.get('thea_LUT')]
+       thea_globals.log.debug("Mat LUT start: %s - index: %s" % (lut[mat.get('thea_LUT')], mat.get('thea_LUT')))
     updateActiveMaterialColor()
 
 
@@ -2535,7 +2541,7 @@ Mat.thea_GlossyWeightFilename = bpy.props.StringProperty(
 Mat.thea_GlossyReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 default=(1, 1, 1),
-                name="Reflectance Color",
+                name="Reflectance",
                 description="Reflectance Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2550,7 +2556,7 @@ Mat.thea_GlossyReflectanceFilename = bpy.props.StringProperty(
 
 Mat.thea_GlossyTransmittanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Transmittance Color",
+                name="Transmittance",
                 description="Transmittance Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2565,7 +2571,7 @@ Mat.thea_GlossyTransmittanceFilename = bpy.props.StringProperty(
 
 Mat.thea_GlossyAbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Absorption Color",
+                name="Absorption",
                 description="Absorption Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2614,7 +2620,7 @@ Mat.thea_GlossyAbbeNumber = bpy.props.FloatProperty(
 
 Mat.thea_GlossyIORFileEnable = bpy.props.BoolProperty(
                 name="IOR file",
-                description="IOR file",
+                description="IOR file (Turn Off Abbe if ON)",
                 default= False,
                 update=materialUpdated)
 
@@ -4152,7 +4158,7 @@ Obj.aperture = bpy.props.FloatProperty(
                 min=0,
 #               CHANGED > to lower max setting and better precision
                 max=100,
-                precision=1,
+                precision=2,
                 default=5.6,
                 name="f-number",
                 description="Focal lenght/lens diameter, the higher the sharper the image")
@@ -4177,7 +4183,7 @@ Obj.dof_distance = bpy.props.FloatProperty(
                 min=0,
 #               CHANGED > to lower max setting and better precision
                 max=10000,
-                precision=1,
+                precision=4,
                 default=0,
                 name="Distance",
                 description="Distance to the focal point for depth of field")
@@ -4317,6 +4323,7 @@ Obj.thMaskIDindex = bpy.props.IntProperty(
                 name="Index",
                 description="Index")
 
+items_store = []
 def materialsList(scene, context):
     '''Return materials for object container
 
@@ -4324,11 +4331,25 @@ def materialsList(scene, context):
         :return: list of tuples (mat.name, mat.name, mat.name)
         :rtpe: [(str, str, str)]
     '''
+
     items = []
     items.append(("None","None","None"))
+    maxid = -1
+    id = -1
+    found = False
     if hasattr(bpy.data, "materials"):
         for mat in bpy.data.materials:
-            items.append((mat.name, mat.name, mat.name))
+            for idrec in items_store:
+                id = idrec[0]
+                if id > maxid:
+                    maxid = id
+                if idrec[1] == mat.name:
+                    found = True
+                    break
+            if not found:
+                items_store.append((maxid+1, mat.name))
+#            items.append((mat.name, mat.name, mat.name))
+            items.append( (mat.name, mat.name,"", id) )
     return items
 
 Obj.thea_Container = bpy.props.EnumProperty(

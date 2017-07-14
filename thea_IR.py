@@ -120,170 +120,173 @@ class RENDER_PT_thea_stopSDK(bpy.types.Operator):
 def register():
     return
 
-def exportIRCamera(scene, area, exportPath):
-    '''Export current 3d view camera to xml file so it can be merged into current IR session
-
-        :param scene: current scene
-        :type scene: bpy_types.Scene
-        :param area: GUI area
-        :type area: bpy_types.Area
-        :param exportPath: path to save xml file
-        :type exportPath: string
-    '''
-    #print("exportIRCamera")
-    resolutionDivider = 1
-
-    cam = ThCamera()
-    camData = area.spaces.active
-    if scene.get('thea_IRResolution'):
-        if scene.get('thea_IRResolution') == 0:
-            resolutionDivider = 1
-        if scene.get('thea_IRResolution') == 1:
-            resolutionDivider = 2
-        if scene.get('thea_IRResolution') == 2:
-            resolutionDivider = 4
-
-    thea_globals.frame_px = view3d_camera_border(bpy.context.scene, area)
-    if thea_globals.frame_px:
-        camOb = scene.camera
-        cam.name=camOb.name
-        camM = scene.camera.matrix_world
-        renderData = scene.render
-        x1 = thea_globals.frame_px[3][0]
-        y2 = thea_globals.frame_px[3][1]
-        x2 = thea_globals.frame_px[0][0]
-        y1 = thea_globals.frame_px[1][1]
-        resX = int(x2-x1)
-        resY = int(y2-y1)
-        #resX=int(renderData.resolution_x*renderData.resolution_percentage*0.01)
-        #resY=int(renderData.resolution_y*renderData.resolution_percentage*0.01)
-        camData = camOb.data
-        cam.pixels = resX
-        cam.lines = resY
-
-        if resX > resY:
-            fac = float(resX) / float(resY)
-        else:
-            fac = 1
-
-        if camData.type == "PERSP":
-            cam.focalLength = camData.lens
-            cam.focusDistance = 1
-            cam.filmHeight = 32 / fac
-            cam.shiftLensX = camData.shift_x
-            cam.shiftLensY = camData.shift_y
-#           CHANGED > added diaphgrama and blades here
-            cam.diaphragm = camOb.thea_diaphragma
-            cam.blades = camOb.thea_diapBlades
-        elif camData.type == "ORTHO":
-            cam.projection = "Parallel"
-#           CHANGED > Added different calculation
-#             cam.filmHeight = camData.ortho_scale * 563.333333 #* 750
-#             cam.focalLength = camData.ortho_scale * 563.333333 #* 750
-            cam.filmHeight = (camOb.scale*1000)/fac
-        if camData.dof_distance > 0:
-            cam.focusDistance = camData.dof_distance
-            if camData.thea_pinhole == True:
-                try:
-                    aperture = camOb["aperture"]
-                    cam.fNumber = aperture
-                except: pass
-            elif camData.thea_enableDOFpercentage == True:
-                try:
-                    DOFpercentage = camOb["DOFpercentage"]
-                    cam.DOFpercentage = DOFpercentage
-                except:pass
-        else:
-            cam.fNumber = 0
-#       CHANGED > Added zClipping options here for camera IR render mode
-#        cam.zClippingNear = True
+#def exportIRCamera(scene, area, exportPath):
+#    '''Export current 3d view camera to xml file so it can be merged into current IR session
+#
+#        :param scene: current scene
+#        :type scene: bpy_types.Scene
+#        :param area: GUI area
+#        :type area: bpy_types.Area
+#        :param exportPath: path to save xml file
+#        :type exportPath: string
+#    '''
+#    #print("exportIRCamera")
+#    resolutionDivider = 1
+#
+#    cam = ThCamera()
+#    camData = area.spaces.active
+#    if scene.get('thea_IRResolution'):
+#        if scene.get('thea_IRResolution') == 0:
+#            resolutionDivider = 1
+#        if scene.get('thea_IRResolution') == 1:
+#            resolutionDivider = 2
+#        if scene.get('thea_IRResolution') == 2:
+#            resolutionDivider = 4
+#
+#    thea_globals.frame_px = view3d_camera_border(bpy.context.scene, area)
+#    if thea_globals.frame_px:
+#        camOb = scene.camera
+#        cam.name=camOb.name
+#        camM = scene.camera.matrix_world
+#        renderData = scene.render
+#        x1 = thea_globals.frame_px[3][0]
+#        y2 = thea_globals.frame_px[3][1]
+#        x2 = thea_globals.frame_px[0][0]
+#        y1 = thea_globals.frame_px[1][1]
+#        resX = int(x2-x1)
+#        resY = int(y2-y1)
+#        #resX=int(renderData.resolution_x*renderData.resolution_percentage*0.01)
+#        #resY=int(renderData.resolution_y*renderData.resolution_percentage*0.01)
+#        camData = camOb.data
+#        cam.pixels = resX
+#        cam.lines = resY
+#
+#        if resX > resY:
+#            fac = float(resX) / float(resY)
+#        else:
+#            fac = 1
+#
+#        if camData.type == "PERSP":
+#            cam.projection = "perspective"
+#            cam.focalLength = camData.lens
+#            cam.focusDistance = 1
+#            cam.filmHeight = 32 / fac
+#            cam.shiftLensX = camData.shift_x
+#            cam.shiftLensY = camData.shift_y
+##           CHANGED > added diaphgrama and blades here
+#            cam.diaphragm = camOb.thea_diaphragma
+#            cam.blades = camOb.thea_diapBlades
+#        elif camData.type == "ORTHO":
+#            cam.projection = "Parallel"
+##           CHANGED > Added different calculation
+##             cam.filmHeight = camData.ortho_scale * 563.333333 #* 750
+##             cam.focalLength = camData.ortho_scale * 563.333333 #* 750
+##            cam.filmHeight = (camOb.scale*1000)/fac
+#            cam.filmHeight = camData.ortho_scale
+#            cam.focalLength = camData.lens
+#        if camData.dof_distance > 0:
+#            cam.focusDistance = camData.dof_distance
+#            if camData.thea_pinhole == True:
+#                try:
+#                    aperture = camOb["aperture"]
+#                    cam.fNumber = aperture
+#                except: pass
+#            elif camData.thea_enableDOFpercentage == True:
+#                try:
+#                    DOFpercentage = camOb["DOFpercentage"]
+#                    cam.DOFpercentage = DOFpercentage
+#                except:pass
+#        else:
+#            cam.fNumber = 0
+##       CHANGED > Added zClipping options here for camera IR render mode
+##        cam.zClippingNear = True
+##        cam.zClippingNearDistance =  camData.clip_start
+##        cam.zClippingFar = True
+##        cam.zClippingFarDistance =  camData.clip_end
+#
+#
+#
+#    else:
+#        cam.name="IR view"
+#        camM = area.spaces.active.region_3d.view_matrix.inverted()
+#    #camM = area.spaces.active.region_3d.view_matrix.inverted()
+#        for region in area.regions:
+#            if region.type == 'WINDOW':
+#                viewWidth = region.width
+#                viewHeight = region.height
+#                break
+#        cam.pixels = int(viewWidth/resolutionDivider)
+#        cam.lines = int(viewHeight/resolutionDivider)
+#
+#        if viewWidth > viewHeight:
+#            fac = float(viewWidth) / float(viewHeight)
+#        else:
+#         fac = 1
+#
+#        offset = area.spaces.active.region_3d.view_camera_offset
+#
+#
+#        cam.focalLength = camData.lens / 2
+#        cam.shiftLensX =  0
+#        cam.shiftLensY =  0
+#        if (area.spaces.active.region_3d.view_perspective == 'CAMERA'):
+#            zoom = area.spaces.active.region_3d.view_camera_zoom;
+#            zoom = (1.41421 + zoom/50.0)
+#            zoom *= zoom
+#            zoom = 2.0/zoom
+#            ##print("zoom: ",zoom, round(zoom, 5), " offset: ",offset[0],offset[1])
+#            cam.focalLength = camData.lens / zoom /2
+#            cam.shiftLensX =  32 * offset[0] / zoom
+#            cam.shiftLensY =  (32 * offset[1] * -1) / fac / zoom
+#
+#        #print("cam.focalLength: ", cam.focalLength, camData.lens,area.spaces.active.region_3d.view_camera_zoom, fac, " offset: ",cam.shiftLensX, cam.shiftLensY)
+#        cam.focusDistance = 0
+#        cam.filmHeight = 32 / fac
+#        cam.fNumber = 0
+#        #                ('1' if getattr(bpy.context.scene, 'thea_DispSharpness') else '0')
+#        cam.zClippingNear = ('1' if getattr(camOb, "thea_zClippingNear") else '0')
+#        print("ClipCheck: ", cam.zClippingNear)
 #        cam.zClippingNearDistance =  camData.clip_start
-#        cam.zClippingFar = True
+#        cam.zClippingFar = ('1' if getattr(camOb, "thea_zClippingFar") else '0')
 #        cam.zClippingFarDistance =  camData.clip_end
-
-
-
-    else:
-        cam.name="IR view"
-        camM = area.spaces.active.region_3d.view_matrix.inverted()
-    #camM = area.spaces.active.region_3d.view_matrix.inverted()
-        for region in area.regions:
-            if region.type == 'WINDOW':
-                viewWidth = region.width
-                viewHeight = region.height
-                break
-        cam.pixels = int(viewWidth/resolutionDivider)
-        cam.lines = int(viewHeight/resolutionDivider)
-
-        if viewWidth > viewHeight:
-            fac = float(viewWidth) / float(viewHeight)
-        else:
-         fac = 1
-
-        offset = area.spaces.active.region_3d.view_camera_offset
-
-
-        cam.focalLength = camData.lens / 2
-        cam.shiftLensX =  0
-        cam.shiftLensY =  0
-        if (area.spaces.active.region_3d.view_perspective == 'CAMERA'):
-            zoom = area.spaces.active.region_3d.view_camera_zoom;
-            zoom = (1.41421 + zoom/50.0)
-            zoom *= zoom
-            zoom = 2.0/zoom
-            ##print("zoom: ",zoom, round(zoom, 5), " offset: ",offset[0],offset[1])
-            cam.focalLength = camData.lens / zoom /2
-            cam.shiftLensX =  32 * offset[0] / zoom
-            cam.shiftLensY =  (32 * offset[1] * -1) / fac / zoom
-
-        #print("cam.focalLength: ", cam.focalLength, camData.lens,area.spaces.active.region_3d.view_camera_zoom, fac, " offset: ",cam.shiftLensX, cam.shiftLensY)
-        cam.focusDistance = 0
-        cam.filmHeight = 32 / fac
-        cam.fNumber = 0
-        #                ('1' if getattr(bpy.context.scene, 'thea_DispSharpness') else '0')
-        cam.zClippingNear = ('1' if getattr(camOb, "thea_zClippingNear") else '0')
-        print("ClipCheck: ", cam.zClippingNear)
-        cam.zClippingNearDistance =  camData.clip_start
-        cam.zClippingFar = ('1' if getattr(camOb, "thea_zClippingFar") else '0')
-        cam.zClippingFarDistance =  camData.clip_end
-
-
-    cam.frame = Transform(\
-                camM[0][0], -camM[0][1], -camM[0][2],
-                camM[1][0], -camM[1][1], -camM[1][2],
-                camM[2][0], -camM[2][1], -camM[2][2],
-                camM[0][3],  camM[1][3],  camM[2][3])
-    irFile = open(os.path.join(exportPath, 'ir.xml'), "w")
-    irFile.write('<Root Label=\"Kernel\" Name=\"\" Type=\"Kernel\">\n')
-    irFile.write('<Object Identifier=\"./Scenes/%s\" Label=\"Default Scene\" Name=\"%s\" Type=\"Scene\">\n' % ("Blender Scene","Blender Scene"))
-    cam.write(irFile)
-    display = DisplayOptions()
-    display.iso = scene.thea_DispISO
-    display.gamma = scene.thea_DispGamma
-    display.brightness = scene.thea_DispBrightness
-    display.shutter = scene.thea_DispShutter
-    display.fNumber = scene.thea_DispFNumber
-#    CHANGED > Added sharpness - burn, new sharpness check
-    display.sharpness = scene.thea_DispSharpness
-    display.sharpnessWeight = scene.thea_DispSharpnessWeight / 100
-    display.burn = scene.thea_DispsBurn / 100
-    display.burnWeight = scene.thea_DispBurnWeight
-    display.bloom = scene.thea_DispBloom
-#   CHANGED > added new bloom/glare menu
-    display.bloomItems = scene.thea_DispBloomItems
-    display.bloomWeight = scene.thea_DispBloomWeight / 100
-    display.glareRadius = scene.thea_DispGlareRadius / 100
-    display.vignetting = scene.thea_DispVignetting / 100
-    display.vignettingWeight = scene.thea_DispVignettingWeight / 100
-    display.minZ = scene.thea_DispMinZ
-    display.maxZ = scene.thea_DispMaxZ
-    display.write(irFile)
-    irFile.write("<Parameter Name=\"./Cameras/Active\" Type=\"String\" Value=\"%s\"/></Object>" % cam.name)
-    irFile.write("<Parameter Name=\"./Scenes/Active\" Type=\"String\" Value=\"Blender Scene\"/>")
-    irFile.write('</Root>\n')
-    irFile.close()
-    del(cam)
-    del(display)
+#
+#
+#    cam.frame = Transform(\
+#                camM[0][0], -camM[0][1], -camM[0][2],
+#                camM[1][0], -camM[1][1], -camM[1][2],
+#                camM[2][0], -camM[2][1], -camM[2][2],
+#                camM[0][3],  camM[1][3],  camM[2][3])
+#    irFile = open(os.path.join(exportPath, 'ir.xml'), "w")
+#    irFile.write('<Root Label=\"Kernel\" Name=\"\" Type=\"Kernel\">\n')
+#    irFile.write('<Object Identifier=\"./Scenes/%s\" Label=\"Default Scene\" Name=\"%s\" Type=\"Scene\">\n' % ("Blender Scene","Blender Scene"))
+#    cam.write(irFile)
+#    display = DisplayOptions()
+#    display.iso = scene.thea_DispISO
+#    display.gamma = scene.thea_DispGamma
+#    display.brightness = scene.thea_DispBrightness
+#    display.shutter = scene.thea_DispShutter
+#    display.fNumber = scene.thea_DispFNumber
+##    CHANGED > Added sharpness - burn, new sharpness check
+#    display.sharpness = scene.thea_DispSharpness
+#    display.sharpnessWeight = scene.thea_DispSharpnessWeight / 100
+#    display.burn = scene.thea_DispsBurn / 100
+#    display.burnWeight = scene.thea_DispBurnWeight
+#    display.bloom = scene.thea_DispBloom
+##   CHANGED > added new bloom/glare menu
+#    display.bloomItems = scene.thea_DispBloomItems
+#    display.bloomWeight = scene.thea_DispBloomWeight / 100
+#    display.glareRadius = scene.thea_DispGlareRadius / 100
+#    display.vignetting = scene.thea_DispVignetting / 100
+#    display.vignettingWeight = scene.thea_DispVignettingWeight / 100
+#    display.minZ = scene.thea_DispMinZ
+#    display.maxZ = scene.thea_DispMaxZ
+#    display.write(irFile)
+#    irFile.write("<Parameter Name=\"./Cameras/Active\" Type=\"String\" Value=\"%s\"/></Object>" % cam.name)
+#    irFile.write("<Parameter Name=\"./Scenes/Active\" Type=\"String\" Value=\"Blender Scene\"/>")
+#    irFile.write('</Root>\n')
+#    irFile.close()
+#    del(cam)
+#    del(display)
 
 def getRes(area):
     '''Get current area resolution
@@ -378,7 +381,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        area_types = {'VIEW_3D',}
+        area_types = {'VIEW_3D'}
         return (context.area.type in area_types) and \
                (context.region.type == "WINDOW")
 
@@ -412,6 +415,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                 message = 'set "./UI/Viewport/Camera/Active" = "%s"' % ("IR view")
             data = sendSocketMsg('localhost', port, message.encode())
             #print("message: ",message, data)
+            thea_globals.log.debug("message: %s -\n data: %s" % (message, data))
 
 
 #             #print("message: ",message, data)
@@ -787,7 +791,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
             t1 = time.time()
             currentBlendDir = os.path.dirname(bpy.data.filepath)
             if getattr(area, 'type', 'None') == 'VIEW_3D' and not thea_globals.IrIsPaused:
-
+#                thea_globals.log.debug("*** IR RENDER: %s" % (getattr(area, 'type', 'NONE')))
                 if self.prevResX != getRes(area)[0] or self.prevResY != getRes(area)[1]:
                     self.renderSizeUpdated = True
                     self.prevResX, self.prevResY = getRes(area)
@@ -807,6 +811,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                     camM = context.scene.camera.matrix_world
 
                     message = 'set "./UI/Viewport/Camera/Active" = "%s"' % (bpy.context.scene.camera.name)
+#                    thea_globals.log.debug("*** IR RENDER: %s" % message)
                 else:
                     camM = area.spaces.active.region_3d.view_matrix.inverted()
                 if self.countSinceUpdate < 5:
@@ -932,6 +937,14 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
             missing_Mat = ""
             for mat in valuesExt[3]:
                 missing_Mat = missing_Mat+"\n"+mat
+#                layout = self.layout
+#                box = layout.box()
+#                col = box.column(align=True)
+#                row = col.row(align=True)
+#                row.alignment = "LEFT"
+#                row.label(
+#                            text=missing_Mat,
+#                            icon="IMAGE_DATA")
             self.report({'ERROR'}, "Please link Material:%s" % missing_Mat)
 #            thea_globals.log.debug("*** CheckMaterials = %s ***" % valuesExt[1])
             return {'FINISHED'}

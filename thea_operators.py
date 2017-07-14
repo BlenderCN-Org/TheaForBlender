@@ -194,7 +194,7 @@ class RENDER_PT_thea_RenderFrame(bpy.types.Operator):
 
     def invoke(self, context, event):
         scene = context.scene
-        args = renderFrame(scene, scene.frame_current)
+        args = renderFrame(scene, scene.frame_current, anim=False)
         p = subprocess.Popen(args)
         return {'FINISHED'}
 
@@ -1165,55 +1165,658 @@ class MATERIAL_PT_thea_GlossySyncBlenderToThea(bpy.types.Operator):
 class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
     '''Sync selected object transform wih saved Thea scene'''
     bl_idname = "thea.sync_with_thea"
-    bl_label = "Sync with Thea"
+    bl_label = "Sync with Thea for selected objects"
 
     def invoke(self, context, event):
         scene = context.scene
-
         (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene)
         xmlFilename = currentBlendFile.replace('.blend', '.xml')
         fileName = os.path.join(exportPath, os.path.basename(xmlFilename))
+        checkFile = extMat = os.path.exists(fileName)
+        if checkFile == False:
+            self.report({'ERROR'}, "Please export scene to studio first")
+            return {'FINISHED'}
+        t1 = datetime.datetime.now()
         f = open(fileName)
         i = 0
+        selectedOb = 0
         foundOb = False
-        camFocalLenght = 0
+#        check = ""
         it = iter(f)
+        for obj in bpy.data.objects:
+            if obj in bpy.context.selected_objects:
+                thea_globals.log.debug("*** Selected Obj: %s" % obj)
+                selectedOb +=1
+        if selectedOb == 0:
+            thea_globals.log.debug("*** Selected Objects Name: %s" % selectedOb)
+            self.report({'ERROR'}, "Sync does need selection")
+            return {'FINISHED'}
         for line in it:
             i+=1
+            thea_globals.log.debug("*** Line: %s" % i)
             if line.find('<Object Identifier="./Models/') >= 0:
-                name = line.split(" ")[3].split('"')[1]
+#                name = line.split(" ")[3].split('"')[1]
+                name = line.split("Name=\"")[0].split('"')[1]
+                name = name.replace(name[:9],'')
                 ob = scene.objects.get(name)
                 if ob in bpy.context.selected_objects:
-                    foundOb = True
+                    if line.find('=Frame')>0:
+                        foundOb = True
+                        frame_str = line.split('"')[5]
+                        frame_arr = frame_str.split(" ")
+                        listItems = []
+                        ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1]), float(frame_arr[5]), float(frame_arr[9]), 0), (float(frame_arr[2]), float(frame_arr[6]), float(frame_arr[10]), 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
+#                        print (name, " synced")
+#                        synced = name
+#                        if foundOb:
+                        self.report({'ERROR'}, "Synced:%s" % name)
+
             if line.find('<Object Identifier="./Lights/') >= 0:
                 name = line.split(" ")[3].split('"')[1]
                 ob = scene.objects.get(name)
+                lampColor = []
+                lampTexProj = ""
+                lampTexFile = ""
+                lampAtte = ""
+                lampWidth = 0
+                lampHeight = 0
+                lampPower = 0
+                lampEfficacy = 0
+                lampUnit = 0
+                iesFile = ""
+                iesTexFile = ""
+                iesColor = []
+                iesTexProj = ""
+                iesMultiplier = ""
+                spotColor = []
+                spotTexFile = ""
+                spotTexProj = ""
+                spotAtte = ""
+                spotFallOff = ""
+                spotHotSpot = ""
+                spotPower = ""
+                spotEfficacy = ""
+                spotUnit = ""
+                omniColor = []
+                omniTexFile = ""
+                omniTexProj = ""
+                omniAtte = ""
+                omniPower = ""
+                omniEfficacy = ""
+                omniUnit = ""
+                ligthEnable = True
+                ligthSun = False
+                lightManualSun = False
+                ligthShadow = True
+                ligthSoftShadow = False
+                ligthGlobalPhotons = False
+                ligthCausticPhotons = False
+                lightMinRays = ""
+                lightMaxRays = ""
+                ligthLayer = ""
+                ligthBuff = ""
+                ligthInterF = False
                 if ob in bpy.context.selected_objects:
-                    foundOb = True
+                    thea_globals.log.debug("*** Selected Objects Type: %s" % ob.type)
+                    line = next(it)
+                    if line.find('<Object Identifier="Projector Light')>= 0:
+                        line = next(it)
+                        foundOb = True
+                        ob.data.use_square = True
+                        if line.find('<Object Identifier="./Color/Constant Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Color"') >=0:
+                                lampColor = line.split('"')[5].split(" ")
+                                ob.data.color = (float(lampColor[0]),float(lampColor[1]),float(lampColor[2]))
+                                ob.data.thea_TextureFilename = ""
+                                thea_globals.log.debug("%s Color: %s %s %s" % (ob,lampColor[0],lampColor[1],lampColor[2]))
+                        if line.find('<Object Identifier="./Color/Bitmap Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Filename"') >=0:
+                                lampTexFile = line.split('"')[5]
+                                ob.data.thea_TextureFilename = lampTexFile
+                                thea_globals.log.debug("%s TexFile: %s" % (name,lampTexFile))
+                            line = next(it)
+                            if line.find('Name="Projection"') >=0:
+                                lampTexProj = line.split('"')[5]
+#                                ob.data.thea_TextureFilename = lampTexProj
+                                thea_globals.log.debug("%s Projection: %s" % (name,lampTexProj))
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                        line = next(it)
+                        line = next(it)
+                        if line.find('Name="Attenuation"'):
+                            lampAtte = line.split('"')[5]
+                            ob.data.thea_EmittanceAttenuation = lampAtte
+                            thea_globals.log.debug("%s Attenuation: %s" % (name,lampAtte))
+                        line = next(it)
+                        if line.find('Name="Width"'):
+                            lampWidth = float(line.split('"')[5])
+                            ob.data.thea_ProjectorWidth = lampWidth
+                            thea_globals.log.debug("Lamp Width: %s" % lampWidth)
+                        line = next(it)
+                        if line.find('Name="Height"'):
+                            lampHeight = float(line.split('"')[5])
+                            ob.data.thea_ProjectorHeight = lampHeight
+                            thea_globals.log.debug("Lamp Height: %s" % lampHeight)
+                        line = next(it)
+                        line = next(it)
+                        if line.find('Name="Power"'):
+                            lampPower = float(line.split('"')[5])
+                            ob.data.thea_EmittancePower = lampPower
+                            thea_globals.log.debug("Lamp Power: %s" % lampPower)
+                        line = next(it)
+                        if line.find('Name="Efficacy"'):
+                            lampEfficacy = float(line.split('"')[5])
+                            ob.data.thea_EmittanceEfficacy = lampEfficacy
+                            thea_globals.log.debug("Lamp Efficacy: %s" % lampEfficacy)
+                        line = next(it)
+                        if line.find('Name="Unit"'):
+                            lampUnit = line.split('"')[5]
+                            ob.data.thea_EmittanceUnit = lampUnit
+                            thea_globals.log.debug("Lamp Power: %s" % lampUnit)
+
+                    if line.find('<Object Identifier="IES Light')>= 0:
+                        line = next(it)
+                        foundOb = True
+                        if line.find('<Object Identifier="./Color/Constant Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Color"') >=0:
+                                iesColor = line.split('"')[5].split(" ")
+                                ob.data.color = (float(iesColor[0]),float(iesColor[1]),float(iesColor[2]))
+                                ob.data.thea_TextureFilename = ""
+                                thea_globals.log.debug("%s Color: %s %s %s" % (ob,iesColor[0],iesColor[1],iesColor[2]))
+                        if line.find('<Object Identifier="./Color/Bitmap Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Filename"') >=0:
+                                iesTexFile = line.split('"')[5] #.split('"')[1]
+                                ob.data.thea_TextureFilename = iesTexFile
+                                thea_globals.log.debug("%s TexFile: %s" % (name,iesTexFile))
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                        line = next(it)
+                        line = next(it)
+                        if line.find('Name="IES File"')>=0:
+                            iesFile = line.split('"')[5]
+                            if iesFile == "0":
+                                ob.data.thea_IESFilename = ""
+                            else:
+                                ob.data.thea_IESFilename = iesFile
+                            thea_globals.log.debug("%s File: %s" % (name,iesFile))
+                        line = next(it)
+                        line = next(it)
+                        if line.find('Name="Multiplier"')>=0:
+                            iesMultiplier = float(line.split('"')[5])
+                            ob.data.thea_IESMultiplier = iesMultiplier
+                            thea_globals.log.debug("%s Multiplier: %s" % (name,iesMultiplier))
+                    if line.find('<Object Identifier="Spot Light')>= 0:
+                        line = next(it)
+                        foundOb = True
+                        if line.find('<Object Identifier="./Color/Constant Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Color"') >=0:
+                                spotColor = line.split('"')[5].split(" ")
+                                ob.data.color = (float(spotColor[0]),float(spotColor[1]),float(spotColor[2]))
+                                ob.data.thea_TextureFilename = ""
+                                thea_globals.log.debug("%s Color: %s %s %s" % (ob,spotColor[0],spotColor[1],spotColor[2]))
+                        if line.find('<Object Identifier="./Color/Bitmap Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Filename"') >=0:
+                                spotTexFile = line.split('"')[5]
+                                ob.data.thea_TextureFilename = spotTexFile
+                                thea_globals.log.debug("%s TexFile: %s" % (name,spotTexFile))
+                            line = next(it)
+                            if line.find('Name="Projection"') >=0:
+                                spotTexProj = line.split('"')[5]
+#                                ob.data.thea_TextureFilename = lampTexProj
+                                thea_globals.log.debug("%s Projection: %s" % (name,spotTexProj))
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                        line = next(it)
+                        line = next(it)
+                        if line.find('Name="Attenuation"'):
+                            spotAtte = line.split('"')[5]
+                            ob.data.thea_EmittanceAttenuation = spotAtte
+                            thea_globals.log.debug("%s Attenuation: %s" % (name,spotAtte))
+                        line = next(it)
+                        if line.find('Name="Fall Off"'):
+                            spotFallOff = float(line.split('"')[5])
+                            ob.data.spot_size = spotFallOff / 57.295779
+                            thea_globals.log.debug("%s FallOff: %s" % (name, spotFallOff))
+                        line = next(it)
+                        if line.find('Name="Hot Spot"'):
+                            spotHotSpot = float(line.split('"')[5])
+                            ob.data.spot_blend = 1-((spotHotSpot/57.295779)/ob.data.spot_size)
+                            thea_globals.log.debug("%s Hot Spot: %s" % (name, spotHotSpot))
+                        line = next(it)
+                        if line.find('Name="Power"'):
+                            spotPower = float(line.split('"')[5])
+                            ob.data.thea_EmittancePower = spotPower
+                            thea_globals.log.debug("%s Power: %s" % (name,spotPower))
+                        line = next(it)
+                        if line.find('Name="Efficacy"'):
+                            spotEfficacy = float(line.split('"')[5])
+                            ob.data.thea_EmittanceEfficacy = spotEfficacy
+                            thea_globals.log.debug("%s Efficacy: %s" % (name,spotEfficacy))
+                        line = next(it)
+                        if line.find('Name="Unit"'):
+                            spotUnit = line.split('"')[5]
+                            ob.data.thea_EmittanceUnit = spotUnit
+                            thea_globals.log.debug("%s Power: %s" % (name,spotUnit))
+                    if line.find('<Object Identifier="Omni Light')>= 0:
+                        line = next(it)
+                        foundOb = True
+                        if line.find('<Object Identifier="./Color/Constant Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Color"') >=0:
+                                omniColor = line.split('"')[5].split(" ")
+                                ob.data.color = (float(omniColor[0]),float(omniColor[1]),float(omniColor[2]))
+                                ob.data.thea_TextureFilename = ""
+                                thea_globals.log.debug("%s Color: %s %s %s" % (ob,omniColor[0],omniColor[1],omniColor[2]))
+                        if line.find('<Object Identifier="./Color/Bitmap Texture')>=0:
+                            line = next(it)
+                            if line.find('Name="Filename"') >=0:
+                                omniTexFile = line.split('"')[5]
+                                ob.data.thea_TextureFilename = omniTexFile
+                                thea_globals.log.debug("%s TexFile: %s" % (name,omniTexFile))
+                            line = next(it)
+                            if line.find('Name="Projection"') >=0:
+                                omniTexProj = line.split('"')[5]
+#                                ob.data.thea_TextureFilename = lampTexProj
+                                thea_globals.log.debug("%s Projection: %s" % (name,omniTexProj))
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                            line = next(it)
+                        line = next(it)
+                        line = next(it)
+                        if line.find('Name="Power"'):
+                            omniPower = float(line.split('"')[5])
+                            ob.data.thea_EmittancePower = omniPower
+                            thea_globals.log.debug("%s Power: %s" % (name,omniPower))
+                        line = next(it)
+                        if line.find('Name="Efficacy"'):
+                            omniEfficacy = float(line.split('"')[5])
+                            ob.data.thea_EmittanceEfficacy = omniEfficacy
+                            thea_globals.log.debug("%s Efficacy: %s" % (name,omniEfficacy))
+                        line = next(it)
+                        if line.find('Name="Unit"'):
+                            omniUnit = line.split('"')[5]
+                            ob.data.thea_EmittanceUnit = omniUnit
+                            thea_globals.log.debug("%s Power: %s" % (name,omniUnit))
+                        line = next(it)
+                        if line.find('Name="Attenuation"'):
+                            omniAtte = line.split('"')[5]
+                            ob.data.thea_EmittanceAttenuation = omniAtte
+                            thea_globals.log.debug("%s Attenuation: %s" % (name,omniAtte))
+                    line = next(it)
+                    line = next(it)
+                    if line.find('Name="Enabled"')>=0:
+                        lightEnabled = line.split('"')[5]
+                        if lightEnabled == "1":
+                            ob.thEnabled = True
+                            ob.data.thea_enableLamp = True
+                        else:
+                            ob.thEnabled = False
+                            ob.data.thea_enableLamp = False
+                        thea_globals.log.debug("%s Enables: %s" % (name,lightEnabled))
+                    line = next(it)
+#                    if line.find('Name="Sun"')>=0:
+#                            lightSun = line.split('"')[5]
+#                            if lightEnabled == "1":
+#                                ob.thEnabled = True
+#                            else:
+#                                ob.thEnabled = False
+#                            thea_globals.log.debug("%s File: %s" % (name,lightEnabled))
+                    line = next(it)
+                    if line.find('Name="Manual Sun"')>=0:
+                        lightManualSun = line.split('"')[5]
+                        if lightManualSun == "1":
+                            ob.data.thea_manualSun = True
+                        else:
+                            ob.data.thea_manualSun = False
+                        thea_globals.log.debug("%s Manual Sun: %s" % (name,lightManualSun))
+                    line = next(it)
+                    if line.find('Name="Shadow"')>=0:
+                        lightShadow = line.split('"')[5]
+                        if lightShadow == "1":
+                            ob.data.thea_enableShadow = True
+                        else:
+                            ob.data.thea_enableShadow = False
+                        thea_globals.log.debug("%s Shadow: %s" % (name,lightShadow))
+                    line = next(it)
+                    if line.find('Name="Soft Shadow"')>=0:
+                        lightSoftShadow = line.split('"')[5]
+                        if lightSoftShadow == "1":
+                            ob.data.thea_enableSoftShadow = True
+                        else:
+                            ob.data.thea_enableSoftShadow = False
+                        thea_globals.log.debug("%s Soft Shadow: %s" % (name,lightSoftShadow))
+                    line = next(it)
+                    if line.find('Name="Negative Light"')>=0:
+                        lightNegativeLight = line.split('"')[5]
+#                            if lightNegativeLight == "1":
+##                                ob.data.thea_enableSoftShadow = True
+#                            else:
+##                                ob.data.thea_enableSoftShadow = False
+                        thea_globals.log.debug("%s Negative Light: %s" % (name,lightNegativeLight))
+                    line = next(it)
+                    if line.find('Name="Global Photons"')>=0:
+                        lightGlobalPhotons = line.split('"')[5]
+                        if lightGlobalPhotons == "1":
+                            ob.data.thea_globalPhotons = True
+                        else:
+                            ob.data.thea_globalPhotons = False
+                        thea_globals.log.debug("%s Global Photons: %s" % (name,lightGlobalPhotons))
+                    line = next(it)
+                    if line.find('Name="Caustic Photons"')>=0:
+                        lightCausticPhotons = line.split('"')[5]
+                        if lightCausticPhotons == "1":
+                            ob.data.thea_causticPhotons = True
+                        else:
+                            ob.data.thea_causticPhotons = False
+                        thea_globals.log.debug("%s Caustics Photons: %s" % (name,lightCausticPhotons))
+                    line = next(it)
+                    if line.find('Name="Frame')>=0:
+                        frame_str = line.split('"')[5]
+                        frame_arr = frame_str.split(" ")
+                        listItems = []
+                        if ob.type in ('LAMP') and ob:
+                            ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1])*-1, float(frame_arr[5])*-1, float(frame_arr[9])*-1, 0), (float(frame_arr[2])*-1, float(frame_arr[6])*-1, float(frame_arr[10])*-1, 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
+        #                    listItems.append(name)
+#                            print (name, " synced")
+                            self.report({'ERROR'}, "Synced:%s" % name)
+
+#                            synced = name
+#                            foundOb = True
+                    line = next(it) # SKIP FRAME already done
+                    line = next(it) # SKIP Focal Frame not sure why this is???
+                    if line.find('Name="Radius Multiplier')>=0:
+                        lightRadiusMulitplier = float(line.split('"')[5])
+                        ob.data.thea_radiusMultiplier = lightRadiusMulitplier
+                        thea_globals.log.debug("%s Radius Multiplier: %s" % (name,lightRadiusMulitplier))
+                    line = next(it)
+                    if line.find('Name="Radius')>=0:
+                        lightRadius = float(line.split('"')[5])
+                        ob.data.thea_softRadius = lightRadius
+                        thea_globals.log.debug("%s Radius: %s" % (name,lightRadius))
+                    line = next(it)
+                    if line.find('Name="Min')>=0:
+                        lightMinRays = float(line.split('"')[5])
+                        ob.data.thea_minRays = lightMinRays
+                        thea_globals.log.debug("%s Min Rays: %s" % (name,lightMinRays))
+                    line = next(it)
+                    if line.find('Name="Max')>=0:
+                        lightMaxRays = float(line.split('"')[5])
+                        ob.data.thea_maxRays = lightMaxRays
+                        thea_globals.log.debug("%s Max Rays: %s" % (name,lightMaxRays))
+                    line = next(it)
+                    if line.find('Name="Layer')>=0:
+                        lightLayer = int(line.split('"')[5])
+                        ob.layers[lightLayer] = True
+                        for i in range(20):
+                            ob.layers[i] = (i == lightLayer)
+                        thea_globals.log.debug("%s Layer: %s" % (name,lightLayer))
+                    line = next(it)
+                    if line.find('Name="Light Buffer Index')>=0:
+                        lightLightBuffer = float(line.split('"')[5])
+                        ob.data.thea_bufferIndex = lightLightBuffer
+                        thea_globals.log.debug("%s Light Buffer Index: %s" % (name,lightLightBuffer))
+                    line = next(it)
+                    if line.find('Name="Interface Appearance"')>=0:
+                        lightInterference = line.split('"')[5]
+#                        ob.thea_Container[lightInterference]
+                        try:
+                            setattr(ob,"thea_Container",lightInterference)
+                        except:
+                            pass
+                        thea_globals.log.debug("%s Interference: %s" % (name,lightInterference))
+#                    line = next(it)
             if line.find('<Object Identifier="./Cameras/') >= 0:
-                name = line.split(" ")[4].split('"')[1]
+                name = line.split("Name=\"")[0].split('"')[1]
+                name = name.replace(name[:10],'')
                 ob = scene.objects.get(name)
                 if ob in bpy.context.selected_objects:
                     foundOb = True
                     line = next(it)
-                    if line.find('<Parameter Name="Focal Length (mm)"') >= 0:
-                        camFocalLenght = float(line.split(" ")[5].split('"')[1])
-            if foundOb and (line.find('<Parameter Name="Frame"') >= 0):
-                frame_str = line.split('"')[5]
-                frame_arr = frame_str.split(" ")
-                if ob.type in ('LAMP', 'CAMERA'):
-                    ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1])*-1, float(frame_arr[5])*-1, float(frame_arr[9])*-1, 0), (float(frame_arr[2])*-1, float(frame_arr[6])*-1, float(frame_arr[10])*-1, 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
-                    if (ob.type == 'CAMERA') and (camFocalLenght >0):
-                        ob.data.lens = camFocalLenght
-                    print (name, " synced")
-                    foundOb = False
-                else:
-                    ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1]), float(frame_arr[5]), float(frame_arr[9]), 0), (float(frame_arr[2]), float(frame_arr[6]), float(frame_arr[10]), 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
-                    print (name, " synced")
-                    foundOb = False
+                    if line.find('Focal Length'):
+                        camFocalLength = float(line.split(" ")[5].split('"')[1])
+        #                        camFocalLength = line.split(" ")[5].split('"')[1]
+                        ob.data.lens = camFocalLength
+                        line = next(it)
+                    if line.find('Film Height') >= 0:
+                        camFilmHeight = float(line.split(" ")[5].split('"')[1])
+                        if ob.data.sensor_fit in {'VERTICAL'}:
+                           ob.data.sensor_height = camFilmHeight
+                        if ob.data.sensor_fit in {'HORIZONTAL' and 'AUTO'}:
+                           ob.data.sensor_height = camFilmHeight
+
+                    line = next(it)
+                    if line.find('Shift X') >= 0:
+                        camShiftX = float(line.split(" ")[5].split('"')[1])
+        #                        ob.data.shift_x = camShiftX
+                    line = next(it)
+                    if line.find('Shift Y') >= 0:
+                        camShiftY = float(line.split(" ")[5].split('"')[1])
+        #                        ob.data.shift_y = camShiftY
+                    line = next(it)
+                    if line.find('Resolution'):
+                        camResolution = (line.split(" ")[3].split('"')[1])
+                        camRatio = camResolution.split("x")
+                        if camRatio[0] > camRatio[1]:
+                            fac = float(camRatio[0]) / float(camRatio[1])
+                        else:
+                            fac = 1
+                        ob.data.sensor_width = camFilmHeight * fac
+                        ob.data.shift_x  = float(camShiftX) / ob.data.sensor_width
+                        ob.data.shift_y  = float(camShiftY) / ob.data.sensor_width  * -1
+                    line = next(it)
+                    if line.find('Frame'):
+#                        camFrame = line.split('"')[5]
+#                        foundOb = True
+                        frame_str = line.split('"')[5]
+                        frame_arr = frame_str.split(" ")
+                        listItems = []
+                        if ob.type in ('CAMERA') and ob:
+                            ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1])*-1, float(frame_arr[5])*-1, float(frame_arr[9])*-1, 0), (float(frame_arr[2])*-1, float(frame_arr[6])*-1, float(frame_arr[10])*-1, 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
+                            self.report({'ERROR'}, "Synced:%s" % name)
+
+#                            synced = name
+#                        thea_globals.log.debug("Frame found: %s" % camFrame)
+                    line = next(it)
+                    if line.find('Focus Distance') >= 0:
+                        camFocusDistance = float(line.split(" ")[4].split('"')[1])
+                        ob.data.dof_distance = camFocusDistance
+                    line = next(it)
+                    if line.find('Shutter Speed') >= 0:
+                        camShutterSpeed = float(line.split(" ")[4].split('"')[1])
+                        ob.shutter_speed = camShutterSpeed
+                    line = next(it)
+                    if line.find('f-number'):
+                        camFNumber = line.split('"')[-2]
+                        if camFNumber == 'Pinhole':
+                            ob.thea_pinhole = True
+                            thea_globals.log.debug("*** OB2: %s" % camFNumber)
+                        else:
+                            camFNumber = float(camFNumber)
+                            thea_globals.log.debug("*** OB2: %s" % camFNumber)
+                            ob.aperture = camFNumber
+                            ob.thea_pinhole = False
+
+                    line = next(it)
+                    if line.find('Depth of Field') >= 0:
+                        camDOF = float(line.split(" ")[5].split('"')[1])
+                        ob.thea_DOFpercentage = camDOF
+                    line = next(it)
+                    if line.find('Blades'):
+                        camBlades = float(line.split(" ")[3].split('"')[1])
+                        ob.thea_diapBlades = camBlades
+                    line = next(it)
+                    if line.find('Diaphragm"'):
+                        camDiaph = line.split(" ")[3].split('"')[1]
+                        ob.thea_diaphragma = camDiaph
+                    line = next(it)
+                    if line.find('Projection"'):
+                        camProjec = line.split(" ")[3].split('"')[1]
+        #                        if camProjec == "Perspective":
+                        ob.thea_projection = camProjec
+                        ob.data.type = "PERSP"
+                        if camProjec == "Parallel":
+                            ob.data.type = "ORTHO"
+#                                    ob.data.ortho_scale = camFocalLength * .0001 # OLD SCALE VALUE
+#                            ob.data.ortho_scale = camFocalLength * .0001 # NEW CALCULATION - slight mismatch though
+                            ob.data.ortho_scale = camFilmHeight * .001 # NEW CALCULATION - slight mismatch though
+                            ob.data.shift_x = 0
+                            ob.data.shift_y = 0
+        #                        elif: camProjec == "Cylindrical"
+        #                            ob.data.type =
+                    line = next(it)
+                    if line.find('Auto-Focus'):
+                        camAutoFocus = line.split(" ")[3].split('"')[1]
+                        if camAutoFocus == "1":
+                            ob.autofocus = True
+                        else:
+                            ob.autofocus = False
+                    line = next(it) # SKIP DOF LOCK
+                    line = next(it) # SKIP CURRENT VIEW
+                    line = next(it) # SKIP LOCK CAMERA TRANSFORM
+                    line = next(it) # SKIP ROLL LOCK BOOL
+                    line = next(it) # SKIP UPWARDS ???? BOOL
+                    line = next(it) # SKIP REGION MATRIX
+                    line = next(it) # SKIP REGION BOOL
+                    line = next(it) # INTERFERENCE
+                    line = next(it)
+                    if line.find('Z-Clipping Near'):
+                        zClipNear = line.split(" ")[4].split('"')[1]
+                        if zClipNear == "1":
+                            ob.thea_zClippingNear = True
+                        else:
+                            ob.thea_zClippingNear = False
+                    line = next(it)
+                    if line.find('Z-Clipping Far'):
+                        zClipFar = line.split(" ")[4].split('"')[1]
+                        if zClipFar == "1":
+                            ob.thea_zClippingFar = True
+                        else:
+                            ob.thea_zClippingFar = False
+                    line = next(it)
+                    if line.find('Z-Clipping Near Distance'):
+                        zClipNearDistance = float(line.split(" ")[5].split('"')[1])
+                        ob.data.clip_start = zClipNearDistance
+                    line = next(it)
+                    if line.find('Z-Clipping Near Distance'):
+                        zClipNearDistance = float(line.split(" ")[5].split('"')[1])
+                        ob.data.clip_end = zClipNearDistance
+
+                    obCam = bpy.data.objects[name].name
+                    line = next(it)
+##            thea_globals.log.debug("*** Selected Objects Name: %s" % selectedOb)
+#            if foundOb and (line.find('Frame') >= 0):
+#                frame_str = line.split('"')[5]
+#                frame_arr = frame_str.split(" ")
+#                listItems = []
+#                ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1]), float(frame_arr[5]), float(frame_arr[9]), 0), (float(frame_arr[2]), float(frame_arr[6]), float(frame_arr[10]), 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
+#                print (name, " synced")
+#                foundOb = False
+#                selectedOb += 1
+
 
         f.close()
-
+#        f.close()
+        t2 = datetime.datetime.now()
+        totalTime = t2-t1
+        minutes = totalTime.seconds/60
+        seconds = totalTime.seconds%60
+        microseconds = totalTime.microseconds%1000000
+        result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+        thea_globals.log.debug("Sync time from Thea XML: %s > %s sec" % (name, result))
         return {'FINISHED'}
 
 
@@ -1368,7 +1971,7 @@ class MATERIAL_PT_thea_checkTheaExtMat(bpy.types.Operator):
     bl_idname = "thea.check_thea_mat"
     bl_label = "Show missing linked materials list"
 
-    def execute(self, context):
+    def invoke(self, context, event):
         missing_Materials = []
         matNameExt = ""
         matMesh = ""
@@ -1378,14 +1981,11 @@ class MATERIAL_PT_thea_checkTheaExtMat(bpy.types.Operator):
             if getattr(mat, "thea_extMat"):
                 extMat = os.path.exists(os.path.abspath(bpy.path.abspath(mat.get('thea_extMat'))))
                 if extMat == False:
-    #                matMesh = bpy.context.active_object.name
-#                    matExtLink = False
                     matNameExt = mat.name
                     MNAME = matNameExt
                     obs = []
                     for o in bpy.data.objects:
                         if isinstance(o.data, bpy.types.Mesh) and MNAME in o.data.materials:
-    #                        obs.append(o.name)
                             matMesh = o.name
                     missing_Materials.append("%s > Mesh obj: %s" % (matNameExt, matMesh))
 #                    missing_Materials += matNameExt + "> Mesh obj:"+ matMesh+"\n"
@@ -1394,15 +1994,13 @@ class MATERIAL_PT_thea_checkTheaExtMat(bpy.types.Operator):
                 else:
                     pass
             missing_Materials = sorted(list(set(missing_Materials)))
+
         for mat in missing_Materials:
             missing_Mat = missing_Mat+"\n"+mat
-        thea_globals.log.debug("*** missing mat: %s" % missing_Mat)
+
         self.report({'ERROR'}, "Please link Material:%s" % missing_Mat)
         return {'FINISHED'}
-    #    thea_globals.log.debug("*** Missing Material list: %s" % missing_Materials)
-#        return [missing_Materials]
-#        self.report({'ERROR'}, missing_Materials)
-#        return {'FINISHED'}
+
 
 class MATERIAL_PT_thea_listLinkedMaterials(bpy.types.Operator):
     '''List materials using the same Thea material file'''
@@ -1571,3 +2169,161 @@ class LAMP_PT_thea_refreshLamp(bpy.types.Operator):
         thea_globals.lampUpdated = True
         return {'FINISHED'}
 
+def item_iorMenu(self, context):
+    iorMenuItems = []
+    iorMenuItems.append(("0","None",""))
+    sceneLoaded = False
+    try:
+        if bpy.context.scene:
+            sceneLoaded = True
+    except:
+        pass
+    if sceneLoaded:
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(bpy.context.scene)
+    else:
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene=None)
+    ior = []
+    if len(dataPath ) > 5:
+        i = 2
+        for entry in sorted(os.listdir(os.path.join(dataPath,"ior"))):
+            ior.append((entry,os.path.join(dataPath,"ior",entry)))
+            iorMenuItems.append((str(i),entry[:-4],""))
+            i+=1
+#            thea_globals.log.debug("*** IORmenu Items: %s" % iorMenuItems)
+
+    return iorMenuItems
+#    return [(str(i), "Item %i" % i, "") for i in range(100)]
+
+
+class glossyIORmenu(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "glossy.iormenu"
+    bl_label = "IOR Menu 1"
+    bl_property = "my_enum"
+    bl_description = "Quick search for IOR files"
+#    my_enum = bpy.props.EnumProperty(items=item_cb)
+    my_enum = bpy.props.EnumProperty(items=item_iorMenu)
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+
+
+    def execute(self, context):
+        mat = context.material
+#        self.report({'INFO'}, "Selected: %s" % self.my_enum)
+        item = self.my_enum
+#        thea_globals.log.debug("*** IORmenu Items: %s" % item)
+        try:
+            bpy.data.materials[setattr(mat,"thea_GlossyIORMenu", item)]
+        except:
+            pass
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.invoke_search_popup(self)
+        return {'FINISHED'}
+
+class glossy2IORmenu(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "glossy2.iormenu"
+    bl_label = "IOR Menu 2"
+    bl_property = "my_enum"
+    bl_description = "Quick search for IOR files"
+#    my_enum = bpy.props.EnumProperty(items=item_cb)
+    my_enum = bpy.props.EnumProperty(items=item_iorMenu)
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+
+
+    def execute(self, context):
+        mat = context.material
+#        self.report({'INFO'}, "Selected: %s" % self.my_enum)
+        item = self.my_enum
+#        thea_globals.log.debug("*** IORmenu Items: %s" % item)
+        try:
+            bpy.data.materials[setattr(mat,"thea_Glossy2IORMenu", item)]
+        except:
+            pass
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.invoke_search_popup(self)
+#        invoke_props_dialog(self, 800, 550)
+        return {'FINISHED'}
+
+def item_lutMenu(self, context):
+    lutMenuItems = []
+    lutMenuItems.append(("0","None",""))
+    sceneLoaded = False
+    try:
+        if bpy.context.scene:
+            sceneLoaded = True
+    except:
+        pass
+    if sceneLoaded:
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(bpy.context.scene)
+    else:
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene=None)
+
+    #print("sceneLoaded: ", sceneLoaded)
+    matTransTable = getMatTransTable()
+
+    i = 1
+    maxid = 1
+    id = 1
+    found = False
+    for tr in matTransTable:
+        for idrec in lutMenuItems_store:
+            id = idrec[0]
+            if id > maxid:
+                maxid = id
+            if idrec[1] == str(i):
+                found = True
+                break
+        if not found:
+            lutMenuItems_store.append((maxid+1, str(i)))
+#            items.append((mat.name, mat.name, mat.name))
+#        items.append( (mat.name, mat.name, "", id) )
+        lutMenuItems.append((str(i),tr[0],"",id))
+        i+=1
+
+    return lutMenuItems
+
+
+class theaLUTmenu(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "thea.lutmenu"
+    bl_label = "LUT menu search"
+    bl_property = "my_lut"
+    bl_description = "Quick search in LUT library"
+#    my_enum = bpy.props.EnumProperty(items=item_cb)
+    my_lut = bpy.props.EnumProperty(items=item_lutMenu)
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+
+
+    def execute(self, context):
+        mat = context.material
+#        self.report({'INFO'}, "Selected: %s" % self.my_enum)
+        item = self.my_lut
+#        thea_globals.log.debug("*** IORmenu Items: %s" % item)
+        try:
+            bpy.data.materials[setattr(mat,"thea_LUT", item)]
+        except:
+            pass
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.invoke_search_popup(self)
+        return {'FINISHED'}

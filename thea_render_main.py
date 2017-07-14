@@ -640,13 +640,11 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                     if camData.dof_object:
                         obj1 = cam.name
                         obj2 = camData.dof_object.name
-                        #                    obj1_loc = bpy.data.objects[obj1].matrix_world.to_translation()
-                        #                    obj2_loc = bpy.data.objects[obj2].matrix_world.to_translation()
                         obj1_loc = bpy.data.objects[obj1].location
                         obj2_loc = bpy.data.objects[obj2].location
                         dist = (obj1_loc - obj2_loc).length
                         zDist = dist
-#                        thea_globals.log.debug("***DOF CAMERA>OBJECT: ", dist)
+                        camData.dof_distance = dist # SET distance from object
                     else:
                         dist = camData.dof_distance
 
@@ -689,7 +687,8 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
                             cam.fNumber = 0
 #                            print("APERTURE A - ALL 0:", aperture)
 
-                    cam.projection = getattr(camOb, 'thea_projection', 'Perspective')
+#                    cam.projection = getattr(camOb, 'thea_projection', 'Perspective')
+                    cam.projection = getattr(camOb, "thea_projection")
                     #   CHANGED > added diaphgrama and blades
                     cam.diaphragm = camOb.thea_diaphragma
                     cam.blades = camOb.thea_diapBlades
@@ -718,8 +717,9 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 #                  CHANGED > Added different calculation
 #                     cam.filmHeight = camData.ortho_scale * 563.333333 #* 750
 #                     cam.focalLength = camData.ortho_scale * 563.333333 #* 750
-                    cam.filmHeight = camData.ortho_scale * 750
-                    cam.focalLength = camData.ortho_scale * 750
+#                    cam.filmHeight = 80 / camData.lens * 1000
+                    cam.filmHeight = camData.ortho_scale * 1000
+                    cam.focalLength = camData.lens
 #               CHANGED > New check for distance/distance_object and check if pinhole is active
                 if camData.dof_distance >= 0:
 #                    cam.focusDistance = camData.dof_distance
@@ -870,7 +870,10 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 #   CHANGED > added new distance check for object or distance
 #        if dist == 'None':
 #            dist = 1
-        cam.focusDistance = dist
+        try:
+            cam.focusDistance = dist
+        except:
+            pass
         thea_globals.log.debug("camData.camera: %s" % camData.camera)
         thea_globals.log.debug("area.spaces.active.region_3d.view_perspective: %s" % area.spaces.active.region_3d.view_perspective)
         cam.filmHeight = 32 / fac
@@ -1045,6 +1048,7 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
         omni.multiplier=lightData.thea_EmittancePower#*10
         omni.efficacy = lightData.thea_EmittanceEfficacy
 #        changed > to Attenuation checker like in studio
+        thea_globals.log.debug("*** Light Name: %s - Type: %s" % (lightData.name, lightData.type))
         if lightData.type == 'SUN':
             att = lightData.thea_SunAttenuation
         else:
@@ -1131,8 +1135,8 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
                 omni.iesfile = os.path.abspath(bpy.path.abspath(getattr(lightData, "thea_IESFilename")))
         #        changed > to emittancePower like in studio
                 omni.multiplier=lightData.thea_IESMultiplier#*10
-            omni.falloff = lightData.spot_size * 57.3
-            omni.hotspot = (lightData.spot_size * (1 - lightData.spot_blend)) * 57.3
+            omni.falloff = lightData.spot_size * 57.295779 #57.3
+            omni.hotspot = (lightData.spot_size * (1 - lightData.spot_blend)) * 57.295779 #57.3
             #print("energy: ", lightData.energy)
 
         if lightData.type == 'AREA':
@@ -1144,8 +1148,10 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
 
 
         omni.unit = getattr(lightData, "thea_EmittanceUnit")
-
-        if lightData.type == 'SUN' and omni.name.lower() == "sun":
+#        and omni.name.lower() == "sun"
+        if lightData.type == 'POINT':
+            omni.sun = False
+        if lightData.type == 'SUN':
     #        changed > to emittancePower like in studio
             omni.multiplier=lightData.thea_EmittancePower#*10
             omni.radiusMultiplier=getattr(lightData, "thea_radiusMultiplier")
@@ -1281,14 +1287,16 @@ def exportLibraries(scene,frame, anim=False, exporter=None, obList=None):
                            mainExpObject.subobjects.append(expOb)
 #                  CHANGED > Added better time notation
                     t1 = datetime.datetime.now()
-                    exporter.writeModelBinary(scn, mainExpObject, frame, anim)
+#                    exporter.writeModelBinary(scn, mainExpObject, frame, anim)
+                    # CHANGED > Still used old code
+                    exporter.writeModelBinaryNew(scn, mainExpObject, frame, anim)
                     t2 = datetime.datetime.now()
                     totalTime = t2-t1
                     minutes = totalTime.seconds/60
                     seconds = totalTime.seconds%60
                     microseconds = totalTime.microseconds%1000000
                     result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
-                    thea_globals.log.debug("exporting object: %s > %s sec" % (ob.name, result))
+                    thea_globals.log.debug("Exporting object Library: %s > %s sec" % (ob.name, result))
                     package = Package()
                     package.name = ob.name
                     package.alias = "%s:%s" % (ob.dupli_group.name, os.path.basename(ob.dupli_group.library.filepath).replace('.blend','') if ob.dupli_group.library else "local")
@@ -1376,7 +1384,7 @@ def exportDupliObjects(scene,frame, anim=False, exporter=None, obList=None):
         seconds = totalTime.seconds%60
         microseconds = totalTime.microseconds%1000000
         result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
-        thea_globals.log.debug("exporting object: %s > %s sec" % (ob.name, result))
+        thea_globals.log.debug("Exporting object DupliObject: %s > %s sec" % (ob.name, result))
 
 
 
@@ -1804,7 +1812,7 @@ def exportMeshObjects(scene,frame, anim=False, exporter=None, obList=None):
         microseconds = totalTime.microseconds%1000000
         result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
 #        thea_globals.log.debug("exporting object: %s time: %s" % (ob.name, time.strftime("%H:%M:%S",time.gmtime(t))))
-        thea_globals.log.debug("exporting object: %s > %s sec" % (ob.name, result))
+        thea_globals.log.debug("Exporting object MeshObject: %s > %s sec" % (ob.name, result))
 #        thea_globals.log.debug("exporting object: %s time: %s" % (ob.name, t2-t1))
 
 
@@ -1982,7 +1990,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.getRenderOptions().animationOptions.frameRate = int(scn.render.fps / scn.render.fps_base)
 
     if area:
-        exporter.getRenderOptions().activeCamera = "3D view"
+        exporter.getRenderOptions().activeCamera = '## Current View ##'
     else:
         if scn.camera:
             exporter.getRenderOptions().activeCamera = scn.camera.name
@@ -2297,7 +2305,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
             #print("*IBL*")
             #iblMap.bitmapTexture = BitmapTexture(bpy.path.abspath(scn.thea_IBLFilename))
             tex = getTexture(component="thea_IBLFilename")
-            thea_globals.log.debug("tex: %s" % tex)
+#            thea_globals.log.debug("tex: %s" % tex)
             if tex:
                 iblMap = EnvironmentOptions.IBLMap()
                 iblMap.bitmapTexture = tex
@@ -2369,7 +2377,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.environmentOptions.GlobalMediumIOR = scn.thea_GlobalMediumIOR
     colorMedS = RgbTexture(getattr(scn, "thea_MediumScatterCol")[0],getattr(scn, "thea_MediumScatterCol")[1],getattr(scn, "thea_MediumScatterCol")[2])
     colorMed = RgbTexture(scn.thea_MediumScatterCol[0],scn.thea_MediumScatterCol[1],scn.thea_MediumScatterCol[2])
-    thea_globals.log.debug("GLobal Med Color: %s" % colorMedS)
+#    thea_globals.log.debug("GLobal Med Color: %s" % colorMedS)
     exporter.environmentOptions.scatteringColor = colorMedS
     exporter.environmentOptions.scatteringDensity = scn.thea_MediumScatterDensity
     exporter.environmentOptions.scatteringDensityTexture = scn.thea_MediumScatterDensityFilename
@@ -2600,7 +2608,8 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                         cam.blades = camOb.thea_diapBlades
                 elif camData.type == "ORTHO":
                     cam.projection = "Parallel"
-                    cam.filmHeight = (camOb.scale*1000)/fac
+#                    cam.filmHeight = (camOb.scale*1000)/fac
+                    cam.filmHeight = 80 / camData.lens
                 if camData.dof_distance > 0:
                     cam.focusDistance = camData.dof_distance
                     try:
@@ -2745,8 +2754,8 @@ def renderFrame(scene,frame,anim=True):
         :return: list with arguments to start Thea process
         :rtype: list
     '''
-
-
+    thea_globals.log.debug("*** Render Animation: %s" % anim)
+    t1 = datetime.datetime.now()
     global guiSets
     global scn, exportPath, command, tmpTheaRenderFile, outputImage
     maskIndex = []
@@ -2844,20 +2853,22 @@ def renderFrame(scene,frame,anim=True):
 #         theaPath = darkroomfile
 
 
-
-    if anim:
-        args.append(scriptFilename)
-        args.append(saveScriptFilename)
+    args.append(scriptFilename)
+    args.append(saveScriptFilename)
 #         args.append(str(theaPath))
-        if scn.get('thea_HideThea') != False:
-            args.append("-hidden")
-        args.append(exitCom)
+    if scn.get('thea_HideThea') != False:
+        args.append("-hidden")
+    args.append(exitCom)
+    scriptFile.write('message \"Render\"\n')
+    thea_globals.log.debug("*** Save 2 Export only: %s" % getattr(scn,"thea_save2Export", False))
+    if anim and (getattr(scn,"thea_save2Export")!=True):
+
 #         args.append("-darkroom")
 #         args.append("-nosplash")
         if scn.frame_start == frame:
 #             args.append("-load")
 #             args.append(scriptFilename)
-            scriptFile.write('message \"Render\"\n')
+
             if color_mode == "RGBA":
                 saveScriptFile.write('message \"SaveChannel +Alpha %s\"\n' % outputImage)
                 exporter.getRenderOptions().alphaChannel = True
@@ -2877,7 +2888,7 @@ def renderFrame(scene,frame,anim=True):
                saveScriptFile.write('message \"Load Irradiance Cache ' + os.path.join(exportPath,os.path.basename(xmlFilename) + '.irc.thea\"\n'))
             if scn.thea_CausticLock:
                 saveScriptFile.write('message \"Load Caustic Map ' + os.path.join(exportPath,os.path.basename(xmlFilename) + '.cpm.thea\"\n'))
-            scriptFile.write('message \"Render\"\n')
+#            scriptFile.write('message \"Render\"\n')
             if scn.thea_ICLock:
                saveScriptFile.write('message \"Save Irradiance Cache ' + os.path.join(exportPath,os.path.basename(xmlFilename) + '.irc.thea\"\n'))
             if scn.thea_CausticLock:
@@ -2956,30 +2967,30 @@ def renderFrame(scene,frame,anim=True):
 
 
 #       CHANGED > ADDED MARKER NAMING AND CUSTOM NAMING
-        if exporter.getRenderOptions().customOutput:
-            prefix = exporter.getRenderOptions().customName
-            prefix = prefix + "_"
-            xmlFilename = prefix
-        else:
-            prefix = ""
-        if exporter.getRenderOptions().markerName:
-            frame_current = scn.frame_current
-            markers = scn.timeline_markers
-            for m in markers:
-                if m.frame == frame_current:
-    #                for k,v in scn.timeline_markers.items():
+    if exporter.getRenderOptions().customOutput:
+        prefix = exporter.getRenderOptions().customName
+        prefix = prefix + "_"
+        xmlFilename = prefix
+    else:
+        prefix = ""
+    if exporter.getRenderOptions().markerName:
+        frame_current = scn.frame_current
+        markers = scn.timeline_markers
+        for m in markers:
+            if m.frame == frame_current:
+#                for k,v in scn.timeline_markers.items():
 #                    frame = v.frame
-                    name = m.name
-                    outputImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + fileFormat)
-                    outputIMG = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + ".img.thea")
-                    outputChannelImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name )
-                    thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
-        else:
-            #save rendered image also in exportPath dir
-            outputImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + fileFormat)
-            outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + ".img.thea")
-            outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name )
-
+                name = m.name
+                outputImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + fileFormat)
+                outputIMG = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + ".img.thea")
+                outputChannelImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name )
+                thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
+    else:
+        #save rendered image also in exportPath dir
+        outputImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + fileFormat)
+        outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + ".img.thea")
+        outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name )
+    if getattr(scn,"thea_save2Export")!=False:
         if color_mode == "RGBA":
             saveScriptFile.write('message \"SaveChannel +Alpha %s\"\n' % outputImage)
             exporter.getRenderOptions().alphaChannel = True
@@ -3007,7 +3018,7 @@ def renderFrame(scene,frame,anim=True):
                 saveScriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % (outputChannelImage + "_material_id" + fileFormat))
             if exporter.getRenderOptions().shadowChannel:
                 saveScriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % (outputChannelImage + "_shadow" + fileFormat))
-#            CHANGED> Added mask back in CHECK numbering system
+    #            CHANGED> Added mask back in CHECK numbering system
             if exporter.getRenderOptions().maskChannel:
                 maskIndexList = []
                 for obName in scn.objects:
@@ -3018,8 +3029,8 @@ def renderFrame(scene,frame,anim=True):
                             saveScriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, outputChannelImage + "_Mask" + str(maskIndex) + fileFormat))
                             maskIndexList.append(maskIndex)
                         thea_globals.log.debug("Mask Index Number: %s" % maskIndexList)
-#            if exporter.getRenderOptions().maskChannel:
-#                saveScriptFile.write('message \"SaveChannel \'Mask %s\' %s\"\n' % ("#3", outputChannelImage + "_mask" + fileFormat))
+    #            if exporter.getRenderOptions().maskChannel:
+    #                saveScriptFile.write('message \"SaveChannel \'Mask %s\' %s\"\n' % ("#3", outputChannelImage + "_mask" + fileFormat))
             if exporter.getRenderOptions().rawDiffuseColorChannel:
                 saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % (outputChannelImage + "_raw_diffuse_color" + fileFormat))
             if exporter.getRenderOptions().rawDiffuseLightingChannel:
@@ -3048,10 +3059,10 @@ def renderFrame(scene,frame,anim=True):
             if exporter.getRenderOptions().irradianceChannel:
                 saveScriptFile.write('message \"SaveChannel \'Irradiance\' %s\"\n' % (outputChannelImage + "_irradiance"+ fileFormat))
 
-#         if exporter.getRenderOptions().depthChannel:
-#             saveScriptFile.write('message \"SaveChannel Depth %s\"\n' % (outputChannelImage + "_depth" + fileFormat))
-#         if alphaMode:
-#             saveScriptFile.write('message \"SaveChannel Alpha %s\"\n' % (outputChannelImage + "_alpha" + fileFormat))
+    #         if exporter.getRenderOptions().depthChannel:
+    #             saveScriptFile.write('message \"SaveChannel Depth %s\"\n' % (outputChannelImage + "_depth" + fileFormat))
+    #         if alphaMode:
+    #             saveScriptFile.write('message \"SaveChannel Alpha %s\"\n' % (outputChannelImage + "_alpha" + fileFormat))
 
 
 
@@ -3071,6 +3082,14 @@ def renderFrame(scene,frame,anim=True):
     scriptFile.close()
     saveScriptFile.close()
     thea_globals.log.debug(args)
+
+    t2 = datetime.datetime.now()
+    totalTime = t2-t1
+    minutes = totalTime.seconds/60
+    seconds = totalTime.seconds%60
+    microseconds = totalTime.microseconds%1000000
+    result = "%d:%d.%d" %(minutes, seconds,(microseconds/1000))
+    thea_globals.log.debug("Total export time: %s > %s sec" % (currentBlendFile, result))
     return args
 
 
@@ -3485,7 +3504,7 @@ def getPresets():
             i+=1
     return presets
 
-
+lutMenuItems_store = []
 def getLUT():
     '''Get menu entries with material from LUT file
 
@@ -3510,10 +3529,23 @@ def getLUT():
     #print("sceneLoaded: ", sceneLoaded)
     matTransTable = getMatTransTable()
 
-
     i = 1
+    maxid = 1
+    id = 1
+    found = False
     for tr in matTransTable:
-        lutMenuItems.append((str(i),tr[0],""))
+        for idrec in lutMenuItems_store:
+            id = idrec[0]
+            if id > maxid:
+                maxid = id
+            if idrec[1] == str(i):
+                found = True
+                break
+        if not found:
+            lutMenuItems_store.append((maxid+1, str(i)))
+#            items.append((mat.name, mat.name, mat.name))
+#        items.append( (mat.name, mat.name, "", id) )
+        lutMenuItems.append((str(i),tr[0],"",id))
         i+=1
 
     return lutMenuItems
@@ -3543,6 +3575,7 @@ def getLUTarray():
         lut.append(tr[0])
         i+=1
 
+#    thea_globals.log.debug("*** List LUT materials: %s" % lut)
     return lut
 
 
@@ -3601,6 +3634,9 @@ def getTheaCRFMenuItems():
     return crfMenuItems
 
 
+
+
+
 def getTheaIORMenuItems():
     '''get list with menu items of the IOR directory
 
@@ -3609,7 +3645,7 @@ def getTheaIORMenuItems():
     '''
 
     iorMenuItems = []
-
+    iorMenuItems.append(("0","None",""))
     sceneLoaded = False
     try:
         if bpy.context.scene:
@@ -3622,7 +3658,7 @@ def getTheaIORMenuItems():
         (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene=None)
     ior = []
     if len(dataPath ) > 5:
-        i = 1
+        i = 2
         for entry in sorted(os.listdir(os.path.join(dataPath,"ior"))):
             ior.append((entry,os.path.join(dataPath,"ior",entry)))
             iorMenuItems.append((str(i),entry[:-4],""))
@@ -3686,7 +3722,6 @@ def getTheaPreviewScenesMenuItems():
     allfiles = []
     subfiles = []
     scenesMenuItems.append(("0", "Addon", "Addon"))
-
     for root, dirs, files in os.walk(searchPath):
         for f in files:
             if f.endswith('.scn.thea'):
@@ -3698,13 +3733,13 @@ def getTheaPreviewScenesMenuItems():
         i = 1
         for entry in subfiles:
             scenes.append((entry,entry))
-#             thea_globals.log.debug("entry: %s %s" % (entry, entry[:-9]))
+#            thea_globals.log.debug("entry: %s %s" % (entry, entry[:-9]))
             scenesMenuItems.append((str(i),os.path.basename(entry)[:-9],entry))
             i+=1
     else:
         scenesMenuItems.append(("1", "Please install Thea Studio to use Thea Studio preview scenes", ""))
 
-#     thea_globals.log.debug("scenesMenuItems: %s" % scenesMenuItems)
+#    thea_globals.log.debug("scenesMenuItems: %s" % scenesMenuItems)
     return scenesMenuItems
 
 
@@ -4152,7 +4187,8 @@ def updateActiveMaterialColor():
     import tempfile
     material = bpy.context.scene.objects.active.active_material
     extMatFile = False
-    ##print("material name: ", material.name)
+    scene = bpy.context.scene
+    #print("material name: ", material.name)
     if material:
         try:
             materialName, foo = material.name.split(".") # very bad workaround because preview scene adds .00x to material names
@@ -4165,15 +4201,22 @@ def updateActiveMaterialColor():
     if int(getattr(material, 'thea_LUT', 0)) > 0:
         matTransTable = getMatTransTable()
         lut = getLUTarray()
+        i = 0
 #                 #print("matTransTable: ", matTransTable)
         for trMat in matTransTable:
+            i+=1
             try:
                 trFileName = trMat[1].replace("$", ":")
                 foo, trFileName = trFileName.split("::/")
+                matIndex = i
+                matName = trMat[0]
             except:
                 trFileName = trMat[1]
+                matIndex = i
+                matName = trMat[0]
 
-            trFileName = os.path.join(dataPath, trFileName)
+#            trFileName = os.path.join(dataPath, trFileName)
+            trFileName = os.path.join(scene.thea_materialsPath, trFileName)
             try:
                 if thea_globals.getNameBasedLUT():
                     if trMat[0] == materialName and (os.path.exists(trFileName)):
@@ -4184,7 +4227,6 @@ def updateActiveMaterialColor():
                     ##print("trMat[0], matName: ", trMat[0], matName)
             except:
                 pass
-
     if not extMatFile:
         try:
             extMatFile = os.path.abspath(bpy.path.abspath(material['thea_extMat']))
@@ -4303,7 +4345,7 @@ class TheaRender(bpy.types.RenderEngine):
                     materialName = material.name
 
             #if getattr(scene, 'thea_useLUT'):
-            thea_globals.log.debug("thea_globals.useLUT: %s %s" % (thea_globals.useLUT, getattr(scene, "thea_useLUT")))
+#            thea_globals.log.debug("thea_globals.useLUT: %s %s" % (thea_globals.useLUT, getattr(scene, "thea_useLUT")))
             #print("scenes: ", bpy.data.scenes)
 #             if thea_globals.getUseLUT():
 #             if getattr(scene, "thea_useLUT"):

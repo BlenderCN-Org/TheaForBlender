@@ -1113,7 +1113,7 @@ class LayeredCoating:
 ##        CHANGED > Added Thickness absorption color
     def setThicknessAbsorptionTexture (self, texture):
         self.thicknessAbsorptionTexture = texture
-    def getWeightTexture(self):
+    def getCoatingWeightTexture(self):
         return self.weightTexture
     def getThicknessTexture(self):
         return self.thicknessTexture
@@ -1238,18 +1238,28 @@ class LayeredBSDF:
         k=0
         for coating in self.coatings:
             try:
-                if coating.getWeightTexture():
+                if coating.getCoatingWeightTexture():
                     layerId = "Weight Map #"+str(k)
-                    thea_globals.log.debug("coating: %s" % coating)
-                    coating.getWeightTexture().write(file,layerId)
+                    thea_globals.log.debug("coating: %s" % layerId)
+                    coating.getCoatingWeightTexture().write(file,layerId)
             except:
                 type = None
             k+=1
         # write textured weights for substrates
         k=0
         for substrate in self.sortedSubstrates:
+#            if getattr(bpy.context.active_object.active_material, 'thea_Coating', False):
+#                k = 0
+            try:
+                if coating.getCoatingWeightTexture():
+                    k = 1
+                if not coating.getCoatingWeightTexture():
+                    k = 1
+            except:
+                pass
             if substrate.getWeightTexture():
                 layerId = "Weight Map #"+str(k)
+                thea_globals.log.debug("substrate: %s" % layerId)
                 substrate.getWeightTexture().write(file,layerId)
             k+=1
         # write parameters.
@@ -1461,7 +1471,7 @@ class PointLight:
 #        CHANGED > changed to enableLamp, so we can turn it off as well. Wasnt working below identifier. Also Radiance doesnt do anything i think
         file.write('<Parameter Name=\"Enabled\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.enableLamp else '0'))
 #CHANGED > added equal state to check for sun. all lamps where converted to a sun but did have some llamp controls
-        if self.sun == "Sun":
+        if self.sun == True and stype == "Omni Light":
 #            CHANGED > moved this under sun. All light would get sun assinged and caused error in studio
             file.write('<Parameter Name=\"Sun\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.sun)
 #    CHANGED > Moved this out of sun, would get soft radius else
@@ -1637,7 +1647,7 @@ class ThMaterial:
         self.name=n
 
     def write(self, file, preview=False):
-        '''Write whole material object
+        ''' Write whole material object
 
             :param file: file handler
             :type file: file
@@ -1690,13 +1700,14 @@ class ThMaterial:
 #// Model - that is a geometric object
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Model:
-    '''Model - that is a geometric object. Not used in this implementation as binary mesh formatt is used.
+    ''' Model - that is a geometric object. Not used in this implementation as binary mesh formatt is used.
     '''
     def __init__(self):
         self.pointList = []
         self.normalList = []
         self.indexList = []
         self.uvList = []
+        smoothingAngle = 90
         self.materialName = None
         self.frame = Transform()
         self.visible = 1
@@ -1710,7 +1721,7 @@ class Model:
         '''
         file.write('<Object Identifier=\"./Models/%s\" Label=\"Default Model\" Name=\"%s\" Type=\"Model\">\n' % (self.name, self.name))
         file.write('<Object Identifier=\"Triangular Mesh\" Label=\"Triangular Mesh\" Name=\"\" Type=\"Surface\">\n')
-
+        file.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % smoothingAngle)
         file.write('<Parameter Name=\"Vertex List\" Type=\"Point3D List\" Value=\"%s\">\n' % len(self.pointList))
         for p in self.pointList:
             file.write('<P xyz=\"%s %s %s\"/>\n' % (p.x, p.y, p.z))
@@ -1726,15 +1737,25 @@ class Model:
             file.write('<F ijk=\"%s %s %s\"/>\n' % (d.i, d.j, d.k))
         file.write('</Parameter>\n')
 
-        file.write('</Object>\n')
 
         file.write('<Parameter Name=\"Map Channel\" Type=\"Point2D List\" Value=\"%s\">\n' % len(self.uvList))
         for p in self.uvList:
             file.write('<P xy=\"%s %s\"/>\n' % (p.u, p.v))
         file.write('</Parameter>\n')
 
-        file.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialName)
 
+        thea_globals.log.debug("*** Model custom normals: %s" % self.smoothingAngle)
+#        if mesh.use_auto_smooth:
+##                        modelSmooth = ""
+#                        modelSmooth = ('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % (round (180 * mesh.auto_smooth_angle / 3.14159265359)))
+#                        thea_globals.log.debug("*** Model custom normals: %s" % modelSmooth))
+        file.write('<Parameter Name=\"Pivot\" Type=\"Transform\" Value=\"1 0 0 0 0 1 0 0 0 0 1 1.11423 \"/>\n')
+        file.write('</Object>\n')
+#        file.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % self.smoothingAngle)
+#        file.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % (round (180 * self.auto_smooth_angle) / 3.14159265359))
+
+        file.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialName)
+        file.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % smoothingAngle)
         self.frame.write(file);
 
         file.write('</Object>\n')
@@ -1784,7 +1805,7 @@ class ThCamera:
             :param file: file handler
             :type file: file
         '''
-        file.write('<Object Identifier=\"./Cameras/%s\" Label=\"Pinhole Camera\" Name=\"%s\" Type=\"Camera\">\n' % (self.name, self.name))
+        file.write('<Object Identifier=\"./Cameras/%s\" Label=\"Standard Camera\" Name=\"%s\" Type=\"Camera\">\n' % (self.name, self.name))
         file.write('<Parameter Name=\"Focal Length (mm)\" Type=\"Real\" Value=\"%s\"/>\n' % self.focalLength)
         file.write('<Parameter Name=\"Film Height (mm)\" Type=\"Real\" Value=\"%s\"/>\n' % self.filmHeight)
         file.write('<Parameter Name=\"Shift X (mm)\" Type=\"Real\" Value=\"%s\"/>\n' % self.shiftLensX)
@@ -1848,7 +1869,8 @@ class EnvironmentOptions:
             if self.wrapping == "Spherical":
                 file.write("Spherical")
             file.write("\"/>\n")
-            file.write('<Parameter Name=\"IBL Type\" Type="String" Value=\"%s\"/>\n' % (self.iblType))
+            if identifier == "Illumination Mapping":
+                file.write('<Parameter Name=\"IBL Type\" Type="String" Value=\"%s\"/>\n' % (self.iblType))
             file.write('<Parameter Name=\"./%s/Intensity\" Type=\"Real\" Value=\"%s\"/>\n' % (identifier,self.intensity))
             file.write('<Parameter Name=\"./%s/Rotation" Type=\"Real\" Value="%s"/>\n' % (identifier, self.rotation))
             if self.enabledParameter:
@@ -2820,7 +2842,7 @@ class XMLExporter:
             i+=1
         return materials_dict
 
-    def writeModel(self, model, frame):
+#    def writeModel(self, model, frame):
         '''write xml model, not used currently
         '''
         global exportPath
@@ -2833,727 +2855,728 @@ class XMLExporter:
         modelFile = open(os.path.join(tempDir,modelFilename), "wb")
         model.write(modelFile)
 
-    def writeModelBinary(self, scn, expOb, frame, anim):
-        '''write model using binary mesh.thea format
-
-            :param scn: Blender scene
-            :type: scn: bpy_types.Scene
-            :param expOb: object to export
-            :type expOb: exportObject
-            :param frame: transformation matrix
-            :type frame: Transform
-            :param anim: is object animated
-            :type anim: bool
-        '''
-        from TheaForBlender.thea_render_main import getMatTransTable, setPaths
-
-#         def mesh_triangulate(me):
-#             import bmesh
-#             bm = bmesh.new()
-#             bm.from_mesh(me)
-#             bmesh.ops.triangulate(bm, faces=bm.faces)
-#             bm.to_mesh(me)
-#             bm.free()
-
-        t1 = time.time()
-
-
-        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scn)
-
-        t2 = time.time()
-#         thea_globals.log.debug("*t2-t1: %s" % (t2-t1))
-
-        matTransTable = getMatTransTable()
-
-#         thea_globals.log.debug("ob: %s %s" % (expOb.name, expOb.blenderObject.name))
-
-
-        frameS= "0000" + str(frame)
-        tempDir = os.path.join(exportPath,"~thexport")
-        if not os.path.isdir(tempDir):
-            os.mkdir(tempDir)
-        if anim:
-            framesDir = os.path.join(tempDir,"frames")
-            if not os.path.isdir(framesDir):
-                os.mkdir(framesDir)
-        objects = []
-        exportedObjects = []
-        subObjects = False
-        if len(expOb.subobjects) > 0:
-            objects = expOb.subobjects
-            subObjects = True
-        else:
-            objects.append(expOb)
-
-
-        ##print("objects: ", len(objects), expOb.name)
-
-        for ob in objects:
-#             ##print("ob: ", ob)
-            if(ob.blenderObject is None):
-                return
-            if getattr(ob.blenderObject, 'library'):
-            #if ob.blenderObject.library:
-                libObject = True
-                obName = ob.name
-                #obFileName = ob.meshName
-#                 obFileName = ob.name.replace(":","_").replace("_\\",":\\")
-                obFileName = obName.replace(":","_").replace("_\\",":\\")
-#                 obFileName = "".join([ c if c.isalnum() else "_" for c in obFileName ])
-                obFileName = re.sub('[^0-9a-zA-Z]+', '_', obFileName)
-                if anim:
-#                    modelGroupFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', '_f'+frameS[-4:]))+"."+obFileName+".xml"
-                   modelGroupFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', '_f'+frameS[-4:]))+"."+os.path.basename(obFileName)+".xml"
-                else:
-                    modelGroupFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', "."+obFileName+'.xml'))
-            else:
-                obFileName = ob.meshName.replace(":","_").replace("_\\",":\\")
-#                 obFileName = "".join([ c if c.isalnum() else "_" for c in obFileName ])
-                obFileName = re.sub('[^0-9a-zA-Z]+', '_', obFileName)
-                if anim:
-                   modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'.xml'))
-                else:
-                    modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+'.xml'))
-                libObject = False
-                obName = ob.name#[3]
-#                 obName = "".join([ c if c.isalnum() else "_" for c in obName ])
-#                 obName = re.sub('[^0-9a-zA-Z]+', '_', obName)
-
-
-
-            object = ob.blenderObject
-            exportModel = Model()
-#             exportModel.name = re.sub('[^0-9a-zA-Z]+', '_', ob.name)
-            exportModel.name = ob.name
-
-            obD_mat = ob.matrix
-            exportModel.frame = Transform(
-            obD_mat[0][0], obD_mat[0][1], obD_mat[0][2],
-            obD_mat[1][0], obD_mat[1][1], obD_mat[1][2],
-            obD_mat[2][0], obD_mat[2][1], obD_mat[2][2],
-            obD_mat[0][3], obD_mat[1][3], obD_mat[2][3])
-
-            t3 = time.time()
-#             thea_globals.log.debug("*t3-t2: %s" % (t3-t2))
-
-            try:
-                if ob.blenderObject["thAnimated"]:
-                    animatedMesh = True
-                else:
-                    animatedMesh = False
-            except:
-                    animatedMesh = False
-
-            if (scn.thea_Reuse == 0):
-                if anim:
-                    if animatedMesh:
-                      exportGeometry = True
-                    else:
-                      exportGeometry = False
-                else:
-                    exportGeometry = True
-            elif animatedMesh:
-                exportGeometry = True
-            else:
-                exportGeometry = False
-
-            if not exportGeometry and thea_globals.forceExportGeometry:
-                exportGeometry = True
-
-            if exportGeometry:
-                mesh = ob.blenderObject.to_mesh(scn,True, 'RENDER',calc_tessface=True)
-            else:
-                mesh = ob.blenderObject.data
-
-            if mesh is None:
-                mesh = ob.blenderObject.data
-                exportGeometry = False
-
-#             thea_globals.log.debug("mesh %s" % mesh.name)
-
-            t4 = time.time()
-#             thea_globals.log.debug("*t4-t3: %s" % (t4-t3))
-
-
-
-#             mesh.update(calc_tessface=True)
-            try:
-                if object.get('thNoRecalcNormals'):
-                    thea_globals.log.debug("Normal recalculation is disabled for this object!")
-#                    mesh.use_auto_smooth()
-#                    mesh.auto_smooth_angle = 10
-                else:
-                    mesh.calc_normals_split()
-                    thea_globals.log.debug("Normal recalculation is ON for this object!")
-#                 mesh.calc_normals()
-            except:
-                pass
-
-
-            try:
-                meshMaterials = mesh.materials
-            except:
-                meshMaterials = False
-
-
-            t5 = time.time()
-#             thea_globals.log.debug("*t5-t4: %s" % (t5-t4))
-
-            if meshMaterials:
-
-                try:
-                    exportModel.materialName = meshMaterials[0].name
-                except:
-                    exportModel.materialName = "--None--"
-
-                from . import thea_render_main
-                lut = thea_render_main.getLUTarray()
-                for mat in meshMaterials:
-                    if mat:
-                        matName = mat.name
-                        madeLink = False
-                        if thea_globals.getUseLUT():#getattr(scn, 'thea_useLUT'):
-                            for trMat in matTransTable:
-                                t11 = time.time()
-                                try:
-                                    if thea_globals.getNameBasedLUT():
-                                        if trMat[0] == matName and (self.findMaterialLink(matName) < 0):
-                                            matLink = Link()
-                                            matLink.setName(trMat[0])
-                                            matLink.setFilename(trMat[1])
-                                            self.addMaterialLink(matLink)
-                                            madeLink = True
-                                    else:
-                                        if int(getattr(bpy.data.materials.get(matName), 'thea_LUT', 0)) > 0:
-                                            pass
-                                            if trMat[0] == lut[int(getattr(bpy.data.materials.get(matName), 'thea_LUT', 0))] and (self.findMaterialLink(matName) < 0):
-                                                matLink = Link()
-                                                matLink.setName(matName)
-                                                matLink.setFilename(trMat[1])
-                                                self.addMaterialLink(matLink)
-                                                madeLink = True
-                                    t12 = time.time()
-#                                     thea_globals.log.debug("**t12-t11: %s" % (t12-t11))
-                                except:
-                                    emptyMat = True
-                        try:
-                            ##print("mat['thea_extMat']: ", mat['thea_extMat'], os.path.exists(os.path.abspath(bpy.path.abspath(mat['thea_extMat']))))
-                            #os.path.abspath(bpy.path.abspath(extMatFile)
-
-                            if os.path.exists(os.path.abspath(bpy.path.abspath(mat['thea_extMat']))) and (self.findMaterialLink(matName) < 0):
-                                matLink = Link()
-                                matLink.setName(matName)
-                                matLink.setFilename(os.path.abspath(bpy.path.abspath(mat['thea_extMat'])))
-                                self.addMaterialLink(matLink)
-                                madeLink = True
-                        except: pass
-
-
-
-                        if mat and (self.findMaterial(matName) < 0):
-                            ma = ThMaterial()
-                            ma.setName(matName)
-                            if madeLink:
-                                ma.link = True
-                            self.addMaterial(ma)
-                            self.materialList[self.findMaterial(matName)].blenderMat = mat
-                    else:
-                        #print("====Missing material for object %s. Object won't be exported!=====" % obName)
-                        scn['thea_Warning'] = ("Missing material for object %s" % obName)
-                        return
-            else:
-                #print("====No material assigned to object. Assigning basic_gray material====")
-                matName = "basic_gray"
-                ma = ThMaterial()
-                ma.setName(matName)
-                self.addMaterial(ma)
-                if(bpy.data.materials.get(matName)):
-                    mesh.materials.append(bpy.data.materials.get(matName))
-                else:
-                    bpy.data.materials.new(name=matName)
-                    mesh.materials.append(bpy.data.materials.get(matName))
-                self.materialList[self.findMaterial(matName)].blenderMat = bpy.data.materials.get(matName)
-                meshMaterials = mesh.materials
-
-
-            t6 = time.time()
-#             thea_globals.log.debug("*t6-t5: %s" % (t6-t5))
-
-
-            materials_dict = {}
-
-
-
-
-#             thea_globals.log.debug("exportGeometry1: %s" % exportGeometry)
-
-            uvLayer = None
-            meshUVs = []
-            modelUVs = []
-            uvNums = []
-            if exportGeometry:
-                if len(getattr(mesh, 'uv_layers', []))>0:
-                    for uvLayer in mesh.tessface_uv_textures:
-                        meshUV = []
-                        for uv in uvLayer.data:
-                            meshUV.append(uv.uv)
-                        meshUVs.append(meshUV)
-                        uvNums.append(0)
-                        modelUVs.append([])
-                ##print("modelUVs: ", modelUVs)
-                ##print("meshUVs: ", meshUVs)
-
-                try:
-                    uvLayer = mesh.tessface_uv_textures.active.data
-                except:
-                    pass
-                meshUV = []
-
-                if uvLayer:
-                    for uv in uvLayer:
-                            meshUV.append(uv.uv)
-                    ##print("meshUV: ", meshUV)
-
-#             thea_globals.log.debug("*modelUVs: %s" % modelUVs)
-
-            t7 = time.time()
-#             thea_globals.log.debug("*t7-t6: %s" % (t7-t6))
-
-
-            if exportGeometry:
-                for face in mesh.tessfaces:
-                        if len(meshMaterials):
-                            if face.material_index >= len(meshMaterials):
-                                materialName = None
-                            else:
-                                materialName = meshMaterials[face.material_index].name
-
-                                matKey = self.findMaterial(materialName)
-                                try:
-                                    materials_dict[matKey].append(face)
-                                except:
-                                    materials_dict[matKey] = [face]
-#             else: #if we don't export geometry we don't really need loop over faces to get materials list.
-            for mat in mesh.materials:
-                matKey = self.findMaterial(mat.name)
-                if matKey not in materials_dict:
-                    materials_dict[matKey] = []
-
-
-#             thea_globals.log.debug("materials_dict: %s" % materials_dict)
-
-            t8 = time.time()
-#             thea_globals.log.debug("*t8-t7: %s" % (t8-t7))
-            #search if mesh is already exported
-            if anim:
-                filePath = os.path.join(framesDir,modelGroupFilename)
-            else:
-                filePath = os.path.join(tempDir,modelGroupFilename)
-            if ob.isProxy == True: #is instance
-                filePath = filePath.replace(".xml", "_proxy.xml")
-
-            filePath=filePath.replace(":","_").replace("_\\",":\\")
-
-
-            isInstance = ob.isProxy#[5]
-
-            for obFilenameL, obNameL, meshName, obFrameL, isInstance in self.modelFilesList:
-                if obFilenameL == filePath:
-                    exportGeometry = False
-
-            if subObjects:
-                exportedObjects.append((obName, filePath, exportModel.frame))
-            else:
-                self.modelFilesList.append((filePath,obName,ob.meshName, exportModel.frame, ob.isProxy))
-
-            modelGroupFile = open(filePath, "w")
-
-            if ob.isProxy: #if proxy
-                modelGroupFile.write('<Object Identifier=\"./Proxies/Model/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
-            else:
-                modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
-
-            if thea_globals.forceExportGeometry:
-                exportGeometry = True
-
-#             thea_globals.log.debug("exportGeometry2: %s, force: %s" % (exportGeometry, thea_globals.forceExportGeometry))
-
-            for matKey, matFaces in materials_dict.items():
-                currMatName = re.sub('[^0-9a-zA-Z]+', '_', self.materialList[matKey].name)
-                if animatedMesh:
-                   if ob.blenderObject.library:
-                       modelFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', '_f'+frameS[-4:]))+"."+os.path.basename(obFileName)+"_"+currMatName+'.mesh.thea'
-                   else:
-                       modelFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+"_"+currMatName+'.mesh.thea'))
-                else:
-                    modelFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+"_"+currMatName+'.mesh.thea'))
-                if len(materials_dict) > 1:
-                    modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s (%s)\" Type=\"Model\">\n' % (obName, obName,currMatName))
-                if anim and animatedMesh:
-                    modelPath = os.path.join(framesDir,modelFilename)
-                else:
-                    modelPath = os.path.join(tempDir,modelFilename)
-                modelPath = modelPath.replace(":","_").replace("_\\",":\\")
-
-                modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\"/>\n' % modelPath)
-                modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialList[matKey].name)
-#               CHANGED > Added model properties if mesh is group, problem is all objects in the mesh group will get this. There is no workaournd or seperate the mesh which needs to have the property settings. But now it works in the whole group. In studio when you apply these settings everything in the group gets them, unless you uncheck the individually later. Perhaps this option should go to mesh object as well??? But you cant apply this per mesh object cause they all get the same name + material name as mesh.
-                if bpy.context.scene.objects.get(obName):
-                    modProp = bpy.context.scene.objects.get(obName)
-                    modelGroupFile.write('<Parameter Name=\"Enabled\" Type=\"Boolean\" Value=\"%s\"/>\n' % modProp.thEnabled)
-                    modelGroupFile.write('<Parameter Name=\"Visible\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thVisible)
-                    modelGroupFile.write('<Parameter Name=\"Shadow Caster\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thShadowCaster)
-                    modelGroupFile.write('<Parameter Name=\"Shadow Tight\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thShadowTight)
-#                    print("CHeck Shadow Tight", modProp.thShadowTight)
-#                    print("CHeck Shadow CAster", modProp.thShadowCaster)
-                    modelGroupFile.write('<Parameter Name=\"Shadow Receiver\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thShadowReceiver)
-                    modelGroupFile.write('<Parameter Name=\"Caustics Receiver\" Type=\"Boolean\" Value=\"%s\"/>\n' % modProp.thCausticsReceiver)
-                    modelGroupFile.write('<Parameter Name=\"Caustics Transmitter\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thCausticsTransmitter)
-                    modelGroupFile.write('<Parameter Name=\"Mask Index\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thMaskID)
-                else:
-                    pass
-
-                if ob.blenderObject.thExportAnimation == True and bpy.context.scene.thea_ExportAnimation == True:
-                        #export animation data
-                        obM = ob.blenderObject.matrix_world
-                        obFrame = Transform(\
-                        obM[0][0], -obM[0][1], -obM[0][2],
-                        obM[1][0], -obM[1][1], -obM[1][2],
-                        obM[2][0], -obM[2][1], -obM[2][2],
-                        obM[0][3],  obM[1][3],  obM[2][3])
-
-
-
-#                         startObMatrixAssigned = mathutils.Matrix((\
-#                         (obM[0][0], -obM[0][1], -obM[0][2], obM[0][3]),
-#                         (obM[1][0], -obM[1][1], -obM[1][2], obM[1][3]),
-#                         (obM[2][0], -obM[2][1], -obM[2][2], obM[2][3]),
-#                         (0.0, 0.0, 0.0, 1.0)))
-
-                        startObMatrixAssigned = mathutils.Matrix((\
-                        (obM[0][0], obM[0][1], obM[0][2], obM[0][3]),
-                        (obM[1][0], obM[1][1], obM[1][2], obM[1][3]),
-                        (obM[2][0], obM[2][1], obM[2][2], obM[2][3]),
-                        (0.0, 0.0, 0.0, 1.0)))
-
-                        obMInverted = ob.blenderObject.matrix_world.inverted()
-                        currFrame = bpy.context.scene.frame_current
-                        startFrame = bpy.context.scene.frame_start
-                        endFrame = bpy.context.scene.frame_end
-                        im = InterpolatedMotion()
-                        im.enabled = True
-                        im.duration = endFrame+1-startFrame
-                        bpy.context.scene.frame_set(startFrame)
-                        prevObM = ob.blenderObject.matrix_world
-                        if(bpy.context.scene.get('thea_AnimationEveryFrame')):
-                            tolerance = 0
-                        else:
-                            tolerance = 10**-5
-                        for frame in range(startFrame, endFrame+1, 1):
-                            print ("\n\nExporting animation frame %s for mesh object %s: " % (frame, obName))
-                            bpy.context.scene.frame_set(frame)
-                            obM = ob.blenderObject.matrix_world
-#                             ob_matrix_world_Assigned = mathutils.Matrix((\
-#                             (obM[0][0], -obM[0][1], -obM[0][2], obM[0][3]),
-#                             (obM[1][0], -obM[1][1], -obM[1][2], obM[1][3]),
-#                             (obM[2][0], -obM[2][1], -obM[2][2], obM[2][3]),
-#                             (0.0, 0.0, 0.0, 1.0)))
-                            sum = 0
-                            for v in (prevObM-obM):
-                                for i in v:
-                                    sum += abs(i)
-                            ##print(sum*100000000000000)
-
-                            #if((obM != prevObM) or (frame == startFrame)):
-                            if((sum>tolerance) or (frame == startFrame)):
-                            #if((obM != prevObM) or (frame == startFrame)):
-                                ob_matrix_world_Assigned = mathutils.Matrix((\
-                                (obM[0][0], obM[0][1], obM[0][2], obM[0][3]),
-                                (obM[1][0], obM[1][1], obM[1][2], obM[1][3]),
-                                (obM[2][0], obM[2][1], obM[2][2], obM[2][3]),
-                                (0.0, 0.0, 0.0, 1.0)))
-
-                                obM = startObMatrixAssigned.inverted() * ob_matrix_world_Assigned
-                                frame = Transform(\
-                                obM[0][0], obM[0][1], obM[0][2],
-                                obM[1][0], obM[1][1], obM[1][2],
-                                obM[2][0], obM[2][1], obM[2][2],
-                                obM[0][3], obM[1][3], obM[2][3])
-                                im.addNode(bpy.context.scene.frame_current, frame)
-                            else:
-                                thea_globals.log.debug("****no transform change on this frame")
-                            prevObM = ob.blenderObject.matrix_world * 1.0
-                        bpy.context.scene.frame_set(currFrame)
-                        im.write(modelGroupFile)
-
-                #obFrame.write(self.file, identifier="Group Frame")
-
-
-                if getattr(object, 'thea_Container') != "None":
-                    matInterface = getattr(object, 'thea_Container')
-                    modelGroupFile.write('<Parameter Name=\"Interface Appearance\" Type=\"String\" Value=\"%s\"/>\n' % matInterface)
-                else:
-                    matInterface = False
-
-
-                t9 = time.time()
-#                 thea_globals.log.debug("*t9-t8: %s" % (t9-t8))
-
-#                 thea_globals.log.debug("matFaces: %s %s" % (matFaces, len(matFaces)))
-                if exportGeometry and len(matFaces) > 0: #if we should export geometry too
-
-
-
-                    vertexNum = 0
-                    normalNum = 0
-                    faceNum = 0
-                    uvNum = 0
-                    modelP = []
-                    modelN = []
-                    modelF = []
-                    modelU = []
-                    modelV = []
-                    modelNN = []
-                    meshV = []
-                    vertN = []
-
-                    modelUVs = []
-                    if exportGeometry:
-                        if len(mesh.uv_layers)>0:
-                            for uvLayer in mesh.tessface_uv_textures:
-                                modelUVs.append([])
-
-                    for v in mesh.vertices:
-                        meshV.append(v.co)
-                        vertN.append(v.normal)
-
-                    for face in matFaces:
-#                         thea_globals.log.debug("face.use_smooth: %s" % face.use_smooth)
-                        fIdx = face.index
-                        if len(face.vertices) >= 3:
-                            vi = []
-                            for vert in face.vertices:
-                                 vi.append(vert)
-                            for vert in [0,1,2]:
-                                 idx=vi[vert]
-                                 modelP.append(meshV[idx][0])
-                                 modelP.append(meshV[idx][1])
-                                 modelP.append(meshV[idx][2])
-                                 if face.use_smooth:
-                                    modelN.append(vertN[idx][0])
-                                    modelN.append(vertN[idx][1])
-                                    modelN.append(vertN[idx][2])
-                                 else:
-                                    faceNormal = face.normal
-                                    modelN.append(faceNormal[0])
-                                    modelN.append(faceNormal[1])
-                                    modelN.append(faceNormal[2])
-                            vertexNum += 3
-                            normalNum += 3
-                            modelF.append(vertexNum-3)
-                            modelF.append(vertexNum-2)
-                            modelF.append(vertexNum-1)
-                            faceNum += 1
-
-
-                            if len(meshUVs)>1:
-                                n = 0
-                                for mUV in meshUVs:
-                                    ##print("mUV: ", mUV)
-                                    ##print("mUV[fIdx][0][0]: ", mUV[fIdx])
-                                    modelUVs[n].append(mUV[fIdx][0][0])
-                                    modelUVs[n].append(1.0-mUV[fIdx][0][1])
-                                    modelUVs[n].append(mUV[fIdx][1][0])
-                                    modelUVs[n].append(1.0-mUV[fIdx][1][1])
-                                    modelUVs[n].append(mUV[fIdx][2][0])
-                                    modelUVs[n].append(1.0-mUV[fIdx][2][1])
-                                    uvNums[n] += 3
-                                    n+=1
-                            else:
-                                if uvLayer:
-                                    ##print("meshUV[fIdx]: ", meshUV[fIdx])
-                                    modelU.append(meshUV[fIdx][0][0])
-                                    modelU.append(1.0-meshUV[fIdx][0][1])
-                                    modelU.append(meshUV[fIdx][1][0])
-                                    modelU.append(1.0-meshUV[fIdx][1][1])
-                                    modelU.append(meshUV[fIdx][2][0])
-                                    modelU.append(1.0-meshUV[fIdx][2][1])
-                                    uvNum += 3
-
-                            if len(face.vertices) == 4:
-                                ##print("**********************4 faces ******************")
-                                vi = []
-                                for vert in face.vertices:
-                                     vi.append(vert)
-                                for vert in [0,2,3]:
-                                     idx=vi[vert]
-                                     modelP.append(meshV[idx][0])
-                                     modelP.append(meshV[idx][1])
-                                     modelP.append(meshV[idx][2])
-                                     if face.use_smooth:
-                                        modelN.append(vertN[idx][0])
-                                        modelN.append(vertN[idx][1])
-                                        modelN.append(vertN[idx][2])
-                                     else:
-                                        faceNormal = face.normal
-                                        modelN.append(faceNormal[0])
-                                        modelN.append(faceNormal[1])
-                                        modelN.append(faceNormal[2])
-                                vertexNum += 3
-                                normalNum += 3
-                                modelF.append(vertexNum-3)
-                                modelF.append(vertexNum-2)
-                                modelF.append(vertexNum-1)
-                                faceNum += 1
-
-
-                                if len(meshUVs)>1:
-                                    n = 0
-                                    for mUV in meshUVs:
-                                        modelUVs[n].append(mUV[fIdx][0][0])
-                                        modelUVs[n].append(1.0-mUV[fIdx][0][1])
-                                        modelUVs[n].append(mUV[fIdx][2][0])
-                                        modelUVs[n].append(1.0-mUV[fIdx][2][1])
-                                        modelUVs[n].append(mUV[fIdx][3][0])
-                                        modelUVs[n].append(1.0-mUV[fIdx][3][1])
-                                        uvNums[n] += 3
-                                        n+=1
-                                else:
-                                    if uvLayer:
-                                        modelU.append(meshUV[fIdx][0][0])
-                                        modelU.append(1.0-meshUV[fIdx][0][1])
-                                        modelU.append(meshUV[fIdx][2][0])
-                                        modelU.append(1.0-meshUV[fIdx][2][1])
-                                        modelU.append(meshUV[fIdx][3][0])
-                                        modelU.append(1.0-meshUV[fIdx][3][1])
-                                        uvNum += 3
-
-#                     thea_globals.log.debug("*modelUVs: %s" % modelUVs)
-#                     thea_globals.log.debug("*modelU: %s" % modelU)
-
-                    modelFile = open(modelPath, "wb")
-#                     magicHeader = 0x54524d01
-                    if len(modelUVs)>1 :
-                        magicHeader = 0x54524d02
-                    else:
-                        magicHeader = 0x54524d01
-
-                    modelFile.write(struct.pack('<l',magicHeader))
-
-                    vertexCount = len(modelP)
-                    if vertexCount > 0:
-                        modelFile.write(struct.pack('<l',int(vertexCount/3)))
-                        modelFile.write(struct.pack("<%df" % (vertexCount), *modelP))
-
-                    normalCount = len(modelN)
-                    if normalCount > 0:
-                        modelFile.write(struct.pack('<l',int(normalCount/3)))
-                        modelFile.write(struct.pack("<%df" % (normalCount), *modelN))
-
-                    triangleCount = len(modelF)
-                    if triangleCount > 0:
-                        modelFile.write(struct.pack('<l',int(triangleCount/3)))
-                        modelFile.write(struct.pack("<%dl" % (triangleCount), *modelF))
-
-#                     print("vertexCount: ", vertexCount)
-#                     print("normalCount: ", normalCount)
-#                     print("triangleCount: ", triangleCount)
-
-#                     if vertexCount > 0:
-#                     #print("len(meshUVs): ", len(meshUVs))
-                    if len(meshUVs)>1:
-                        modelFile.write(struct.pack('<l',len(modelUVs)))
-                        for modelU in modelUVs:
-#                             #print("#########modelU: ", modelU)
-                            uvCount = len(modelU)
-#                             #print("uvCount: ", uvCount)
-                            modelFile.write(struct.pack('<l',int(uvCount/2)))
-                            modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
-                    else:
-                        # #                     #print("modelU: ", modelU)
-                        uvCount = len(modelU)
-#                         #print("uvCount: ", uvCount)
-                        if vertexCount > 0:
-                            modelFile.write(struct.pack('<l',int(uvCount/2)))
-                            modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
-                    modelFile.write(struct.pack('<l',0))
-
-
-
-
-
-
-                    modelFile.close()
+#    def writeModelBinary(self, scn, expOb, frame, anim):
+#        '''write model using binary mesh.thea format
 #
-                    if len(materials_dict) > 1:
-                        modelGroupFile.write('</Object>\n')
-                elif exportGeometry: # just create empty file if there are no faces for the material
-                    modelFile = open(modelPath, "wb")
-                    magicHeader = 0x54524d01
-                    modelFile.write(struct.pack('<l',magicHeader))
-                    modelFile.write(struct.pack('<l',0))
-                    modelFile.write(struct.pack('<l',0))
-                    modelFile.write(struct.pack('<l',0))
-                    modelFile.write(struct.pack('<l',0))
-                    modelFile.close()
-
-            if exportGeometry:
-                bpy.data.meshes.remove(mesh)
-                del(mesh)
-
-            t10 = time.time()
-#             thea_globals.log.debug("*t10-t9: %s" % (t10-t9))
-
-            i = 0
-            for layer in object.layers:
-               if layer:
-                   if i>9:
-                       modelGroupFile.write('<Parameter Name=\"Layer\" Type=\"Integer\" Value=\"%s\"/>\n' % (i-10))
-                   else:
-                       modelGroupFile.write('<Parameter Name=\"Layer\" Type=\"Integer\" Value=\"%s\"/>\n' % i)
-               i += 1
-            modelGroupFile.write('</Object>\n')
-            modelGroupFile.close()
-
-            del(object)
-            del(exportModel)
-
-        if subObjects: #if we have subobjects then we make group
-            object = expOb.blenderObject
-            obD_mat = expOb.matrix
-            exportModel = Model()
-            exportModel.frame = Transform(\
-            obD_mat[0][0], obD_mat[0][1], obD_mat[0][2],
-            obD_mat[1][0], obD_mat[1][1], obD_mat[1][2],
-            obD_mat[2][0], obD_mat[2][1], obD_mat[2][2],
-            obD_mat[0][3], obD_mat[1][3], obD_mat[2][3])
-
-            obFileName = expOb.name
-            if anim:
-               wholeGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'.xml'))
-            else:
-                wholeGroupFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+'.xml'))
-
-            if anim:
-                filePath = os.path.join(framesDir,wholeGroupFilename)
-            else:
-                filePath = os.path.join(tempDir,wholeGroupFilename)
-            filePath = filePath.replace(":","_").replace("_\\",":\\")
-
-            groupFile = open(filePath, "w")
-
-            groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (expOb.name, expOb.name))
-
-            for subObName, subFilePath, modelFrame in exportedObjects:
-                groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (subObName, subObName))
-                groupFile.write('<Link Identifier=\"./Models/%s\" Name=\"%s\" File=\"%s\">\n' % (subObName, subObName,subFilePath.replace(":","_").replace("_\\",":\\")))
-                groupFile.write('</Link>\n')
-                modelFrame.write(groupFile, identifier="Group Frame")
-                groupFile.write('</Object>\n')
-
-            groupFile.write('</Object>\n')
-            self.modelFilesList.append((filePath,expOb.name,ob.meshName,exportModel.frame, ob.isProxy))
-
+#            :param scn: Blender scene
+#            :type: scn: bpy_types.Scene
+#            :param expOb: object to export
+#            :type expOb: exportObject
+#            :param frame: transformation matrix
+#            :type frame: Transform
+#            :param anim: is object animated
+#            :type anim: bool
+#        '''
+#        from TheaForBlender.thea_render_main import getMatTransTable, setPaths
+#
+##         def mesh_triangulate(me):
+##             import bmesh
+##             bm = bmesh.new()
+##             bm.from_mesh(me)
+##             bmesh.ops.triangulate(bm, faces=bm.faces)
+##             bm.to_mesh(me)
+##             bm.free()
+#
+#        t1 = time.time()
+#
+#
+#        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scn)
+#
+#        t2 = time.time()
+##         thea_globals.log.debug("*t2-t1: %s" % (t2-t1))
+#
+#        matTransTable = getMatTransTable()
+#
+##         thea_globals.log.debug("ob: %s %s" % (expOb.name, expOb.blenderObject.name))
+#
+#
+#        frameS= "0000" + str(frame)
+#        tempDir = os.path.join(exportPath,"~thexport")
+#        if not os.path.isdir(tempDir):
+#            os.mkdir(tempDir)
+#        if anim:
+#            framesDir = os.path.join(tempDir,"frames")
+#            if not os.path.isdir(framesDir):
+#                os.mkdir(framesDir)
+#        objects = []
+#        exportedObjects = []
+#        subObjects = False
+#        if len(expOb.subobjects) > 0:
+#            objects = expOb.subobjects
+#            subObjects = True
+#        else:
+#            objects.append(expOb)
+#
+#
+#        ##print("objects: ", len(objects), expOb.name)
+#
+#        for ob in objects:
+##             ##print("ob: ", ob)
+#            if(ob.blenderObject is None):
+#                return
+#            if getattr(ob.blenderObject, 'library'):
+#            #if ob.blenderObject.library:
+#                libObject = True
+#                obName = ob.name
+#                #obFileName = ob.meshName
+##                 obFileName = ob.name.replace(":","_").replace("_\\",":\\")
+#                obFileName = obName.replace(":","_").replace("_\\",":\\")
+##                 obFileName = "".join([ c if c.isalnum() else "_" for c in obFileName ])
+#                obFileName = re.sub('[^0-9a-zA-Z]+', '_', obFileName)
+#                if anim:
+##                    modelGroupFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', '_f'+frameS[-4:]))+"."+obFileName+".xml"
+#                   modelGroupFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', '_f'+frameS[-4:]))+"."+os.path.basename(obFileName)+".xml"
+#                else:
+#                    modelGroupFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', "."+obFileName+'.xml'))
+#            else:
+#                obFileName = ob.meshName.replace(":","_").replace("_\\",":\\")
+##                 obFileName = "".join([ c if c.isalnum() else "_" for c in obFileName ])
+#                obFileName = re.sub('[^0-9a-zA-Z]+', '_', obFileName)
+#                if anim:
+#                   modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'.xml'))
+#                else:
+#                    modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+'.xml'))
+#                libObject = False
+#                obName = ob.name#[3]
+##                 obName = "".join([ c if c.isalnum() else "_" for c in obName ])
+##                 obName = re.sub('[^0-9a-zA-Z]+', '_', obName)
+#
+#
+#
+#            object = ob.blenderObject
+#            exportModel = Model()
+##             exportModel.name = re.sub('[^0-9a-zA-Z]+', '_', ob.name)
+#            exportModel.name = ob.name
+#
+#            obD_mat = ob.matrix
+#            exportModel.frame = Transform(
+#            obD_mat[0][0], obD_mat[0][1], obD_mat[0][2],
+#            obD_mat[1][0], obD_mat[1][1], obD_mat[1][2],
+#            obD_mat[2][0], obD_mat[2][1], obD_mat[2][2],
+#            obD_mat[0][3], obD_mat[1][3], obD_mat[2][3])
+#
+#            t3 = time.time()
+##             thea_globals.log.debug("*t3-t2: %s" % (t3-t2))
+#
+#            try:
+#                if ob.blenderObject["thAnimated"]:
+#                    animatedMesh = True
+#                else:
+#                    animatedMesh = False
+#            except:
+#                    animatedMesh = False
+#
+#            if (scn.thea_Reuse == 0):
+#                if anim:
+#                    if animatedMesh:
+#                      exportGeometry = True
+#                    else:
+#                      exportGeometry = False
+#                else:
+#                    exportGeometry = True
+#            elif animatedMesh:
+#                exportGeometry = True
+#            else:
+#                exportGeometry = False
+#
+#            if not exportGeometry and thea_globals.forceExportGeometry:
+#                exportGeometry = True
+#
+#            if exportGeometry:
+#                mesh = ob.blenderObject.to_mesh(scn,True, 'RENDER',calc_tessface=True)
+#            else:
+#                mesh = ob.blenderObject.data
+#
+#            if mesh is None:
+#                mesh = ob.blenderObject.data
+#                exportGeometry = False
+#
+##             thea_globals.log.debug("mesh %s" % mesh.name)
+#
+#            t4 = time.time()
+##             thea_globals.log.debug("*t4-t3: %s" % (t4-t3))
+#
+#
+#
+##             mesh.update(calc_tessface=True)
+#            try:
+#                if object.get('thNoRecalcNormals'):
+#                    thea_globals.log.debug("Normal recalculation is disabled for this object!")
+#
+#                else:
+##                    mesh.calc_normals_split()
+#                    thea_globals.log.debug("Normal recalculation is ON for this object!")
+##                 mesh.calc_normals()
+#            except:
+#                pass
+#
+#
+#            try:
+#                meshMaterials = mesh.materials
+#            except:
+#                meshMaterials = False
+#
+#
+#            t5 = time.time()
+##             thea_globals.log.debug("*t5-t4: %s" % (t5-t4))
+#
+#            if meshMaterials:
+#
+#                try:
+#                    exportModel.materialName = meshMaterials[0].name
+#                except:
+#                    exportModel.materialName = "--None--"
+#
+#                from . import thea_render_main
+#                lut = thea_render_main.getLUTarray()
+#                for mat in meshMaterials:
+#                    if mat:
+#                        matName = mat.name
+#                        madeLink = False
+#                        if thea_globals.getUseLUT():#getattr(scn, 'thea_useLUT'):
+#                            for trMat in matTransTable:
+#                                t11 = time.time()
+#                                try:
+#                                    if thea_globals.getNameBasedLUT():
+#                                        if trMat[0] == matName and (self.findMaterialLink(matName) < 0):
+#                                            matLink = Link()
+#                                            matLink.setName(trMat[0])
+#                                            matLink.setFilename(trMat[1])
+#                                            self.addMaterialLink(matLink)
+#                                            madeLink = True
+#                                    else:
+#                                        if int(getattr(bpy.data.materials.get(matName), 'thea_LUT', 0)) > 0:
+#                                            pass
+#                                            if trMat[0] == lut[int(getattr(bpy.data.materials.get(matName), 'thea_LUT', 0))] and (self.findMaterialLink(matName) < 0):
+#                                                matLink = Link()
+#                                                matLink.setName(matName)
+#                                                matLink.setFilename(trMat[1])
+#                                                self.addMaterialLink(matLink)
+#                                                madeLink = True
+#                                    t12 = time.time()
+##                                     thea_globals.log.debug("**t12-t11: %s" % (t12-t11))
+#                                except:
+#                                    emptyMat = True
+#                        try:
+#                            ##print("mat['thea_extMat']: ", mat['thea_extMat'], os.path.exists(os.path.abspath(bpy.path.abspath(mat['thea_extMat']))))
+#                            #os.path.abspath(bpy.path.abspath(extMatFile)
+#
+#                            if os.path.exists(os.path.abspath(bpy.path.abspath(mat['thea_extMat']))) and (self.findMaterialLink(matName) < 0):
+#                                matLink = Link()
+#                                matLink.setName(matName)
+#                                matLink.setFilename(os.path.abspath(bpy.path.abspath(mat['thea_extMat'])))
+#                                self.addMaterialLink(matLink)
+#                                madeLink = True
+#                        except: pass
+#
+#
+#
+#                        if mat and (self.findMaterial(matName) < 0):
+#                            ma = ThMaterial()
+#                            ma.setName(matName)
+#                            if madeLink:
+#                                ma.link = True
+#                            self.addMaterial(ma)
+#                            self.materialList[self.findMaterial(matName)].blenderMat = mat
+#                    else:
+#                        #print("====Missing material for object %s. Object won't be exported!=====" % obName)
+#                        scn['thea_Warning'] = ("Missing material for object %s" % obName)
+#                        return
+#            else:
+#                #print("====No material assigned to object. Assigning basic_gray material====")
+#                matName = "basic_gray"
+#                ma = ThMaterial()
+#                ma.setName(matName)
+#                self.addMaterial(ma)
+#                if(bpy.data.materials.get(matName)):
+#                    mesh.materials.append(bpy.data.materials.get(matName))
+#                else:
+#                    bpy.data.materials.new(name=matName)
+#                    mesh.materials.append(bpy.data.materials.get(matName))
+#                self.materialList[self.findMaterial(matName)].blenderMat = bpy.data.materials.get(matName)
+#                meshMaterials = mesh.materials
+#
+#
+#            t6 = time.time()
+##             thea_globals.log.debug("*t6-t5: %s" % (t6-t5))
+#
+#
+#            materials_dict = {}
+#
+#
+#
+#
+##             thea_globals.log.debug("exportGeometry1: %s" % exportGeometry)
+#
+#            uvLayer = None
+#            meshUVs = []
+#            modelUVs = []
+#            uvNums = []
+#            if exportGeometry:
+#                if len(getattr(mesh, 'uv_layers', []))>0:
+#                    for uvLayer in mesh.tessface_uv_textures:
+#                        meshUV = []
+#                        for uv in uvLayer.data:
+#                            meshUV.append(uv.uv)
+#                        meshUVs.append(meshUV)
+#                        uvNums.append(0)
+#                        modelUVs.append([])
+#                ##print("modelUVs: ", modelUVs)
+#                ##print("meshUVs: ", meshUVs)
+#
+#                try:
+#                    uvLayer = mesh.tessface_uv_textures.active.data
+#                except:
+#                    pass
+#                meshUV = []
+#
+#                if uvLayer:
+#                    for uv in uvLayer:
+#                            meshUV.append(uv.uv)
+#                    ##print("meshUV: ", meshUV)
+#
+##             thea_globals.log.debug("*modelUVs: %s" % modelUVs)
+#
+#            t7 = time.time()
+##             thea_globals.log.debug("*t7-t6: %s" % (t7-t6))
+#
+#
+#            if exportGeometry:
+#                for face in mesh.tessfaces:
+#                        if len(meshMaterials):
+#                            if face.material_index >= len(meshMaterials):
+#                                materialName = None
+#                            else:
+#                                materialName = meshMaterials[face.material_index].name
+#
+#                                matKey = self.findMaterial(materialName)
+#                                try:
+#                                    materials_dict[matKey].append(face)
+#                                except:
+#                                    materials_dict[matKey] = [face]
+##             else: #if we don't export geometry we don't really need loop over faces to get materials list.
+#            for mat in mesh.materials:
+#                matKey = self.findMaterial(mat.name)
+#                if matKey not in materials_dict:
+#                    materials_dict[matKey] = []
+#
+#
+##             thea_globals.log.debug("materials_dict: %s" % materials_dict)
+#
+#            t8 = time.time()
+##             thea_globals.log.debug("*t8-t7: %s" % (t8-t7))
+#            #search if mesh is already exported
+#            if anim:
+#                filePath = os.path.join(framesDir,modelGroupFilename)
+#            else:
+#                filePath = os.path.join(tempDir,modelGroupFilename)
+#            if ob.isProxy == True: #is instance
+#                filePath = filePath.replace(".xml", "_proxy.xml")
+#
+#            filePath=filePath.replace(":","_").replace("_\\",":\\")
+#
+#
+#            isInstance = ob.isProxy#[5]
+#
+#            for obFilenameL, obNameL, meshName, obFrameL, isInstance in self.modelFilesList:
+#                if obFilenameL == filePath:
+#                    exportGeometry = False
+#
+#            if subObjects:
+#                exportedObjects.append((obName, filePath, exportModel.frame))
+#            else:
+#                self.modelFilesList.append((filePath,obName,ob.meshName, exportModel.frame, ob.isProxy))
+#
+#            modelGroupFile = open(filePath, "w")
+#
+#            if ob.isProxy: #if proxy
+#                modelGroupFile.write('<Object Identifier=\"./Proxies/Model/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
+##                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % (round (180 * mesh.auto_smooth_angle) / 3.14159265359))
+#            else:
+#                modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
+##                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % (round (180 * mesh.auto_smooth_angle) / 3.14159265359))
+#
+#            if thea_globals.forceExportGeometry:
+#                exportGeometry = True
+#
+##             thea_globals.log.debug("exportGeometry2: %s, force: %s" % (exportGeometry, thea_globals.forceExportGeometry))
+#
+#            for matKey, matFaces in materials_dict.items():
+#                currMatName = re.sub('[^0-9a-zA-Z]+', '_', self.materialList[matKey].name)
+#                if animatedMesh:
+#                   if ob.blenderObject.library:
+#                       modelFilename = os.path.basename(ob.blenderObject.library.filepath.replace('.blend', '_f'+frameS[-4:]))+"."+os.path.basename(obFileName)+"_"+currMatName+'.mesh.thea'
+#                   else:
+#                       modelFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+"_"+currMatName+'.mesh.thea'))
+#                else:
+#                    modelFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+"_"+currMatName+'.mesh.thea'))
+#                if len(materials_dict) > 1:
+#                    modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s (%s)\" Type=\"Model\">\n' % (obName, obName,currMatName))
+##                    modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s"/>\n' % mesh.auto_smoothing_angle)
+##                    modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"90"/>\n')
+#                if anim and animatedMesh:
+#                    modelPath = os.path.join(framesDir,modelFilename)
+#                else:
+#                    modelPath = os.path.join(tempDir,modelFilename)
+#                modelPath = modelPath.replace(":","_").replace("_\\",":\\")
+#
+#                modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\"/>\n' % modelPath)
+##                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s"/>\n' % mesh.auto_smoothing_angle)
+#                modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialList[matKey].name)
+##               CHANGED > Added model properties if mesh is group, problem is all objects in the mesh group will get this. There is no workaournd or seperate the mesh which needs to have the property settings. But now it works in the whole group. In studio when you apply these settings everything in the group gets them, unless you uncheck the individually later. Perhaps this option should go to mesh object as well??? But you cant apply this per mesh object cause they all get the same name + material name as mesh.
+#                if bpy.context.scene.objects.get(obName):
+#                    modProp = bpy.context.scene.objects.get(obName)
+#                    modelGroupFile.write('<Parameter Name=\"Enabled\" Type=\"Boolean\" Value=\"%s\"/>\n' % modProp.thEnabled)
+#                    modelGroupFile.write('<Parameter Name=\"Visible\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thVisible)
+#                    modelGroupFile.write('<Parameter Name=\"Shadow Caster\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thShadowCaster)
+#                    modelGroupFile.write('<Parameter Name=\"Shadow Tight\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thShadowTight)
+##                    print("CHeck Shadow Tight", modProp.thShadowTight)
+##                    print("CHeck Shadow CAster", modProp.thShadowCaster)
+#                    modelGroupFile.write('<Parameter Name=\"Shadow Receiver\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thShadowReceiver)
+#                    modelGroupFile.write('<Parameter Name=\"Caustics Receiver\" Type=\"Boolean\" Value=\"%s\"/>\n' % modProp.thCausticsReceiver)
+#                    modelGroupFile.write('<Parameter Name=\"Caustics Transmitter\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thCausticsTransmitter)
+#                    modelGroupFile.write('<Parameter Name=\"Mask Index\" Type=\"Boolean\" Value=\"%s\"/>\n'% modProp.thMaskID)
+#                else:
+#                    pass
+#
+#                if ob.blenderObject.thExportAnimation == True and bpy.context.scene.thea_ExportAnimation == True:
+#                        #export animation data
+#                        obM = ob.blenderObject.matrix_world
+#                        obFrame = Transform(\
+#                        obM[0][0], -obM[0][1], -obM[0][2],
+#                        obM[1][0], -obM[1][1], -obM[1][2],
+#                        obM[2][0], -obM[2][1], -obM[2][2],
+#                        obM[0][3],  obM[1][3],  obM[2][3])
+#
+#
+#
+##                         startObMatrixAssigned = mathutils.Matrix((\
+##                         (obM[0][0], -obM[0][1], -obM[0][2], obM[0][3]),
+##                         (obM[1][0], -obM[1][1], -obM[1][2], obM[1][3]),
+##                         (obM[2][0], -obM[2][1], -obM[2][2], obM[2][3]),
+##                         (0.0, 0.0, 0.0, 1.0)))
+#
+#                        startObMatrixAssigned = mathutils.Matrix((\
+#                        (obM[0][0], obM[0][1], obM[0][2], obM[0][3]),
+#                        (obM[1][0], obM[1][1], obM[1][2], obM[1][3]),
+#                        (obM[2][0], obM[2][1], obM[2][2], obM[2][3]),
+#                        (0.0, 0.0, 0.0, 1.0)))
+#
+#                        obMInverted = ob.blenderObject.matrix_world.inverted()
+#                        currFrame = bpy.context.scene.frame_current
+#                        startFrame = bpy.context.scene.frame_start
+#                        endFrame = bpy.context.scene.frame_end
+#                        im = InterpolatedMotion()
+#                        im.enabled = True
+#                        im.duration = endFrame+1-startFrame
+#                        bpy.context.scene.frame_set(startFrame)
+#                        prevObM = ob.blenderObject.matrix_world
+#                        if(bpy.context.scene.get('thea_AnimationEveryFrame')):
+#                            tolerance = 0
+#                        else:
+#                            tolerance = 10**-5
+#                        for frame in range(startFrame, endFrame+1, 1):
+#                            print ("\n\nExporting animation frame %s for mesh object %s: " % (frame, obName))
+#                            bpy.context.scene.frame_set(frame)
+#                            obM = ob.blenderObject.matrix_world
+##                             ob_matrix_world_Assigned = mathutils.Matrix((\
+##                             (obM[0][0], -obM[0][1], -obM[0][2], obM[0][3]),
+##                             (obM[1][0], -obM[1][1], -obM[1][2], obM[1][3]),
+##                             (obM[2][0], -obM[2][1], -obM[2][2], obM[2][3]),
+##                             (0.0, 0.0, 0.0, 1.0)))
+#                            sum = 0
+#                            for v in (prevObM-obM):
+#                                for i in v:
+#                                    sum += abs(i)
+#                            ##print(sum*100000000000000)
+#
+#                            #if((obM != prevObM) or (frame == startFrame)):
+#                            if((sum>tolerance) or (frame == startFrame)):
+#                            #if((obM != prevObM) or (frame == startFrame)):
+#                                ob_matrix_world_Assigned = mathutils.Matrix((\
+#                                (obM[0][0], obM[0][1], obM[0][2], obM[0][3]),
+#                                (obM[1][0], obM[1][1], obM[1][2], obM[1][3]),
+#                                (obM[2][0], obM[2][1], obM[2][2], obM[2][3]),
+#                                (0.0, 0.0, 0.0, 1.0)))
+#
+#                                obM = startObMatrixAssigned.inverted() * ob_matrix_world_Assigned
+#                                frame = Transform(\
+#                                obM[0][0], obM[0][1], obM[0][2],
+#                                obM[1][0], obM[1][1], obM[1][2],
+#                                obM[2][0], obM[2][1], obM[2][2],
+#                                obM[0][3], obM[1][3], obM[2][3])
+#                                im.addNode(bpy.context.scene.frame_current, frame)
+#                            else:
+#                                thea_globals.log.debug("****no transform change on this frame")
+#                            prevObM = ob.blenderObject.matrix_world * 1.0
+#                        bpy.context.scene.frame_set(currFrame)
+#                        im.write(modelGroupFile)
+#
+#                #obFrame.write(self.file, identifier="Group Frame")
+#
+#
+#                if getattr(object, 'thea_Container') != "None":
+#                    matInterface = getattr(object, 'thea_Container')
+#                    modelGroupFile.write('<Parameter Name=\"Interface Appearance\" Type=\"String\" Value=\"%s\"/>\n' % matInterface)
+#                else:
+#                    matInterface = False
+#
+#
+#                t9 = time.time()
+##                 thea_globals.log.debug("*t9-t8: %s" % (t9-t8))
+#
+##                 thea_globals.log.debug("matFaces: %s %s" % (matFaces, len(matFaces)))
+#                if exportGeometry and len(matFaces) > 0: #if we should export geometry too
+#
+#
+#
+#                    vertexNum = 0
+#                    normalNum = 0
+#                    faceNum = 0
+#                    uvNum = 0
+#                    modelP = []
+#                    modelN = []
+#                    modelF = []
+#                    modelU = []
+#                    modelV = []
+#                    modelNN = []
+#                    meshV = []
+#                    vertN = []
+#
+#                    modelUVs = []
+#                    if exportGeometry:
+#                        if len(mesh.uv_layers)>0:
+#                            for uvLayer in mesh.tessface_uv_textures:
+#                                modelUVs.append([])
+#
+#                    for v in mesh.vertices:
+#                        meshV.append(v.co)
+#                        vertN.append(v.normal)
+#
+#                    for face in matFaces:
+##                         thea_globals.log.debug("face.use_smooth: %s" % face.use_smooth)
+#                        fIdx = face.index
+#                        if len(face.vertices) >= 3:
+#                            vi = []
+#                            for vert in face.vertices:
+#                                 vi.append(vert)
+#                            for vert in [0,1,2]:
+#                                 idx=vi[vert]
+#                                 modelP.append(meshV[idx][0])
+#                                 modelP.append(meshV[idx][1])
+#                                 modelP.append(meshV[idx][2])
+#                                 if face.use_smooth:
+#                                    modelN.append(vertN[idx][0])
+#                                    modelN.append(vertN[idx][1])
+#                                    modelN.append(vertN[idx][2])
+#                                 else:
+#                                    faceNormal = face.normal
+#                                    modelN.append(faceNormal[0])
+#                                    modelN.append(faceNormal[1])
+#                                    modelN.append(faceNormal[2])
+#                            vertexNum += 3
+#                            normalNum += 3
+#                            modelF.append(vertexNum-3)
+#                            modelF.append(vertexNum-2)
+#                            modelF.append(vertexNum-1)
+#                            faceNum += 1
+#
+#
+#                            if len(meshUVs)>1:
+#                                n = 0
+#                                for mUV in meshUVs:
+#                                    ##print("mUV: ", mUV)
+#                                    ##print("mUV[fIdx][0][0]: ", mUV[fIdx])
+#                                    modelUVs[n].append(mUV[fIdx][0][0])
+#                                    modelUVs[n].append(1.0-mUV[fIdx][0][1])
+#                                    modelUVs[n].append(mUV[fIdx][1][0])
+#                                    modelUVs[n].append(1.0-mUV[fIdx][1][1])
+#                                    modelUVs[n].append(mUV[fIdx][2][0])
+#                                    modelUVs[n].append(1.0-mUV[fIdx][2][1])
+#                                    uvNums[n] += 3
+#                                    n+=1
+#                            else:
+#                                if uvLayer:
+#                                    ##print("meshUV[fIdx]: ", meshUV[fIdx])
+#                                    modelU.append(meshUV[fIdx][0][0])
+#                                    modelU.append(1.0-meshUV[fIdx][0][1])
+#                                    modelU.append(meshUV[fIdx][1][0])
+#                                    modelU.append(1.0-meshUV[fIdx][1][1])
+#                                    modelU.append(meshUV[fIdx][2][0])
+#                                    modelU.append(1.0-meshUV[fIdx][2][1])
+#                                    uvNum += 3
+#
+#                            if len(face.vertices) == 4:
+#                                ##print("**********************4 faces ******************")
+#                                vi = []
+#                                for vert in face.vertices:
+#                                     vi.append(vert)
+#                                for vert in [0,2,3]:
+#                                     idx=vi[vert]
+#                                     modelP.append(meshV[idx][0])
+#                                     modelP.append(meshV[idx][1])
+#                                     modelP.append(meshV[idx][2])
+#                                     if face.use_smooth:
+#                                        modelN.append(vertN[idx][0])
+#                                        modelN.append(vertN[idx][1])
+#                                        modelN.append(vertN[idx][2])
+#                                     else:
+#                                        faceNormal = face.normal
+#                                        modelN.append(faceNormal[0])
+#                                        modelN.append(faceNormal[1])
+#                                        modelN.append(faceNormal[2])
+#                                vertexNum += 3
+#                                normalNum += 3
+#                                modelF.append(vertexNum-3)
+#                                modelF.append(vertexNum-2)
+#                                modelF.append(vertexNum-1)
+#                                faceNum += 1
+#
+#
+#                                if len(meshUVs)>1:
+#                                    n = 0
+#                                    for mUV in meshUVs:
+#                                        modelUVs[n].append(mUV[fIdx][0][0])
+#                                        modelUVs[n].append(1.0-mUV[fIdx][0][1])
+#                                        modelUVs[n].append(mUV[fIdx][2][0])
+#                                        modelUVs[n].append(1.0-mUV[fIdx][2][1])
+#                                        modelUVs[n].append(mUV[fIdx][3][0])
+#                                        modelUVs[n].append(1.0-mUV[fIdx][3][1])
+#                                        uvNums[n] += 3
+#                                        n+=1
+#                                else:
+#                                    if uvLayer:
+#                                        modelU.append(meshUV[fIdx][0][0])
+#                                        modelU.append(1.0-meshUV[fIdx][0][1])
+#                                        modelU.append(meshUV[fIdx][2][0])
+#                                        modelU.append(1.0-meshUV[fIdx][2][1])
+#                                        modelU.append(meshUV[fIdx][3][0])
+#                                        modelU.append(1.0-meshUV[fIdx][3][1])
+#                                        uvNum += 3
+#
+##                     thea_globals.log.debug("*modelUVs: %s" % modelUVs)
+##                     thea_globals.log.debug("*modelU: %s" % modelU)
+#
+#                    modelFile = open(modelPath, "wb")
+##                     magicHeader = 0x54524d01
+#                    if len(modelUVs)>1 :
+#                        magicHeader = 0x54524d02
+#                    else:
+#                        magicHeader = 0x54524d01
+#
+#                    modelFile.write(struct.pack('<l',magicHeader))
+#
+#                    vertexCount = len(modelP)
+#                    if vertexCount > 0:
+#                        modelFile.write(struct.pack('<l',int(vertexCount/3)))
+#                        modelFile.write(struct.pack("<%df" % (vertexCount), *modelP))
+#
+#                    normalCount = len(modelN)
+#                    if normalCount > 0:
+#                        modelFile.write(struct.pack('<l',int(normalCount/3)))
+#                        modelFile.write(struct.pack("<%df" % (normalCount), *modelN))
+#
+#                    triangleCount = len(modelF)
+#                    if triangleCount > 0:
+#                        modelFile.write(struct.pack('<l',int(triangleCount/3)))
+#                        modelFile.write(struct.pack("<%dl" % (triangleCount), *modelF))
+#
+##                     print("vertexCount: ", vertexCount)
+##                     print("normalCount: ", normalCount)
+##                     print("triangleCount: ", triangleCount)
+#
+##                     if vertexCount > 0:
+##                     #print("len(meshUVs): ", len(meshUVs))
+#                    if len(meshUVs)>1:
+#                        modelFile.write(struct.pack('<l',len(modelUVs)))
+#                        for modelU in modelUVs:
+##                             #print("#########modelU: ", modelU)
+#                            uvCount = len(modelU)
+##                             #print("uvCount: ", uvCount)
+#                            modelFile.write(struct.pack('<l',int(uvCount/2)))
+#                            modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
+#                    else:
+#                        # #                     #print("modelU: ", modelU)
+#                        uvCount = len(modelU)
+##                         #print("uvCount: ", uvCount)
+#                        if vertexCount > 0:
+#                            modelFile.write(struct.pack('<l',int(uvCount/2)))
+#                            modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
+#                    modelFile.write(struct.pack('<l',0))
+#
+#
+#
+#                    modelFile.close()
+##
+#                    if len(materials_dict) > 1:
+#                        modelGroupFile.write('</Object>\n')
+#                elif exportGeometry: # just create empty file if there are no faces for the material
+#                    modelFile = open(modelPath, "wb")
+#                    magicHeader = 0x54524d01
+#                    modelFile.write(struct.pack('<l',magicHeader))
+#                    modelFile.write(struct.pack('<l',0))
+#                    modelFile.write(struct.pack('<l',0))
+#                    modelFile.write(struct.pack('<l',0))
+#                    modelFile.write(struct.pack('<l',0))
+#                    modelFile.close()
+#
+#            if exportGeometry:
+#                bpy.data.meshes.remove(mesh)
+#                del(mesh)
+#
+#            t10 = time.time()
+##             thea_globals.log.debug("*t10-t9: %s" % (t10-t9))
+#
+#            i = 0
+#            for layer in object.layers:
+#               if layer:
+#                   if i>9:
+#                       modelGroupFile.write('<Parameter Name=\"Layer\" Type=\"Integer\" Value=\"%s\"/>\n' % (i-10))
+#                   else:
+#                       modelGroupFile.write('<Parameter Name=\"Layer\" Type=\"Integer\" Value=\"%s\"/>\n' % i)
+#               i += 1
+#            modelGroupFile.write('</Object>\n')
+#            modelGroupFile.close()
+#
+#            del(object)
+#            del(exportModel)
+#
+#        if subObjects: #if we have subobjects then we make group
+#            object = expOb.blenderObject
+#            obD_mat = expOb.matrix
+#            exportModel = Model()
+#            exportModel.frame = Transform(\
+#            obD_mat[0][0], obD_mat[0][1], obD_mat[0][2],
+#            obD_mat[1][0], obD_mat[1][1], obD_mat[1][2],
+#            obD_mat[2][0], obD_mat[2][1], obD_mat[2][2],
+#            obD_mat[0][3], obD_mat[1][3], obD_mat[2][3])
+#
+#            obFileName = expOb.name
+#            if anim:
+#               wholeGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'.xml'))
+#            else:
+#                wholeGroupFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+'.xml'))
+#
+#            if anim:
+#                filePath = os.path.join(framesDir,wholeGroupFilename)
+#            else:
+#                filePath = os.path.join(tempDir,wholeGroupFilename)
+#            filePath = filePath.replace(":","_").replace("_\\",":\\")
+#
+#            groupFile = open(filePath, "w")
+#
+#            groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (expOb.name, expOb.name))
+#
+#            for subObName, subFilePath, modelFrame in exportedObjects:
+#                groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (subObName, subObName))
+#                groupFile.write('<Link Identifier=\"./Models/%s\" Name=\"%s\" File=\"%s\">\n' % (subObName, subObName,subFilePath.replace(":","_").replace("_\\",":\\")))
+#                groupFile.write('</Link>\n')
+#                modelFrame.write(groupFile, identifier="Group Frame")
+#                groupFile.write('</Object>\n')
+#
+#            groupFile.write('</Object>\n')
+#            self.modelFilesList.append((filePath,expOb.name,ob.meshName,exportModel.frame, ob.isProxy))
+#
 
     def writeModelBinaryNew(self, scn, expOb, frame, anim):
         '''write model using binary mesh.thea format - new version
@@ -3761,6 +3784,16 @@ class XMLExporter:
                 self.materialList[self.findMaterial(matName)].blenderMat = bpy.data.materials.get(matName)
                 meshMaterials = mesh.materials
 
+            if exportGeometry:
+                mesh = ob.blenderObject.to_mesh(scn,True, 'RENDER',calc_tessface=True)
+                self.mesh_triangulate(mesh)
+            else:
+                mesh = ob.blenderObject.data
+
+            if mesh is None:
+                mesh = ob.blenderObject.data
+                exportGeometry = False
+
             # check if there are more material slots than 1
             # and we should do this before triangulating the mesh
             # and applying the modifiers to work with lower face number
@@ -3772,15 +3805,7 @@ class XMLExporter:
                 materials_dict = {None:{"name":None, "face_count":None}}
 
 
-            if exportGeometry:
-                mesh = ob.blenderObject.to_mesh(scn,True, 'RENDER',calc_tessface=True)
-                self.mesh_triangulate(mesh)
-            else:
-                mesh = ob.blenderObject.data
 
-            if mesh is None:
-                mesh = ob.blenderObject.data
-                exportGeometry = False
 
             thea_globals.log.debug("materials_dict %s" % materials_dict)
 
@@ -3791,14 +3816,15 @@ class XMLExporter:
 
 
 #             mesh.update(calc_tessface=True)
-#             self.mesh_triangulate(mesh)
+#            self.mesh_triangulate(mesh)
 #             thea_globals.log.debug("mesh %s" % mesh)
             try:
                 if getattr(object, 'thNoRecalcNormals', False):
                     thea_globals.log.debug("Normal recalculation is disabled for this object!")
+
                 else:
                     mesh.calc_normals_split()
-#                     thea_globals.log.debug("calc normals")
+                    thea_globals.log.debug("calc normals")
 #                 mesh.calc_normals()
             except:
                 pass
@@ -3838,9 +3864,13 @@ class XMLExporter:
 
             if ob.isProxy: #if proxy
                 modelGroupFile.write('<Object Identifier=\"./Proxies/Model/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
+#                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % "90")
+#                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % (round (180 * mesh.auto_smooth_angle) / 3.14159265359))
             else:
-                modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
+                modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n ' % (obName, obName))
 
+#                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % (round (180 * mesh.auto_smooth_angle) / 3.14159265359))
+#                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"%s\"/>\n' % "90")
             if thea_globals.forceExportGeometry:
                 exportGeometry = True
 
@@ -3870,13 +3900,15 @@ class XMLExporter:
                     modelFilename = os.path.basename(currentBlendFile.replace('.blend', "."+obFileName+"_"+currMatName+'.mesh.thea'))
                 if len(materials_dict) > 1:
                     modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s (%s)\" Type=\"Model\">\n' % (obName, obName,currMatName))
+
                 if anim and animatedMesh:
                     modelPath = os.path.join(framesDir,modelFilename)
                 else:
                     modelPath = os.path.join(tempDir,modelFilename)
                 modelPath = modelPath.replace(":","_").replace("_\\",":\\")
 
-                modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\"/>\n' % modelPath)
+                modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\">\n' % modelPath)
+                modelGroupFile.write('<Parameter Name=\"Smoothing Angle\" Type=\"Real\" Value=\"45\"/>\n</Link>\n')
 #                 modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialList[matKey].name)
                 modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % mat_desc['name'])
                 if bpy.context.scene.objects.get(obName):
@@ -4096,7 +4128,6 @@ class XMLExporter:
                             modelFile.write(struct.pack("<%df" % (uvCount), *modelUVs[0]))
 
                     modelFile.write(struct.pack('<l',0))
-
                     modelFile.close()
 
 
@@ -4156,16 +4187,14 @@ class XMLExporter:
             filePath = filePath.replace(":","_").replace("_\\",":\\")
 
             groupFile = open(filePath, "w")
-
             groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (expOb.name, expOb.name))
 
             for subObName, subFilePath, modelFrame in exportedObjects:
-                groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (subObName, subObName))
+                groupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (subObName, subObName, ))
                 groupFile.write('<Link Identifier=\"./Models/%s\" Name=\"%s\" File=\"%s\">\n' % (subObName, subObName,subFilePath.replace(":","_").replace("_\\",":\\")))
                 groupFile.write('</Link>\n')
                 modelFrame.write(groupFile, identifier="Group Frame")
                 groupFile.write('</Object>\n')
-
             groupFile.write('</Object>\n')
             self.modelFilesList.append((filePath,expOb.name,ob.meshName,exportModel.frame, ob.isProxy))
 
@@ -4301,6 +4330,7 @@ class XMLExporter:
 
 
         modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\">\n' % (os.path.join(tempDir,modelFilename)))
+        # THIS LINE MAKES NO SENSE
         modelGroupFile.write('<Message Name=\"./Smoothing/Smooth 180\"/>\n</Link>\n')
         modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialList[matKey].name)
 
@@ -5234,6 +5264,7 @@ class XMLExporter:
                 bsdf.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_Basic2MicroRoughnessHeight'))
 
                 wtex = getTexture(type="Stencil", component="thea_Basic2")
+                thea_globals.log.debug("wtex: %s" % (wtex))
                 #if layerAdded: #if already have layer
 
                 if wtex:

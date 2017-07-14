@@ -110,6 +110,7 @@ from bl_ui import properties_data_camera
 for member in dir(properties_data_camera):
     subclass = getattr(properties_data_camera, member)
     try:
+
         subclass.COMPAT_ENGINES.add('THEA_RENDER')
     except:
         pass
@@ -344,11 +345,14 @@ class MATERIAL_PT_LUT(MaterialButtonsPanel, bpy.types.Panel):
        scene = context.scene
        mat  = context.material
        split = layout.split()
-       row = layout.row()
-       split = layout.split()
-       row = layout.row()
        col = split.column()
-       col.prop(mat,"thea_LUT")
+       colL = col
+       colL.label("Thea Materials:")
+#       colR = col.row(align=True)
+       colR = split.column(align=True)
+       colR.prop(mat,"thea_LUT", text="")
+       colR.operator("thea.lutmenu", text="Search", icon="VIEWZOOM")
+#       thea_globals.log.debug("*** LUT current index: %s" % mat.get('thea_LUT'))
        #col.operator("thea.set_library_material", text="Set library material")
 
 
@@ -370,12 +374,15 @@ class MATERIAL_PT_Color(MaterialButtonsPanel, bpy.types.Panel):
         row = layout.row()
         colL = split.column()
         colR = split.column()
-        colL.prop(mat, "diffuse_color", text="")
-        colR.operator("thea.refresh_diffuse_color", text="", icon="FILE_REFRESH")
-        if (getattr(mat,"diffuse_color") == mat.diffuse_color/255):
-            row.label(text="Preview to dark (hit E colorpicker)", icon="ERROR")(percentage=1)
-        else:
-             pass
+        try:
+           colL.prop(mat, "diffuse_color", text="")
+           colR.operator("thea.refresh_diffuse_color", text="", icon="FILE_REFRESH")
+           if (getattr(mat,"diffuse_color") == mat.diffuse_color/255):
+              row.label(text="Preview to dark (hit E colorpicker)", icon="ERROR")(percentage=1)
+           else:
+              pass
+        except:
+            pass
 
 class MATERIAL_PT_Header(MaterialButtonsPanel, bpy.types.Panel):
     bl_label = "Material Settings"
@@ -690,35 +697,58 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             row.label("     ")
             row.label("     ")
             row = layout.row()
+            sub = row
+            sub.active = mat.thea_GlossyIORFileEnable == False
             if(mat.thea_GlossyReflectanceFilename==""):
-                row.prop(mat, "thea_GlossyReflectanceCol")
-            row.prop(mat, "thea_GlossyReflectanceFilename")
+                sub.prop(mat, "thea_GlossyReflectanceCol")
+            sub.prop(mat, "thea_GlossyReflectanceFilename")
 
             #col.prop(mat, "thea_GlossyReflectanceCol")
             row = layout.row()
+            sub = row
+            sub.active = mat.thea_GlossyIORFileEnable == False
             if(mat.thea_GlossyTransmittanceFilename==""):
-                row.prop(mat, "thea_GlossyTransmittanceCol")
-            row.prop(mat, "thea_GlossyTransmittanceFilename")
+                sub.prop(mat, "thea_GlossyTransmittanceCol")
+            sub.prop(mat, "thea_GlossyTransmittanceFilename")
             #col.prop(mat, "thea_GlossyTransmittanceCol")
             split = layout.split()
             row = layout.row()
-            row.prop(mat, "thea_GlossyAbsorptionCol")
-            row.prop(mat, "thea_GlossyAbsorption")
+            sub = row
+            sub.active = mat.thea_GlossyIORFileEnable == False
+            sub.prop(mat, "thea_GlossyAbsorptionCol")
+            sub.prop(mat, "thea_GlossyAbsorption")
             split = layout.split()
             row = layout.row()
             col = split.column()
-            col.prop(mat, "thea_GlossyIOR")
-            col.prop(mat, "thea_GlossyEC")
+            sub = col
+            sub.active = mat.thea_GlossyIORFileEnable == False
+            sub.prop(mat, "thea_GlossyIOR")
+            sub.prop(mat, "thea_GlossyEC")
             split = layout.split()
             row = layout.row()
             colL = split.column()
+            sub = colL
             colR = split.column()
-            colL.prop(mat, "thea_GlossyAbbeNumberEnable")
-            colR.prop(mat, "thea_GlossyAbbeNumber")
+            sub.enabled = mat.thea_GlossyIORFileEnable == False
+#            sub.active = mat.thea_GlossyIORFileEnable == False
+            sub.prop(mat, "thea_GlossyAbbeNumberEnable")
+            sub = colR
+            sub.active = mat.thea_GlossyIORFileEnable == False
+            sub.prop(mat, "thea_GlossyAbbeNumber")
             row = layout.row()
-            row.prop(mat, "thea_GlossyIORFileEnable")
-            if getattr(mat, "thea_GlossyIORFileEnable"):
-                row.prop(mat, "thea_GlossyIORMenu")
+            split = layout.split()
+            colL = split.column()
+            sub = colL
+            sub.enabled = mat.thea_GlossyAbbeNumberEnable == False
+            sub.active = mat.thea_GlossyAbbeNumberEnable == False
+            sub.prop(mat, "thea_GlossyIORFileEnable")
+#            row = layout.row()
+#            sub = row
+            colR = split.column(align=True)
+            sub = colR
+            sub.active = mat.thea_GlossyIORFileEnable == True
+            sub.prop(mat, "thea_GlossyIORMenu", text="")
+            sub.operator("glossy.iormenu", text="Search", icon="VIEWZOOM")
             split = layout.split()
             col = split.column()
             col.prop(mat, "thea_GlossyTraceReflections")
@@ -754,35 +784,58 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             row = layout.row()
             split = layout.split()
             row = layout.row()
+            sub = row
+            sub.active = mat.thea_Glossy2IORFileEnable == False
             if(mat.thea_Glossy2ReflectanceFilename==""):
-                row.prop(mat, "thea_Glossy2ReflectanceCol")
-            row.prop(mat, "thea_Glossy2ReflectanceFilename")
+                sub.prop(mat, "thea_Glossy2ReflectanceCol")
+            sub.prop(mat, "thea_Glossy2ReflectanceFilename")
 
-            #col.prop(mat, "thea_Glossy2ReflectanceCol")
+            #col.prop(mat, "thea_GlossyReflectanceCol")
             row = layout.row()
+            sub = row
+            sub.active = mat.thea_Glossy2IORFileEnable == False
             if(mat.thea_Glossy2TransmittanceFilename==""):
-                row.prop(mat, "thea_Glossy2TransmittanceCol")
-            row.prop(mat, "thea_Glossy2TransmittanceFilename")
-            #col.prop(mat, "thea_Glossy2TransmittanceCol")
+                sub.prop(mat, "thea_Glossy2TransmittanceCol")
+            sub.prop(mat, "thea_Glossy2TransmittanceFilename")
+            #col.prop(mat, "thea_GlossyTransmittanceCol")
             split = layout.split()
             row = layout.row()
-            row.prop(mat, "thea_Glossy2AbsorptionCol")
-            row.prop(mat, "thea_Glossy2Absorption")
+            sub = row
+            sub.active = mat.thea_Glossy2IORFileEnable == False
+            sub.prop(mat, "thea_Glossy2AbsorptionCol")
+            sub.prop(mat, "thea_Glossy2Absorption")
             split = layout.split()
             row = layout.row()
             col = split.column()
-            col.prop(mat, "thea_Glossy2IOR")
-            col.prop(mat, "thea_Glossy2EC")
+            sub = col
+            sub.active = mat.thea_Glossy2IORFileEnable == False
+            sub.prop(mat, "thea_Glossy2IOR")
+            sub.prop(mat, "thea_Glossy2EC")
             split = layout.split()
             row = layout.row()
             colL = split.column()
+            sub = colL
             colR = split.column()
-            colL.prop(mat, "thea_Glossy2AbbeNumberEnable")
-            colR.prop(mat, "thea_Glossy2AbbeNumber")
+            sub.enabled = mat.thea_Glossy2IORFileEnable == False
+#            sub.active = mat.thea_Glossy2IORFileEnable == False
+            sub.prop(mat, "thea_Glossy2AbbeNumberEnable")
+            sub = colR
+            sub.active = mat.thea_Glossy2IORFileEnable == False
+            sub.prop(mat, "thea_Glossy2AbbeNumber")
             row = layout.row()
-            row.prop(mat, "thea_Glossy2IORFileEnable")
-            if getattr(mat, "thea_Glossy2IORFileEnable"):
-                row.prop(mat, "thea_Glossy2IORMenu")
+            split = layout.split()
+            colL = split.column()
+            sub = colL
+            sub.enabled = mat.thea_Glossy2AbbeNumberEnable == False
+            sub.active = mat.thea_Glossy2AbbeNumberEnable == False
+            sub.prop(mat, "thea_Glossy2IORFileEnable")
+#            row = layout.row()
+#            sub = row
+            colR = split.column(align=True)
+            sub = colR
+            sub.active = mat.thea_Glossy2IORFileEnable == True
+            sub.prop(mat, "thea_Glossy2IORMenu", text="")
+            sub.operator("glossy2.iormenu", text="Search", icon="VIEWZOOM")
             split = layout.split()
             col = split.column()
             col.prop(mat, "thea_Glossy2TraceReflections")
@@ -1061,7 +1114,10 @@ class MATERIAL_PT_Thea_Strand(MaterialButtonsPanel, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
+        try:
+            return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
+        except:
+            pass
 
     def draw(self, context):
        layout = self.layout
@@ -1115,26 +1171,12 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
                 if getattr(mat, "thea_extMat"):
 #                    row = layout.row()
                     layout.operator("thea.check_thea_mat")
-#           if missing_Materials:
-#                row = col.row(align=True)
-#                row.alignment = "LEFT"
-##                row.prop(
-##                    scene,
-##                    "amaranth_debug_scene_list_missing_images",
-##                    icon="%s" %
-##                    "TRIA_DOWN" if list_missing_images else "TRIA_RIGHT",
-##                    emboss=False)
-##
-##                split = split.split()
-#                col = split.column()
-#                missing_Mat = ""
-#                for mat in missing_Materials:
-#                    missing_Mat = missing_Mat+"\n"+mat
-##                col.label(text="%s missing %s" % (
-##                          str(len(missing_Materials)),
-##                          'image' if len(missing_Materials) == 1 else "images"),
-##                          icon="ERROR")
-#                col.label(text="%s missing %s" % missing_Mat, icon="ERROR")
+                if missing_Materials:
+                    thea_globals.log.debug("missing materials: %s" % missing_Materials)
+                    for mis in missing_Materials:
+                        row = col.row(align=True)
+                        row.alignment = "LEFT"
+                        row.label(text=mis[0], icon="IMAGE_DATA")
        except:
                 pass
 #       split = layout.split()
@@ -1787,6 +1829,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
        col.label("Extra's:")
 #      CHANGED > Added button to save img.thea file
        col.prop(scene,"thea_ImgTheaFile")
+       col.prop(scene,"thea_save2Export")
        col.prop(scene,"thea_markerName")
        col.prop(scene,"thea_customOutputName")
        if getattr(scene, "thea_customOutputName"):
@@ -2751,6 +2794,27 @@ class OBJECT_PT_theaTools(ObjectButtonsPanel, bpy.types.Panel):
        sub.active = bpy.data.objects[bpy.context.active_object.name].thMaskID == True
        sub.prop(bpy.context.active_object, "thMaskIDindex")
 
+class OBJECT_OT_setCamProjection(bpy.types.Operator):
+    bl_idname = "set.cam"
+    bl_label = "set cam"
+
+    def execute(self, context):
+        cam = context.object
+        camera = context.camera
+        camShiftXNew = camera.shift_x
+        camShiftYNew = camera.shift_y
+#        thea_globals.log.debug("OBJ cam: %s" % cam.thea_projection)
+        if cam.thea_projection == "Perspective":
+            camera.type = 'PERSP'
+            camera.shift_x = camShiftXNew
+            camera.shift_y = camShiftYNew
+        if cam.thea_projection == "Parallel":
+            camera.type = 'ORTHO'
+            camShiftXOld = camera.shift_x
+            camShiftYOld = camera.shift_y
+            camera.shift_x = 0
+            camera.shift_y = 0
+        return{'FINISHED'}
 
 
 class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
@@ -2762,115 +2826,114 @@ class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
         engine = context.scene.render.engine
         return (engine in cls.COMPAT_ENGINES) and context.active_object.type=='CAMERA'
 
+    def draw_header(self, context):
+       scene = context.scene
+       cam  = context.active_object
+
     def draw(self, context):
        layout = self.layout
        scene = context.scene
-#       split = layout.split()
-#       row = layout.row()
-#       colL = split.column()
-#       colR = split.column()
+       cam = context.object
        object = bpy.context.active_object
-       layout.prop(bpy.context.active_object, "thea_projection")
-       layout.prop(bpy.context.active_object, "shutter_speed")
-       split = layout.split()
-       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-#       CHANGED > new menu layout and added options, pinnhole, aperture check, diaphragma and blades
-#       VERSION 1 - make sit inactive and dimm
-       split = layout.split()
-       row.prop(bpy.context.active_object, "autofocus")
-#       split = layout.split()
-#       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-       sub = colL
-       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
-       sub.prop(bpy.context.active_object, "thea_pinhole")
-       sub = colR.row()
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
-#       print(bpy.data.objects[bpy.context.active_object.name].pinhole)
-       sub.prop(bpy.context.active_object, "aperture")
-#       VERSION 2 - HIdes the aperture
-#       colR.prop(bpy.context.active_object, "pinhole")
-#       if bpy.data.objects[bpy.context.active_object.name].pinhole == False:
-#        colL.prop(bpy.context.active_object, "aperture")
-#       colL.prop(bpy.context.active_object, "aperture")
-#       colR.prop(bpy.context.active_object, "pinhole")
+       camera = context.camera
+       layout.label(text="Film:")
+       if bpy.data.objects[bpy.context.active_object.name].thea_projection == "Perspective":
+           if camera.sensor_fit in {'VERTICAL'} :
+               layout.prop(bpy.data.cameras[bpy.context.active_object.name], "sensor_height", text="Film Height (mm)")
+           if camera.sensor_fit in {'HORIZONTAL' and 'AUTO'} :
+               layout.prop(bpy.data.cameras[bpy.context.active_object.name], "sensor_width", text="Film Height (mm)")
+           layout.prop(bpy.data.cameras[bpy.context.active_object.name], "lens", text="Focal Lenght (mm)")
+           layout.operator("set.cam", text="Preview Perspective", icon='CAMERA_DATA')
+       if bpy.data.objects[bpy.context.active_object.name].thea_projection == "Parallel":
+           layout.prop(bpy.data.cameras[bpy.context.active_object.name], "ortho_scale", text="View Area")
+           layout.operator("set.cam", text="Preview Parallel", icon='CAMERA_DATA')
+
 
        split = layout.split()
-#       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-       colL.label(text="Distance:")
-       colR.prop(bpy.data.cameras[bpy.context.active_object.name], "dof_distance")
+       layout.label(text="Lens:")
+       layout.prop(bpy.context.active_object, "thea_projection")
+       layout.prop(bpy.context.active_object, "shutter_speed")
+       row = layout.row()
+
        split = layout.split()
-#       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-       sub = colL
-       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
-#       sub.enabled = bpy.data.objects[bpy.context.active_object.name].aperture == False
-       sub.prop(bpy.context.active_object,"thea_enableDOFpercentage")
-       sub = colR.row()
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True
-       sub.prop(bpy.context.active_object, "thea_DOFpercentage")
-       split = layout.split()
-#       row = layout.row()
        colL = split.column()
        colR = split.column()
        colL.label(text="Diaphragm:")
        colR.prop(bpy.context.active_object, "thea_diaphragma")
        if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
-        colR.prop(bpy.context.active_object, "thea_diapBlades")
-#      CHANGED > Added label
-       layout.label(text="Camera Clipping:")
-       split = layout.split()
+           colR.prop(bpy.context.active_object, "thea_diapBlades")
+
        row = layout.row()
+#       colL.label(text="")
+       # ADD spcer to align Shift again when blades is ON
+       if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
+           colL.label(text="")
+       colL.label(text="Shift:")
+       colR.prop(camera, "shift_x", text="X")
+       colR.prop(camera, "shift_y", text="Y")
+
+       row = layout.row()
+       layout.label(text="Depth of Field:")
+       layout.prop(bpy.context.active_object, "autofocus")
+
+       split = layout.split()
+
        colL = split.column()
        colR = split.column()
-#      CHANGED > Made active/inactive option
-#CHANGED> Added active/nonactive checker
        sub = colL
+       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+#       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+       sub.prop(bpy.context.active_object, "thea_pinhole")
+       sub = colR.row()
+       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+#       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+       sub.prop(bpy.context.active_object, "aperture")
+
+       split = layout.split()
+
+       colL = split.column()
+       colR = split.column()
+       sub = colL
+
+       sub.label(text="Distance:")
+       sub = colR
+       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+       sub.prop(bpy.data.cameras[bpy.context.active_object.name], "dof_distance")
+       split = layout.split()
+#       row = layout.row()
+       colL = split.column()
+       colR = split.column()
+       sub = colL
+
+       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+       sub.prop(bpy.context.active_object,"thea_enableDOFpercentage")
+#       if (bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True):
+#           bpy.data.objects[bpy.context.active_object.name].aperture = False
+       sub = colR.row()
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True
+       sub.prop(bpy.context.active_object, "thea_DOFpercentage")
+       split = layout.split()
+
+       col = split.column(align=True)
+       sub = col
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
        sub.prop(bpy.context.active_object, "thea_zClippingNear")
-       sub = colR
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
-       sub.prop(bpy.context.active_object, "thea_zClippingFar")
-
-#       colL.prop(bpy.context.active_object, "thea_zClippingNear")
-       sub = colL.row()
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingNear == True
        sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
-#       if getattr(bpy.context.active_object, "thea_zClippingNear"):
-#        colL.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
-       row = layout.row()
-#       colR.prop(bpy.context.active_object, "thea_zClippingFar")
-       sub = colR.row()
+
+
+       col = split.column(align=True)
+       sub = col
+       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
+       sub.prop(bpy.context.active_object, "thea_zClippingFar")
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingFar == True
        sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
-       split = layout.split()
-       sub = row
-#    CHANGED> Added better code for GUI
-       row = split.column()
-       sub = split.column()
-#    CHANGED> Added camDOF for zclip near + zclip Far
-       row.prop(bpy.context.active_object, "thea_ZclipDOF")
+
+       layout.prop(bpy.context.active_object, "thea_ZclipDOF")
+       sub = layout.split()
        sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == True
        sub.prop(bpy.context.active_object,"thea_ZclipDOFmargin")
-#       if getattr(bpy.context.active_object, "thea_zClippingFar"):
-#        colR.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
-#       split = layout.split()
-#       row = layout.row()
-#       colL = split.column()
-#       colR = split.column()
-#       colL.prop(bpy.context.active_object, "thea_zClippingNear")
-#       if getattr(bpy.context.active_object, "thea_zClippingNear"):
-#        colR.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
-#       colL.prop(bpy.context.active_object, "thea_zClippingFar")
-#       if getattr(bpy.context.active_object, "thea_zClippingFar"):
-#        colR.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
-
 
 
 class PARTICLE_PT_Thea(ParticleButtonsPanel, bpy.types.Panel):
@@ -2993,6 +3056,7 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
     def draw(self, context):
         checked = False
         layout = self.layout
+        obj = context.object
         lamp = context.lamp
         row = layout.row()
         if(lamp is not None):
@@ -3019,6 +3083,7 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
                 sub = row
                 sub.enabled = lamp.thea_enableIES == False
                 sub.prop(lamp, "thea_enableProjector")
+#                obj.use_square = True
             if lamp.type in {'SPOT'} and lamp.thea_enableProjector:
                 colL.prop(lamp, "thea_ProjectorWidth")
                 colR.prop(lamp, "thea_ProjectorHeight")
@@ -3042,7 +3107,7 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
             elif (lamp.thea_enableIES == False):
                 colR.prop(lamp, "thea_EmittanceUnit")
 #            CHANGED > Added Sun for attenuation
-            if lamp.type in {'POINT', 'SPOT', 'AREA'}:
+            if lamp.type in {'POINT', 'SPOT', 'AREA'} and lamp.thea_enableIES != True:
                 layout.prop(lamp, "thea_EmittanceAttenuation")
                 #sub.prop(lamp, "distance")
 
