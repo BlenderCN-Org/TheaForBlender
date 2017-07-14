@@ -2066,7 +2066,7 @@ Mat.thea_BasicWeightFilename = bpy.props.StringProperty(
 Mat.thea_BasicDiffuseCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 default=(0.5, 0.5, 0.5),
-                name="Diffuse Color",
+                name="Diffuse",
                 description="Diffuse Color",
                 subtype="COLOR",
                 update=diffuseColorUpdated)
@@ -2082,7 +2082,7 @@ Mat.thea_BasicDiffuseFilename = bpy.props.StringProperty(
 
 Mat.thea_BasicReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Reflectance Color",
+                name="Reflectance",
                 default=(0, 0, 0),
                 description="Reflectance Color",
                 subtype="COLOR",
@@ -2098,7 +2098,7 @@ Mat.thea_BasicReflectanceFilename = bpy.props.StringProperty(
 
 Mat.thea_BasicTranslucentCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Translucent Color",
+                name="Translucent",
                 description="Translucent Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2113,7 +2113,7 @@ Mat.thea_BasicTranslucentFilename = bpy.props.StringProperty(
 
 Mat.thea_BasicAbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Absorption Color",
+                name="Absorption",
                 description="Absorption Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2303,7 +2303,7 @@ Mat.thea_Basic2WeightFilename = bpy.props.StringProperty(
 
 Mat.thea_Basic2DiffuseCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Diffuse Color",
+                name="Diffuse",
                 default=(0.5, 0.5, 0.5),
                 description="Diffuse Color",
                 subtype="COLOR",
@@ -2319,7 +2319,7 @@ Mat.thea_Basic2DiffuseFilename = bpy.props.StringProperty(
 
 Mat.thea_Basic2ReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Reflectance Color",
+                name="Reflectance",
                 default=(0, 0, 0),
                 description="Reflectance Color",
                 subtype="COLOR",
@@ -2336,7 +2336,7 @@ Mat.thea_Basic2ReflectanceFilename = bpy.props.StringProperty(
 
 Mat.thea_Basic2TranslucentCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Translucent Color",
+                name="Translucent",
                 description="Translucent Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2351,7 +2351,7 @@ Mat.thea_Basic2TranslucentFilename = bpy.props.StringProperty(
 
 Mat.thea_Basic2AbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Absorption Color",
+                name="Absorption",
                 description="Absorption Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2802,7 +2802,7 @@ Mat.thea_Glossy2WeightFilename = bpy.props.StringProperty(
 Mat.thea_Glossy2ReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 default=(1, 1, 1),
-                name="Reflectance Color",
+                name="Reflectance",
                 description="Reflectance Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2817,7 +2817,7 @@ Mat.thea_Glossy2ReflectanceFilename = bpy.props.StringProperty(
 
 Mat.thea_Glossy2TransmittanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Transmittance Color",
+                name="Transmittance",
                 description="Transmittance Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -2832,7 +2832,7 @@ Mat.thea_Glossy2TransmittanceFilename = bpy.props.StringProperty(
 
 Mat.thea_Glossy2AbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Absorption Color",
+                name="Absorption",
                 description="Absorption Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -3609,7 +3609,7 @@ Mat.thea_CoatingWeightFilename = bpy.props.StringProperty(
 Mat.thea_CoatingReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 default=(1, 1, 1),
-                name="Reflectance Color",
+                name="Reflectance",
                 description="Reflectance Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -3679,7 +3679,7 @@ Mat.thea_CoatingAbsorptionEnable = bpy.props.BoolProperty(
 Mat.thea_CoatingThicknessAbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
 #                default=("", "", ""),
-                name="Absorption Color",
+                name="Absorption",
                 description="Absorption Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -3837,7 +3837,7 @@ Mat.thea_SSSWeightFilename = bpy.props.StringProperty(
 
 Mat.thea_SSSReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Reflectance Color",
+                name="Reflectance",
                 description="Reflectance Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -3852,7 +3852,7 @@ Mat.thea_SSSReflectanceFilename = bpy.props.StringProperty(
 
 Mat.thea_SSSAbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Absorption Color",
+                name="Absorption",
                 description="Absorption Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -3868,7 +3868,7 @@ Mat.thea_SSSAbsorption = bpy.props.FloatProperty(
 
 Mat.thea_SSSScatteringCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
-                name="Scattering Color",
+                name="Scattering",
                 description="Scattering Color",
                 subtype="COLOR",
                 update=materialUpdated)
@@ -4041,7 +4041,7 @@ Mat.thea_ThinFilmWeightFilename = bpy.props.StringProperty(
 Mat.thea_ThinFilmTransmittanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 default=(1, 1, 1),
-                name="Transmittance Color",
+                name="Transmittance",
                 description="Transmittance Color",
                 subtype="COLOR",
                 update=materialUpdated)
