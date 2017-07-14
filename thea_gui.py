@@ -758,10 +758,15 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             row = layout.row()
             row.prop(mat, "thea_GlossyStructureRoughness")
             row.prop(mat, "thea_GlossyRoughnessFilename", text="")
-            row = layout.row()
-            row.prop(mat, "thea_GlossyStructureRoughTrEn")
-            if getattr(mat, "thea_GlossyStructureRoughTrEn"):
-                row.prop(mat, "thea_GlossyStructureRoughnessTr")
+
+            sub = layout.row()
+            sub.prop(mat, "thea_GlossyStructureRoughTrEn")
+            sub = layout.row()
+            sub.active = mat.thea_GlossyStructureRoughTrEn == True
+            sub.prop(mat, "thea_GlossyStructureRoughnessTr")
+            sub.prop(mat, "thea_GlossyRoughnessTrFilename", text="")
+#            if getattr(mat, "thea_GlossyStructureRoughTrEn"):
+#                sub.prop(mat, "thea_GlossyRoughnessTrFilename", text="")
             row = layout.row()
             row.prop(mat, "thea_GlossyStructureAnisotropy")
             row.prop(mat, "thea_GlossyAnisotropyFilename", text="")
@@ -845,10 +850,12 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             row = layout.row()
             row.prop(mat, "thea_Glossy2StructureRoughness")
             row.prop(mat, "thea_Glossy2RoughnessFilename", text="")
-            row = layout.row()
-            row.prop(mat, "thea_Glossy2StructureRoughTrEn")
-            if getattr(mat, "thea_Glossy2StructureRoughTrEn"):
-                row.prop(mat, "thea_Glossy2StructureRoughnessTr")
+            sub = layout.row()
+            sub.prop(mat, "thea_Glossy2StructureRoughTrEn")
+            sub = layout.row()
+            sub.active = mat.thea_Glossy2StructureRoughTrEn == True
+            sub.prop(mat, "thea_Glossy2StructureRoughnessTr")
+            sub.prop(mat, "thea_Glossy2RoughnessTrFilename", text="")
             row = layout.row()
             row.prop(mat, "thea_Glossy2StructureAnisotropy")
             row.prop(mat, "thea_Glossy2AnisotropyFilename", text="")
@@ -888,21 +895,16 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             col.prop(mat, "thea_SSSTraceReflections")
             col.prop(mat, "thea_SSSTraceRefractions")
             split = layout.split()
-            col = split.column()
-            row.label(text="Structure")
-            row = layout.row()
-            col.prop(mat, "thea_SSSStructureRoughness")
-            split = layout.split()
-            row = layout.row()
-            colL = split.column()
-            colR = split.column()
-            colL.prop(mat, "thea_SSSStructureRoughTrEn")
-            colR.prop(mat, "thea_SSSStructureRoughnessTr")
-            split = layout.split()
             layout.label(text="Structure")
             row = layout.row()
             row.prop(mat, "thea_SSSStructureRoughness")
             row.prop(mat, "thea_SSSRoughnessFilename", text="")
+            sub = layout.row()
+            sub.prop(mat, "thea_SSSStructureRoughTrEn")
+            sub = layout.row()
+            sub.active = mat.thea_SSSStructureRoughTrEn == True
+            sub.prop(mat, "thea_SSSStructureRoughnessTr")
+            sub.prop(mat, "thea_SSSRoughnessTrFilename", text="")
             row = layout.row()
             row.prop(mat, "thea_SSSStructureAnisotropy")
             row.prop(mat, "thea_SSSAnisotropyFilename", text="")
@@ -930,22 +932,24 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             col.prop(mat, "thea_ThinFilmIOR")
 #            CHANGED > Added inactive state to ThinFilm  THickness
             row = layout.row()
-            split = layout.split()
-            col.prop(mat, "thea_ThinFilmInterference")
-            col = split.column()
-            sub = col.row()
+            row.prop(mat, "thea_ThinFilmInterference")
+            col = layout.column()
+            sub = col.row(align=False)
             sub.active = mat.thea_ThinFilmInterference == True
             sub.prop(mat, "thea_ThinFilmThickness")
             sub.prop(mat, "thea_ThinFilmThicknessFilename", text="")
 #            col.prop(mat, "thea_ThinFilmThickness")
             row = layout.row()
-            split = layout.split()
-            col = split.column()
+
+
             row.label(text="Structure")
 #           CHANGED > Was given the name of glossy
-            col.prop(mat, "thea_ThinFilmStructureBump")
-            col.prop(mat, "thea_ThinFilmBumpFilename", text="")
-            col.prop(mat, "thea_ThinFilmStructureNormal")
+            col = layout.column()
+            row = col.row(align=False)
+            row.prop(mat, "thea_ThinFilmStructureBump")
+            row.prop(mat, "thea_ThinFilmBumpFilename", text="")
+            row = layout.row()
+            row.prop(mat, "thea_ThinFilmStructureNormal")
 
 
 
@@ -972,11 +976,11 @@ class MATERIAL_PT_Clipping(MaterialButtonsPanel, bpy.types.Panel):
        row = layout.row()
 
        if mat.get('thea_Clipping'):
-           row = layout.row()
-           col = split.column()
-           col.prop(mat, "thea_ClippingFilename", text="")
+           col = layout.column()
+           col.prop(mat, "thea_ClippingFilename", text="Texture")
            col.prop(mat, "thea_ClippingThreshold")
-           col.prop(mat, "thea_ClippingSoft")
+           row = layout.row()
+           row.prop(mat, "thea_ClippingSoft")
 
 class MATERIAL_PT_Emittance(MaterialButtonsPanel, bpy.types.Panel):
     bl_label = "Emittance"
@@ -1050,19 +1054,19 @@ class MATERIAL_PT_Medium(MaterialButtonsPanel, bpy.types.Panel):
            row = layout.row()
            if(mat.thea_MediumAbsorptionFilename==""):
                 row.prop(mat, "thea_MediumAbsorptionCol")
-           row.prop(mat, "thea_MediumAbsorptionFilename")
+           row.prop(mat, "thea_MediumAbsorptionFilename", text="")
            row = layout.row()
            if(mat.thea_MediumScatterFilename==""):
                 row.prop(mat, "thea_MediumScatterCol")
-           row.prop(mat, "thea_MediumScatterFilename")
+           row.prop(mat, "thea_MediumScatterFilename", text="")
            row = layout.row()
            if(mat.thea_MediumAbsorptionDensityFilename==""):
                row.prop(mat, "thea_MediumAbsorptionDensity")
-           row.prop(mat, "thea_MediumAbsorptionDensityFilename")
+           row.prop(mat, "thea_MediumAbsorptionDensityFilename", text="")
            row = layout.row()
            if(mat.thea_MediumScatterDensityFilename==""):
                row.prop(mat, "thea_MediumScatterDensity")
-           row.prop(mat, "thea_MediumScatterDensityFilename")
+           row.prop(mat, "thea_MediumScatterDensityFilename", text="")
            row = layout.row()
            row.prop(mat, "thea_MediumCoefficient")
            if(mat.thea_MediumCoefficient):

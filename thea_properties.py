@@ -725,7 +725,7 @@ Scene.thea_MediumAbsorptionCol = bpy.props.FloatVectorProperty(
 Scene.thea_MediumAbsorptionFilename = bpy.props.StringProperty(
                   name = "Absorption texture",
                   default = "",
-                  description = "File path",
+                  description = "Absorption texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumAbsorptionFilename")
                   )
@@ -747,7 +747,7 @@ Scene.thea_MediumScatterCol = bpy.props.FloatVectorProperty(
 Scene.thea_MediumScatterFilename = bpy.props.StringProperty(
                   name = "Scatter texture",
                   default = "",
-                  description = "File path",
+                  description = "Scatter texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumScatterFilename")
                   )
@@ -770,7 +770,7 @@ Scene.thea_MediumAbsorptionDensity = bpy.props.FloatProperty(
 Scene.thea_MediumAbsorptionDensityFilename = bpy.props.StringProperty(
                   name = "Absorption Density texture",
                   default = "",
-                  description = "File path",
+                  description = "Absorption Density texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumAbsorptionDensityFilename")
                   )
@@ -793,7 +793,7 @@ Scene.thea_MediumScatterDensity = bpy.props.FloatProperty(
 Scene.thea_MediumScatterDensityFilename = bpy.props.StringProperty(
                   name = "Scatter Density texture",
                   default = "",
-                  description = "File path",
+                  description = "Scatter Density texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumScatterDensityFilename")
                   )
@@ -859,7 +859,7 @@ Scene.thea_BackroundWrappingMenu = bpy.props.EnumProperty(
 Scene.thea_IBLFilename = bpy.props.StringProperty(
                   name = "Filename",
                   default = "",
-                  description = "IBL file path",
+                  description = "IBL map file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_IBLFilename")
                   )
@@ -904,7 +904,7 @@ Scene.thea_BackgroundMappingWrappingMenu = bpy.props.EnumProperty(
 
 Scene.thea_BackgroundMappingFilename = bpy.props.StringProperty(
                 name="Filename",
-                description="Filename",
+                description="Background map file path",
                 default= "",
                 subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_BackgroundMappingFilename"))
@@ -949,7 +949,7 @@ Scene.thea_ReflectionMappingWrappingMenu = bpy.props.EnumProperty(
 
 Scene.thea_ReflectionMappingFilename = bpy.props.StringProperty(
                 name="Filename",
-                description="Filename",
+                description="Reflection map file path",
                 default= "",
                 subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_ReflectionMappingFilename"))
@@ -994,7 +994,7 @@ Scene.thea_RefractionMappingWrappingMenu = bpy.props.EnumProperty(
 
 Scene.thea_RefractionMappingFilename = bpy.props.StringProperty(
                 name="Filename",
-                description="Filename",
+                description="Refraction map file path",
                 default= "",
                 subtype = 'FILE_PATH',
                   update=lambda a,b: worldFilenameUpdated(a,b,"thea_RefractionMappingFilename"))
@@ -1881,6 +1881,9 @@ def materialFilenameUpdated(self, context, origin=""):
         if 'Roughness' in tex.name:
             slot.use_map_hardness=True
             slot.use_map_color_diffuse=False
+        if 'RoughnessTr' in tex.name:
+            slot.texture.thea_RoughnessTrTex=True
+            slot.use_map_color_diffuse=False
         if 'Sigma' in tex.name:
             slot.texture.thea_StructureSigmaTex=True
             slot.use_map_color_diffuse=False
@@ -2058,7 +2061,7 @@ Mat.thea_BasicWeight = bpy.props.FloatProperty(
 Mat.thea_BasicWeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicWeightFilename")
                   )
@@ -2075,7 +2078,7 @@ Mat.thea_BasicDiffuseCol = bpy.props.FloatVectorProperty(
 Mat.thea_BasicDiffuseFilename = bpy.props.StringProperty(
                   name = "Diffuse Color texture",
                   default = "",
-                  description = "File path",
+                  description = "Diffuse Color texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicDiffuseFilename")
                   )
@@ -2091,7 +2094,7 @@ Mat.thea_BasicReflectanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_BasicReflectanceFilename = bpy.props.StringProperty(
                   name = "Reflectance Color texture",
                   default = "",
-                  description = "File path",
+                  description = "Reflectance Color texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicReflectanceFilename")
                   )
@@ -2106,7 +2109,7 @@ Mat.thea_BasicTranslucentCol = bpy.props.FloatVectorProperty(
 Mat.thea_BasicTranslucentFilename = bpy.props.StringProperty(
                   name = "Translucent Color texture",
                   default = "",
-                  description = "File path",
+                  description = "Translucent Color texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicTranslucentFilename")
                   )
@@ -2203,7 +2206,7 @@ Mat.thea_BasicStructureBump = bpy.props.FloatProperty(
 Mat.thea_BasicBumpFilename = bpy.props.StringProperty(
                   name = "Bumpmap texture",
                   default = "",
-                  description = "File path",
+                  description = "Bumpmap texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicBumpFilename")
                   )
@@ -2211,7 +2214,7 @@ Mat.thea_BasicBumpFilename = bpy.props.StringProperty(
 Mat.thea_BasicSigmaFilename = bpy.props.StringProperty(
                   name = "Sigma texture",
                   default = "",
-                  description = "File path",
+                  description = "Sigma texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicSigmaFilename")
                   )
@@ -2219,7 +2222,7 @@ Mat.thea_BasicSigmaFilename = bpy.props.StringProperty(
 Mat.thea_BasicRoughnessFilename = bpy.props.StringProperty(
                   name = "Roughness texture",
                   default = "",
-                  description = "File path",
+                  description = "Roughness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicRoughnessFilename")
                   )
@@ -2227,7 +2230,7 @@ Mat.thea_BasicRoughnessFilename = bpy.props.StringProperty(
 Mat.thea_BasicAnisotropyFilename = bpy.props.StringProperty(
                   name = "Anisotropy texture",
                   default = "",
-                  description = "File path",
+                  description = "Anisotropy texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicAnisotropyFilename")
                   )
@@ -2235,7 +2238,7 @@ Mat.thea_BasicAnisotropyFilename = bpy.props.StringProperty(
 Mat.thea_BasicRotationFilename = bpy.props.StringProperty(
                   name = "Rotation texture",
                   default = "",
-                  description = "File path",
+                  description = "Rotation texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicRotationFilename")
                   )
@@ -2296,7 +2299,7 @@ Mat.thea_Basic2Weight = bpy.props.FloatProperty(
 Mat.thea_Basic2WeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2WeightFilename")
                   )
@@ -2312,7 +2315,7 @@ Mat.thea_Basic2DiffuseCol = bpy.props.FloatVectorProperty(
 Mat.thea_Basic2DiffuseFilename = bpy.props.StringProperty(
                   name = "Diffuse Color texture",
                   default = "",
-                  description = "File path",
+                  description = "Diffuse Color texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2DiffuseFilename")
                   )
@@ -2328,7 +2331,7 @@ Mat.thea_Basic2ReflectanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_Basic2ReflectanceFilename = bpy.props.StringProperty(
                   name = "Reflectance Color texture",
                   default = "",
-                  description = "File path",
+                  description = "Reflectance Color texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2ReflectanceFilename")
                   )
@@ -2344,7 +2347,7 @@ Mat.thea_Basic2TranslucentCol = bpy.props.FloatVectorProperty(
 Mat.thea_Basic2TranslucentFilename = bpy.props.StringProperty(
                   name = "Translucent Color texture",
                   default = "",
-                  description = "File path",
+                  description = "Translucent Color texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2TranslucentFilename")
                   )
@@ -2440,7 +2443,7 @@ Mat.thea_Basic2StructureBump = bpy.props.FloatProperty(
 Mat.thea_Basic2BumpFilename = bpy.props.StringProperty(
                   name = "Bumpmap texture",
                   default = "",
-                  description = "File path",
+                  description = "Bumpmap texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2BumpFilename")
                   )
@@ -2448,7 +2451,7 @@ Mat.thea_Basic2BumpFilename = bpy.props.StringProperty(
 Mat.thea_Basic2SigmaFilename = bpy.props.StringProperty(
                   name = "Sigma texture",
                   default = "",
-                  description = "File path",
+                  description = "Sigma texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2SigmaFilename")
                   )
@@ -2456,7 +2459,7 @@ Mat.thea_Basic2SigmaFilename = bpy.props.StringProperty(
 Mat.thea_Basic2RoughnessFilename = bpy.props.StringProperty(
                   name = "Roughness texture",
                   default = "",
-                  description = "File path",
+                  description = "Roughness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2RoughnessFilename")
                   )
@@ -2464,7 +2467,7 @@ Mat.thea_Basic2RoughnessFilename = bpy.props.StringProperty(
 Mat.thea_Basic2AnisotropyFilename = bpy.props.StringProperty(
                   name = "Anisotropy texture",
                   default = "",
-                  description = "File path",
+                  description = "Anisotropy texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2AnisotropyFilename")
                   )
@@ -2472,7 +2475,7 @@ Mat.thea_Basic2AnisotropyFilename = bpy.props.StringProperty(
 Mat.thea_Basic2RotationFilename = bpy.props.StringProperty(
                   name = "Rotation texture",
                   default = "",
-                  description = "File path",
+                  description = "Rotation texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2RotationFilename")
                   )
@@ -2533,7 +2536,7 @@ Mat.thea_GlossyWeight = bpy.props.FloatProperty(
 Mat.thea_GlossyWeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyWeightFilename")
                   )
@@ -2549,7 +2552,7 @@ Mat.thea_GlossyReflectanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_GlossyReflectanceFilename = bpy.props.StringProperty(
                   name = "Reflectance texture",
                   default = "",
-                  description = "File path",
+                  description = "Reflectance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyReflectanceFilename")
                   )
@@ -2564,7 +2567,7 @@ Mat.thea_GlossyTransmittanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_GlossyTransmittanceFilename = bpy.props.StringProperty(
                   name = "Transmittance texture",
                   default = "",
-                  description = "File path",
+                  description = "Transmittance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyTransmittanceFilename")
                   )
@@ -2670,6 +2673,14 @@ Mat.thea_GlossyStructureRoughnessTr = bpy.props.FloatProperty(
                 description="(%)",
                 update=materialUpdated)
 
+Mat.thea_GlossyRoughnessTrFilename = bpy.props.StringProperty(
+                name = "Glossy Roughness TR Texture",
+                default = "",
+                description = "Glossy Roughness Tr file path",
+                subtype = 'FILE_PATH',
+                update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyRoughnessTrFilename")
+                )
+
 Mat.thea_GlossyStructureAnisotropy = bpy.props.FloatProperty(
                 min=0,
                 max=100,
@@ -2701,7 +2712,7 @@ Mat.thea_GlossyStructureBump = bpy.props.FloatProperty(
 Mat.thea_GlossySigmaFilename = bpy.props.StringProperty(
                   name = "Sigma texture",
                   default = "",
-                  description = "File path",
+                  description = "Sigma texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossySigmaFilename")
                   )
@@ -2709,7 +2720,7 @@ Mat.thea_GlossySigmaFilename = bpy.props.StringProperty(
 Mat.thea_GlossyRoughnessFilename = bpy.props.StringProperty(
                   name = "Roughness texture",
                   default = "",
-                  description = "File path",
+                  description = "Roughness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyRoughnessFilename")
                   )
@@ -2717,7 +2728,7 @@ Mat.thea_GlossyRoughnessFilename = bpy.props.StringProperty(
 Mat.thea_GlossyAnisotropyFilename = bpy.props.StringProperty(
                   name = "Anisotropy texture",
                   default = "",
-                  description = "File path",
+                  description = "Anisotropy texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyAnisotropyFilename")
                   )
@@ -2725,7 +2736,7 @@ Mat.thea_GlossyAnisotropyFilename = bpy.props.StringProperty(
 Mat.thea_GlossyRotationFilename = bpy.props.StringProperty(
                   name = "Rotation texture",
                   default = "",
-                  description = "File path",
+                  description = "Rotation texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyRotationFilename")
                   )
@@ -2733,7 +2744,7 @@ Mat.thea_GlossyRotationFilename = bpy.props.StringProperty(
 Mat.thea_GlossyBumpFilename = bpy.props.StringProperty(
                   name = "Bump texture",
                   default = "",
-                  description = "File path",
+                  description = "Bump texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyBumpFilename")
                   )
@@ -2794,7 +2805,7 @@ Mat.thea_Glossy2Weight = bpy.props.FloatProperty(
 Mat.thea_Glossy2WeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2WeightFilename")
                   )
@@ -2810,7 +2821,7 @@ Mat.thea_Glossy2ReflectanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_Glossy2ReflectanceFilename = bpy.props.StringProperty(
                   name = "Reflectance texture",
                   default = "",
-                  description = "File path",
+                  description = "Reflectance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2ReflectanceFilename")
                   )
@@ -2825,7 +2836,7 @@ Mat.thea_Glossy2TransmittanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_Glossy2TransmittanceFilename = bpy.props.StringProperty(
                   name = "Transmittance texture",
                   default = "",
-                  description = "File path",
+                  description = "Transmittance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2TransmittanceFilename")
                   )
@@ -2930,6 +2941,14 @@ Mat.thea_Glossy2StructureRoughnessTr = bpy.props.FloatProperty(
                 subtype='PERCENTAGE',
                 update=materialUpdated)
 
+Mat.thea_Glossy2RoughnessTrFilename = bpy.props.StringProperty(
+                name = "Glossy 2 Roughness TR Texture",
+                default = "",
+                description = "Glossy 2 Roughness Tr file path",
+                subtype = 'FILE_PATH',
+                update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2RoughnessTrFilename")
+                )
+
 Mat.thea_Glossy2StructureAnisotropy = bpy.props.FloatProperty(
                 min=0,
                 max=100,
@@ -2962,7 +2981,7 @@ Mat.thea_Glossy2StructureBump = bpy.props.FloatProperty(
 Mat.thea_Glossy2SigmaFilename = bpy.props.StringProperty(
                   name = "Sigma texture",
                   default = "",
-                  description = "File path",
+                  description = "Sigma texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2SigmaFilename")
                   )
@@ -2970,7 +2989,7 @@ Mat.thea_Glossy2SigmaFilename = bpy.props.StringProperty(
 Mat.thea_Glossy2RoughnessFilename = bpy.props.StringProperty(
                   name = "Roughness texture",
                   default = "",
-                  description = "File path",
+                  description = "Roughness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2RoughnessFilename")
                   )
@@ -2978,7 +2997,7 @@ Mat.thea_Glossy2RoughnessFilename = bpy.props.StringProperty(
 Mat.thea_Glossy2AnisotropyFilename = bpy.props.StringProperty(
                   name = "Anisotropy texture",
                   default = "",
-                  description = "File path",
+                  description = "Anisotropy texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2AnisotropyFilename")
                   )
@@ -2986,7 +3005,7 @@ Mat.thea_Glossy2AnisotropyFilename = bpy.props.StringProperty(
 Mat.thea_Glossy2RotationFilename = bpy.props.StringProperty(
                   name = "Rotation texture",
                   default = "",
-                  description = "File path",
+                  description = "Rotation texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2RotationFilename")
                   )
@@ -2994,7 +3013,7 @@ Mat.thea_Glossy2RotationFilename = bpy.props.StringProperty(
 Mat.thea_Glossy2BumpFilename = bpy.props.StringProperty(
                   name = "Bump texture",
                   default = "",
-                  description = "File path",
+                  description = "Bump texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2BumpFilename")
                   )
@@ -3039,7 +3058,7 @@ Mat.thea_Displacement = bpy.props.BoolProperty(
 Mat.thea_DisplacementFilename = bpy.props.StringProperty(
                   name = "Displacement texture",
                   default = "",
-                  description = "File path",
+                  description = "Displacement texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_DisplacementFilename")
                   )
@@ -3099,7 +3118,7 @@ Mat.thea_Clipping = bpy.props.BoolProperty(
 Mat.thea_ClippingFilename = bpy.props.StringProperty(
                   name = "Clipping texture",
                   default = "",
-                  description = "File path",
+                  description = "Clipping texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_ClippingFilename")
                   )
@@ -3156,7 +3175,7 @@ Mat.thea_EmittanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_EmittanceFilename = bpy.props.StringProperty(
                   name = "Emittance texture",
                   default = "",
-                  description = "File path",
+                  description = "Emittance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_EmittanceFilename")
                   )
@@ -3170,7 +3189,7 @@ Mat.thea_EmittanceIES = bpy.props.BoolProperty(
 Mat.thea_EmittanceIESFilename = bpy.props.StringProperty(
                   name = "IES File",
                   default = "",
-                  description = "File path",
+                  description = "IES file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_EmittanceFilename")
                   )
@@ -3246,7 +3265,7 @@ Tex.thea_MediumAbsorptionTex = bpy.props.BoolProperty(
 Mat.thea_MediumAbsorptionFilename = bpy.props.StringProperty(
                   name = "Absorption texture",
                   default = "",
-                  description = "File path",
+                  description = "Absorption texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumAbsorptionFilename")
                   )
@@ -3268,7 +3287,7 @@ Tex.thea_MediumScatterTex = bpy.props.BoolProperty(
 Mat.thea_MediumScatterFilename = bpy.props.StringProperty(
                   name = "Scatter texture",
                   default = "",
-                  description = "File path",
+                  description = "Scatter texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumScatterFilename")
                   )
@@ -3291,7 +3310,7 @@ Tex.thea_MediumAbsorptionDensityTex = bpy.props.BoolProperty(
 Mat.thea_MediumAbsorptionDensityFilename = bpy.props.StringProperty(
                   name = "Absorption Density texture",
                   default = "",
-                  description = "File path",
+                  description = "Absorption Density texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumAbsorptionDensityFilename")
                   )
@@ -3314,7 +3333,7 @@ Tex.thea_MediumScatterDensityTex = bpy.props.BoolProperty(
 Mat.thea_MediumScatterDensityFilename = bpy.props.StringProperty(
                   name = "Scatter Density texture",
                   default = "",
-                  description = "File path",
+                  description = "Scatter Density texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumScatterDensityFilename")
                   )
@@ -3564,6 +3583,12 @@ Tex.thea_TransmittanceTex = bpy.props.BoolProperty(
                 default= False,
                 update=materialUpdated)
 
+Tex.thea_RoughnessTrTex = bpy.props.BoolProperty(
+                name="Roughness Tr Texture",
+                description="Rougness Tr Texture",
+                default= False,
+                update=materialUpdated)
+
 Tex.thea_TexChannel = bpy.props.EnumProperty(
                 items=(('RGB', 'RGB', 'RGB'),('Alpha', 'Alpha', 'Alpha')),
                 name="Channel",
@@ -3601,7 +3626,7 @@ Mat.thea_CoatingWeight = bpy.props.FloatProperty(
 Mat.thea_CoatingWeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingWeightFilename")
                   )
@@ -3617,7 +3642,7 @@ Mat.thea_CoatingReflectanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_CoatingReflectanceFilename = bpy.props.StringProperty(
                   name = "Reflectance texture",
                   default = "",
-                  description = "File path",
+                  description = "Reflectance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingReflectanceFilename")
                   )
@@ -3658,7 +3683,7 @@ Mat.thea_CoatingThickness = bpy.props.FloatProperty(
 Mat.thea_CoatingThicknessFilename = bpy.props.StringProperty(
                   name = "Thickness texture",
                   default = "",
-                  description = "File path",
+                  description = "Thickness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingThicknessFilename")
                   )
@@ -3687,7 +3712,7 @@ Mat.thea_CoatingThicknessAbsorptionCol = bpy.props.FloatVectorProperty(
 Mat.thea_CoatingAbsorptionFilename = bpy.props.StringProperty(
                   name = "Absorption texture",
                   default = "",
-                  description = "File path",
+                  description = "Absorption texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingAbsorptionFilename")
                   )
@@ -3751,7 +3776,7 @@ Mat.thea_CoatingStructureNormal = bpy.props.BoolProperty(
 Mat.thea_CoatingRoughnessFilename = bpy.props.StringProperty(
                   name = "Roughness texture",
                   default = "",
-                  description = "File path",
+                  description = "Roughness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingRoughnessFilename")
                   )
@@ -3759,7 +3784,7 @@ Mat.thea_CoatingRoughnessFilename = bpy.props.StringProperty(
 Mat.thea_CoatingAnisotropyFilename = bpy.props.StringProperty(
                   name = "Anisotropy texture",
                   default = "",
-                  description = "File path",
+                  description = "Anisotropy texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingAnisotropyFilename")
                   )
@@ -3767,7 +3792,7 @@ Mat.thea_CoatingAnisotropyFilename = bpy.props.StringProperty(
 Mat.thea_CoatingRotationFilename = bpy.props.StringProperty(
                   name = "Rotation texture",
                   default = "",
-                  description = "File path",
+                  description = "Rotation texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingRotationFilename")
                   )
@@ -3775,7 +3800,7 @@ Mat.thea_CoatingRotationFilename = bpy.props.StringProperty(
 Mat.thea_CoatingBumpFilename = bpy.props.StringProperty(
                   name = "Bump texture",
                   default = "",
-                  description = "File path",
+                  description = "Bump texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingBumpFilename")
                   )
@@ -3830,7 +3855,7 @@ Mat.thea_SSSWeight = bpy.props.FloatProperty(
 Mat.thea_SSSWeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSWeightFilename")
                   )
@@ -3845,7 +3870,7 @@ Mat.thea_SSSReflectanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_SSSReflectanceFilename = bpy.props.StringProperty(
                   name = "Reflectance texture",
                   default = "",
-                  description = "File path",
+                  description = "Reflectance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSReflectanceFilename")
                   )
@@ -3939,6 +3964,14 @@ Mat.thea_SSSStructureRoughnessTr = bpy.props.FloatProperty(
                 subtype='PERCENTAGE',
                 update=materialUpdated)
 
+Mat.thea_SSSRoughnessTrFilename = bpy.props.StringProperty(
+                name = "SSS Roughness TR Texture",
+                default = "",
+                description = "SSS Roughness Tr file path",
+                subtype = 'FILE_PATH',
+                update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSRoughnessTrFilename")
+                )
+
 Mat.thea_SSSStructureAnisotropy = bpy.props.FloatProperty(
                 min=0,
                 max=100,
@@ -3971,7 +4004,7 @@ Mat.thea_SSSStructureBump = bpy.props.FloatProperty(
 Mat.thea_SSSBumpFilename = bpy.props.StringProperty(
                   name = "Bump texture",
                   default = "",
-                  description = "File path",
+                  description = "Bump texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSBumpFilename")
                   )
@@ -3980,7 +4013,7 @@ Mat.thea_SSSBumpFilename = bpy.props.StringProperty(
 Mat.thea_SSSRoughnessFilename = bpy.props.StringProperty(
                   name = "Roughness texture",
                   default = "",
-                  description = "File path",
+                  description = "Roughness texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSRoughnessFilename")
                   )
@@ -3988,7 +4021,7 @@ Mat.thea_SSSRoughnessFilename = bpy.props.StringProperty(
 Mat.thea_SSSAnisotropyFilename = bpy.props.StringProperty(
                   name = "Anisotropy texture",
                   default = "",
-                  description = "File path",
+                  description = "Anisotropy texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSAnisotropyFilename")
                   )
@@ -3996,7 +4029,7 @@ Mat.thea_SSSAnisotropyFilename = bpy.props.StringProperty(
 Mat.thea_SSSRotationFilename = bpy.props.StringProperty(
                   name = "Rotation texture",
                   default = "",
-                  description = "File path",
+                  description = "Rotation texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSRotationFilename")
                   )
@@ -4033,7 +4066,7 @@ Mat.thea_ThinFilmWeight = bpy.props.FloatProperty(
 Mat.thea_ThinFilmWeightFilename = bpy.props.StringProperty(
                   name = "Weight texture",
                   default = "",
-                  description = "File path",
+                  description = "Weight texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_ThinFilmWeightFilename")
                   )
@@ -4050,7 +4083,7 @@ Mat.thea_ThinFilmTransmittanceCol = bpy.props.FloatVectorProperty(
 Mat.thea_ThinFilmTransmittanceFilename = bpy.props.StringProperty(
                 name = "Transmittance texture",
                 default = "",
-                description = "File path",
+                description = "Transmittance texture file path",
                 subtype = 'FILE_PATH',
                 update=lambda a,b: materialFilenameUpdated(a,b,"thea_ThinFilmTransmittanceFilename")
                 )
@@ -4088,7 +4121,7 @@ Mat.thea_ThinFilmThickness = bpy.props.FloatProperty(
 Mat.thea_ThinFilmThicknessFilename = bpy.props.StringProperty(
                 name = "Thickness texture",
                 default = "",
-                description = "File path",
+                description = "Thickness texture file path",
                 subtype = 'FILE_PATH',
                 update=lambda a,b: materialFilenameUpdated(a,b,"thea_ThinFilmThicknessFilename")
                 )
@@ -4112,7 +4145,7 @@ Mat.thea_ThinFilmStructureBump = bpy.props.FloatProperty(
 Mat.thea_ThinFilmBumpFilename = bpy.props.StringProperty(
                 name = "Bump texture",
                 default = "",
-                description = "File path",
+                description = "Bump texture file path",
                 subtype = 'FILE_PATH',
                 update=lambda a,b: materialFilenameUpdated(a,b,"thea_ThinFilmBumpFilename")
                 )
@@ -4837,9 +4870,9 @@ Lamp.thea_SunEmittanceUnit = bpy.props.EnumProperty(
                 update=lampUpdated)
 
 Lamp.thea_TextureFilename = bpy.props.StringProperty(
-                  name = "Texture",
+                  name = "Lamp Texture",
                   default = "",
-                  description = "File path",
+                  description = "Lamp texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: lampFilenameUpdated(a,b,"thea_TextureFilename")
                   )
@@ -4854,7 +4887,7 @@ Lamp.thea_enableIES = bpy.props.BoolProperty(
 Lamp.thea_IESFilename = bpy.props.StringProperty(
                   name = "IES file",
                   default = "",
-                  description = "File path",
+                  description = "IES file path",
                   subtype = 'FILE_PATH',
                   update=lampUpdated)
 
@@ -4877,7 +4910,7 @@ Lamp.thea_enableProjector = bpy.props.BoolProperty(
 Lamp.thea_ProjectorFilename = bpy.props.StringProperty(
                   name = "IES file",
                   default = "",
-                  description = "File path",
+                  description = "IES file path",
                   subtype = 'FILE_PATH',
                   update=lampUpdated)
 

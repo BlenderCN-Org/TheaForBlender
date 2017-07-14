@@ -386,6 +386,7 @@ class GlossyBSDF:
         self.reflectanceTexture = False
         self.transmittanceTexture = False
         self.roughnessTexture = None
+        self.roughnesstrTexture = None
         self.anisotropyTexture = None
         self.rotationTexture = None
         self.bumpTexture = None
@@ -399,6 +400,8 @@ class GlossyBSDF:
         self.transmittanceTexture = texture
     def setRoughnessTexture(self, texture):
         self.roughnessTexture = texture
+    def setRoughnessTrTexture(self, texture):
+        self.roughnesstrTexture = texture
     def setAnisotropyTexture(self, texture):
         self.anisotropyTexture = texture
     def setRotationTexture(self, texture):
@@ -462,6 +465,8 @@ class GlossyBSDF:
             self.transmittanceTexture.write(file,"Transmittance")
         if self.roughnessTexture:
             self.roughnessTexture.write(file,"Roughness Map")
+        if self.roughnesstrTexture:
+            self.roughnesstrTexture.write(file,"Roughness Tr. Map")
         if self.anisotropyTexture:
             self.anisotropyTexture.write(file,"Anisotropy Map")
         if self.rotationTexture:
@@ -776,6 +781,7 @@ class SSS:
     def __init__(self):
         self.reflectanceTexture = None
         self.roughnessTexture = None
+        self.roughnesstrTexture = None
         self.anisotropyTexture = None
         self.rotationTexture = None
         self.bumpTexture = None
@@ -799,6 +805,8 @@ class SSS:
         self.reflectanceTexture = texture
     def setRoughnessTexture(self, texture):
         self.roughnessTexture = texture
+    def setRoughnessTrTexture(self, texture):
+        self.roughnesstrTexture = texture
     def setAnisotropyTexture(self, texture):
         self.anisotropyTexture = texture
     def setRotationTexture(self, texture):
@@ -856,6 +864,8 @@ class SSS:
             RgbTexture(1,1,1).write(file,"Reflectance 90")
         if self.roughnessTexture:
           self.roughnessTexture.write(file,"Roughness Map");
+        if self.roughnesstrTexture:
+          self.roughnesstrTexture.write(file,"Roughness Tr. Map");
         if self.anisotropyTexture:
             self.anisotropyTexture.write(file,"Anisotropy Map");
         if self.rotationTexture:
@@ -869,6 +879,7 @@ class SSS:
             file.write('<Parameter Name="Scattering Color" Type="RGB" Value=\"%s %s %s\"/>\n' % (self.scatteringColor.r(),self.scatteringColor.g(),self.scatteringColor.b()))
             file.write('<Parameter Name=\"Scattering Density\" Type=\"Real\" Value=\"%s\"/>\n' % self.scatteringDensity)
         file.write('<Parameter Name=\"Roughness\" Type=\"Real\" Value=\"%s\"/>\n' % self.roughness)
+        file.write('<Parameter Name=\"Rough Tr.\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.roughnessTrEnable else '0'))
         if self.roughnessTrEnable:
             file.write('<Parameter Name=\"Roughness Tr.\" Type=\"Real\" Value=\"%s\"/>\n' % self.roughnessTr)
         file.write('<Parameter Name=\"Anisotropy\" Type=\"Real\" Value=\"%s\"/>\n' % self.anisotropy)
@@ -5045,6 +5056,10 @@ class XMLExporter:
                             if (mtex.use_map_hardness == 1):
                                 texture = tex
                                 return texture
+                        if (type == "RoughnessTr"):
+                            if (mtex.texture.thea_RoughnessTrTex == 1):
+                                texture = tex
+                                return texture
                         if (type == "Sigma"):
                             if (mtex.texture.thea_StructureSigmaTex == 1):
                                 texture = tex
@@ -5291,6 +5306,7 @@ class XMLExporter:
                 bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy"))
                 bsdf.setTransmittanceTexture(getTexture(type="Transmittance", component="thea_Glossy"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_Glossy"))
+                bsdf.setRoughnessTrTexture(getTexture(type="RoughnessTr", component="thea_Glossy"))
                 bsdf.setBumpTexture(getTexture(type="Bump", component="thea_Glossy"))
                 bsdf.setAnisotropyTexture(getTexture(type="Anisotropy", component="thea_Glossy"))
                 bsdf.setRotationTexture(getTexture(type="Rotation", component="thea_Glossy"))
@@ -5387,6 +5403,7 @@ class XMLExporter:
                 bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy2"))
                 bsdf.setTransmittanceTexture(getTexture(type="Transmittance", component="thea_Glossy2"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_Glossy2"))
+                bsdf.setRoughnessTrTexture(getTexture(type="RoughnessTr", component="thea_Glossy2"))
                 bsdf.setBumpTexture(getTexture(type="Bump", component="thea_Glossy2"))
                 bsdf.setAnisotropyTexture(getTexture(type="Anisotropy", component="thea_Glossy2"))
                 bsdf.setRotationTexture(getTexture(type="Rotation", component="thea_Glossy2"))
@@ -5480,6 +5497,7 @@ class XMLExporter:
                 bsdf = SSS()
                 bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_SSS"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_SSS"))
+                bsdf.setRoughnessTrTexture(getTexture(type="RoughnessTr", component="thea_SSS"))
                 bsdf.setBumpTexture(getTexture(type="Bump", component="thea_SSS"))
                 bsdf.setAnisotropyTexture(getTexture(type="Anisotropy", component="thea_SSS"))
                 bsdf.setRotationTexture(getTexture(type="Rotation", component="thea_SSS"))
