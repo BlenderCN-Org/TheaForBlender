@@ -588,7 +588,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             #layout.prop(mat, "thea_BasicWeight")
             row = layout.row()
             if(mat.thea_BasicDiffuseFilename==""):
-                row.prop(mat, "diffuse_color")
+                row.prop(mat, "diffuse_color", text="Diffuse")
                 #row.prop(mat, "thea_BasicDiffuseCol")
             row.prop(mat, "thea_BasicDiffuseFilename", text="")
 
