@@ -150,7 +150,7 @@ Scene.thea_RenderTime = bpy.props.IntProperty(
                 max=1000,
                 default=0,
                 name="Time Limit (min)",
-                description="terminate the render process by specifying the render time",
+                description="Terminate the render process by specifying the render time",
                 update=engineUpdated)
 
 Scene.thea_RenderMaxPasses = bpy.props.IntProperty(
@@ -172,25 +172,25 @@ Scene.thea_RenderMaxSamples = bpy.props.IntProperty(
 
 Scene.thea_RenderMBlur = bpy.props.BoolProperty(
                 name="Motion Blur",
-                description="Motion Blur",
+                description="If enabled will show up for all visible animated objects. The actual blur amount depends on camera shutter speed and animation properties of the objects",
                 default= True,
                 update=engineUpdated)
 #CHANGED> Added displacement
 Scene.thea_displacemScene = bpy.props.BoolProperty(
                 name="Displacement",
-                description="Displacement",
+                description="By enabling Displacement, materials that have a displacement will be normally rendered; otherwise, they will be rendered as if they had no displacement.",
                 default= True,
                 update=engineUpdated)
 
 Scene.thea_RenderVolS = bpy.props.BoolProperty(
                 name="Volumetric Scattering",
-                description="Volumetric Scattering",
+                description="It corresponds to rendering participating media. If disabled, volumetric (Medium) and sub-surface (SSS) scattering won't be rendered by unbiased engines.",
                 default= True,
                 update=engineUpdated)
 
 Scene.thea_RenderLightBl = bpy.props.BoolProperty(
                 name="Relight",
-                description="Relight",
+                description="This parameter corresponds to rendering light groups in separate image buffers for relighting post-process. Due to the allocation of an image buffer per light, the number of lights has a direct impact on memory demands and rendering high resolution images with a lot of lights may require a lot of Gb Ram. Please note that clearing all image buffers separately takes more time than clearing one merged buffer, although this is easily amortized by reusing the render output in a relight animation.",
                 default= False,
                 update=engineUpdated)
 
@@ -202,7 +202,7 @@ Scene.thea_ImgTheaFile = bpy.props.BoolProperty(
 #            CHANGED > Added clay render options
 Scene.thea_clayRender = bpy.props.BoolProperty(
                 name="Clay Render",
-                description="Enables clay rendering",
+                description="By enabling this option, all materials in the scene will be rendered as diffuse gray, giving the final image a clay effect.",
                 default= False,
                 update=engineUpdated)
 
@@ -211,7 +211,7 @@ Scene.thea_clayRenderReflectance = bpy.props.IntProperty(
                 max=100,
                 default=50,
                 name="Reflectance (%)",
-                description="Percentage of reflectance of clay",
+                description="By changing the Reflectance percentage you can decrease/increase the diffuse material reflectance (from black to white).",
                 update=engineUpdated)
 #CHANGED > Added markernaming + Custom naming
 Scene.thea_markerName = bpy.props.BoolProperty(
@@ -323,50 +323,72 @@ Scene.thea_BucketRendering = bpy.props.BoolProperty(
 
 Scene.thea_ExtendedTracing = bpy.props.BoolProperty(
                 name="Extended Tracing",
-                description="Extended Tracing",
-                default= False)
+                description="By enabling Extended Tracing Depth we can efficiently render scenes with transparent objects or materials with Subsurface Scattering, with lower Tracing Depth values and better render times.",
+                default= False,
+                update=engineUpdated)
 
 Scene.thea_TransparencyDepth = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=15,
                 name="Transparency Depth",
-                description="Transparency Depth")
+                description="Determines the Extended Tracing Depth for all transparent materials like Thin Film, Glossy Glass and Clip Map. It only affects transparency.",
+                update=engineUpdated)
 
 Scene.thea_InternalReflectionDepth = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=15,
                 name="Internal Reflection Depth",
-                description="Internal Reflection Depth")
+                description="Depth determines the Extended Tracing Depth for transparent materials that have refraction and total internal reflection. These materials are created with the use of Thea Glossy material (for example solid glass or water). If you notice that you get dark areas on solid glass, the cause is often because of too low Internal Reflection Depth and not due to the Transparency Depth.",
+                update=engineUpdated)
+
+Scene.thea_ClampLevelEnable = bpy.props.BoolProperty(
+                name="Clamp Level",
+                description="By enabling Extended Tracing Depth we can efficiently render scenes with transparent objects or materials with Subsurface Scattering, with lower Tracing Depth values and better render times.",
+                default= True,
+                update=engineUpdated)
+
+Scene.thea_ClampLevel = bpy.props.FloatProperty(
+                min=0,
+                max=5,
+                precision=3,
+                default=1,
+                name="Clamp Level",
+                description="this parameter is used to clamp the evaluation of a pixel, improving antialiasing. The number corresponds to the clamping limit. Higher than 1, clamping becomes less effective for antialiasing while less than 1 it becomes more effective but also lowering the brightness of the image more aggressively.",
+                update=engineUpdated)
 
 Scene.thea_SSSDepth = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=15,
                 name="SSS Depth",
-                description="SSS Depth")
+                description="Determines the Extended Tracing Depth for Subsurface Scattering (SSS) materials. In some cases increasing this value is needed to increase the brightness of bright colored dense SSS materials.",
+                update=engineUpdated)
 
 Scene.thea_RTTracingDepth = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=5,
                 name="Tracing Depth",
-                description="Tracing Depth")
+                description="It is an important parameter for Progressive engines. Increasing this parameter may be needed for certain cases where there are a lot of mirrors or dielectrics in the scene but it has a direct impact on render times.",
+                update=engineUpdated)
 
 Scene.thea_RTDiffuseDepth = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=1,
                 name="Diffuse Depth",
-                description="Diffuse Depth")
+                description="This is a separate value to control tracing depth for diffused surfaces",
+                update=engineUpdated)
 
 Scene.thea_RTGlossyDepth = bpy.props.IntProperty(
                 min=0,
                 max=100,
                 default=2,
                 name="Glossy Depth",
-                description="Glossy Depth")
+                description="Glossy Depth",
+                update=engineUpdated)
 
 Scene.thea_RTTraceDispersion = bpy.props.BoolProperty(
                 name="Trace Dispersion",
@@ -638,11 +660,29 @@ def worldUpdated(self, context):
     for sunOb in bpy.data.objects:
        if sunOb.type == 'LAMP' and sunOb.data.type == 'SUN':
            sunName = sunOb.data.name
+#           sunObj = sunOb.object
        try:
+#           if getattr(context.scene,"thea_IBLEnable"):
+#               setattr(bpy.data.scenes["Scene"],"thea_EnvPSEnable", False)
+#           if getattr(context.scene,"thea_EnvPSEnable"):
+#               setattr(bpy.data.scenes["Scene"],"thea_IBLEnable", False)
+
            if (getattr(context.scene,"thea_IBLTypeMenu") == 'IBL Only') and getattr(context.scene,"thea_IBLEnable") or getattr(context.scene,"thea_locationEnable"):
                setattr(bpy.data.lamps[sunName], "thea_enableLamp", False)
            else:
                setattr(bpy.data.lamps[sunName], "thea_enableLamp", True)
+#           if (getattr(context.scene,"thea_SkyTypeMenu") == 'Sun+Sky') and getattr(context.scene,"thea_EnvPSEnable", False):
+#               setattr(bpy.data.scenes["Scene"],"thea_SkyTypeMenu", 'Sky Only')
+#
+           if (getattr(context.scene,"thea_SkyTypeMenu") == 'Sky Only') and getattr(context.scene,"thea_EnvPSEnable") or getattr(context.scene,"thea_locationEnable"):
+               setattr(bpy.data.lamps[sunName], "thea_enableLamp", False)
+           if (getattr(context.scene,"thea_SkyTypeMenu") == 'Sun+Sky') and getattr(context.scene,"thea_EnvPSEnable"):
+               setattr(bpy.data.lamps[sunName], "thea_enableLamp", True)
+           if getattr(context.scene,"thea_locationEnable") and getattr(context.scene,"thea_EnvPSEnable"):
+               bpy.data.objects[sunName].hide = True
+           else:
+               bpy.data.objects[sunName].hide = False
+
        except:
            pass
 
@@ -655,6 +695,7 @@ def worldFilenameUpdated(self, context, origin=""):
     '''
     from . import thea_globals
     thea_globals.worldUpdated = True
+#    lampFilenameUpdated
     imgName = context.scene.get(origin)
     texName = "IBL_"+origin
     world = context.scene.world
@@ -1066,6 +1107,12 @@ Scene.thea_EnvPSEnable = bpy.props.BoolProperty(
                 default= False,
                 update=worldUpdated)
 
+Scene.thea_SkyTypeMenu = bpy.props.EnumProperty(
+                items=(("Sky Only","Sky Only","Sky Only"),("Sun+Sky","Sun+Sky","Sun+Sky")),
+                name="Sky Type",
+                description="Sky type",
+                default="Sun+Sky",
+                update=worldUpdated)
 #CHANGED > Added description and editted default settings and max settings
 Scene.thea_EnvPSTurb = bpy.props.FloatProperty(
                 min=0.00,
@@ -1125,7 +1172,7 @@ def locationUpdated(self, context):
     '''Update location and timezone properties when location was selected from the menu
     '''
     scene = context.scene
-    loc = getLocation(scene.thea_EnvLocationsMenu, getLocations()[1], scene)
+    loc = getLocation(scene.thea_EnvLocationsMenu, getLocations2(), scene)
     if loc[0] != "":
         scene.thea_EnvLat = loc[0]
         scene.thea_EnvLong = loc[1]
@@ -1138,7 +1185,8 @@ Scene.thea_locationEnable = bpy.props.BoolProperty(
                 update=locationUpdated)
 
 Scene.thea_EnvLocationsMenu = bpy.props.EnumProperty(
-                items=getLocations()[0],
+#                items=getLocations()[0],
+                items=getLocMenu(),
                 name="Location",
                 description="Location",
                 default="3",
@@ -1730,7 +1778,8 @@ Scene.thea_SceneMerReverseOrder = bpy.props.BoolProperty(
 Scene.thea_AOEnable = bpy.props.BoolProperty(
                 name="Enable",
                 description="Enable AO",
-                default= False)
+                default= True,
+                update=engineUpdated)
 
 Scene.thea_AOLowColor = bpy.props.FloatVectorProperty(
                 min=0, max=1,
@@ -1768,7 +1817,8 @@ Scene.thea_AODistance = bpy.props.FloatProperty(
                 precision=2,
                 default=10,
                 name="Distance",
-                description="Distance")
+                description="This is the maximum distance that the sample may be evaluated to an intermediate (gray) color. After that distance, the sample is evaluated to white color.",
+                update=engineUpdated)
 
 Scene.thea_AOIntensity = bpy.props.FloatProperty(
                 min=0,
@@ -1776,7 +1826,8 @@ Scene.thea_AOIntensity = bpy.props.FloatProperty(
                 precision=2,
                 default=10,
                 name="Intensity",
-                description="Intensity")
+                description="This value defines the intensity of the Ambient Occlusion used.",
+                update=engineUpdated)
 
 def materialLutUpdated(self, context):
     '''Change material name according to LUT when name based LUT is used and update diffuse color based on material preview
@@ -4953,7 +5004,7 @@ Lamp.thea_manualSun = bpy.props.BoolProperty(
 Lamp.thea_enableSoftShadow = bpy.props.BoolProperty(
                 name="Soft Shadow",
                 description="Soft Shadow",
-                default= False,
+                default= True,
                 update=lampUpdated)
 
 Lamp.thea_softRadius = bpy.props.FloatProperty(

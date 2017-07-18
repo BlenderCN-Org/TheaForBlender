@@ -25,7 +25,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
-
+import re
 import bpy
 import bgl
 import blf
@@ -2024,6 +2024,8 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.getRenderOptions().transparencyDepth = getattr(scn, "thea_TransparencyDepth")
     exporter.getRenderOptions().internalReflectionDepth = getattr(scn, "thea_InternalReflectionDepth")
     exporter.getRenderOptions().SSSDepth = getattr(scn, "thea_SSSDepth")
+    exporter.getRenderOptions().ClampLevelEnable = getattr(scn, "thea_ClampLevelEnable")
+    exporter.getRenderOptions().ClampLevel = getattr(scn, "thea_ClampLevel")
     exporter.getRenderOptions().priority = scn.thea_DistPri
     if scn.thea_DistNet == '1':
         exporter.getRenderOptions().network = "Client"
@@ -2358,7 +2360,11 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
                 exporter.getEnvironmentOptions().refractionMap=iblMap
 
 
+    #CHANGED> Added locations menu info environment update for IR
+#    exporter.getEnvironmentOptions().skyType=scn.thea_IBLTypeMenu
 
+
+    exporter.environmentOptions.skyType=scn.thea_SkyTypeMenu
     exporter.environmentOptions.turbidity = scn.thea_EnvPSTurb
     exporter.environmentOptions.waterVapor = scn.thea_EnvPSWatVap
     exporter.environmentOptions.turbidityCoefficient = scn.thea_EnvPSTurbCo
@@ -2366,10 +2372,16 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
 #    changed> Added missing Albedo + ozone
     exporter.environmentOptions.ozone = scn.thea_EnvPSOzone
     exporter.environmentOptions.albedo = scn.thea_EnvPSalbedo
+    exporter.environmentOptions.locEnable = scn.thea_locationEnable
+    locCit = getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][1]
+    locCap = getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][2]
+    exporter.environmentOptions.location = locCap+" - "+locCit
     exporter.environmentOptions.latitude = scn.thea_EnvLat
     exporter.environmentOptions.longitude = scn.thea_EnvLong
     exporter.environmentOptions.timezone = ("GT+"+scn.thea_EnvTZ if int(scn.thea_EnvTZ)>0 else "GT"+scn.thea_EnvTZ)
     exporter.environmentOptions.localtime = scn.thea_EnvTime
+#    exporter.environmentOptions.polarAngle = scn.thea_polarAngle
+#    exporter.environmentOptions.azimuthAngle = scn.thea_azimuthAngle
     exporter.environmentOptions.date = scn.thea_EnvDate
 
 #    CHANGED > Added Global Medium Options
@@ -3394,7 +3406,7 @@ def getMatTransTable():
     return matTransTable
 
 
-def getLocations(maxLines=300):
+def getLocations(maxLines=1200):
     '''Get locations names and coordinates from locations.txt file
 
         :return: tuple with menu entries and list with locations.txt content required for mapping
@@ -3439,6 +3451,112 @@ def getLocations(maxLines=300):
                 EnvLocationsArr.append(line)
             l+=1
     return (EnvLocationsMenuItems, EnvLocationsArr)
+
+def getLocations2(maxLines=1250):
+    '''Get locations names and coordinates from locations.txt file
+
+        :return: tuple with menu entries and list with locations.txt content required for mapping
+        :rtype: ([(str,str,str)], [str])
+    '''
+
+    EnvLocationsMenuItems = []
+    EnvLocationsArr = []
+
+    EnvLocationsMenuItems.append(("0","",""))
+    EnvLocationsArr.append("")
+
+    locPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "locations.txt")
+    try:
+        file = open(locPath)
+    except:
+        file = False
+    #print("locations file: ",locPath)
+    if file:
+        #print("locations found")
+        l = 0
+        it = iter(file)
+        country = ["%UNITED STATES\n", "%CANADA\n"]
+        for line in it:
+            if line.isupper() and l>0:
+                EnvLocCapitals = line.strip(" ").strip('\n')
+                locCap = len(EnvLocCapitals)
+                k = 0
+                continue
+
+
+            if line.isupper() ==0 and (line != "\n") and (line != country[1])>=0:
+#                i+=1
+                EnvLocationsArr.append(line)
+#                EnvLocationsMenuItems.append((str(i),EnvLocCity, EnvLocCapitals))
+                if line.isupper() and l>1:
+                    continue
+            l+=1
+
+        file.close()
+#        for line in file:
+#            if l>0 and l<maxLines:
+#                EnvLocationsMenuItems.append((str(l-1),line[:34].strip(),""))
+#                EnvLocationsArr.append(line)
+#            l+=1
+    return EnvLocationsArr
+
+def getLocMenu():
+    '''Get locations names and coordinates from locations.txt file
+
+        :return: tuple with menu entries and list with locations.txt content required for mapping
+        :rtype: ([(str,str,str)], [str])
+    '''
+
+    EnvLocationsMenuItems = []
+    EnvLocCapitals = []
+    EnvLocCity = []
+    country = []
+    EnvLocationsMenuItems.append(("0","",""))
+
+    locPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "locations.txt")
+    try:
+        file = open(locPath)
+    except:
+        file = False
+
+    i=0
+    l = 0
+    k = 0
+    locCap = ""
+    locCit = ""
+    pattern='[a-z]'
+    it = iter(file)
+    for line in it:
+        country = ["%UNITED STATES\n", "%CANADA\n"]
+        if line.isupper() and (line != country[0]) and (line != country[1]):
+#            EnvLocCapitals.append(line.strip(" "))
+            EnvLocCapitals = line.strip(" ").strip('\n')
+            locCap = len(EnvLocCapitals)
+#            thea_globals.log.debug("Locations Capitals: %s" % EnvLocCapitals)
+            k = 0
+            continue
+        l+=1
+
+        if line.isupper() ==0 and (line != "\n") and (line != country[1])>=1:
+            i+=1
+            if line == "\n":
+                i+=1
+#                thea_globals.log.debug("Locations Extra: %s" % i)
+#            EnvLocCity.append(line[:34].strip(" "))
+            EnvLocCity = line[:34].strip(" ")
+            locCit = line.strip(" ")
+            EnvLocationsMenuItems.append((str(i),EnvLocCity, EnvLocCapitals))
+#            thea_globals.log.debug("Locations Cities: %s + %s" % (i,line))
+#            thea_globals.log.debug("Locations Cities: %s" % locCit)
+#            thea_globals.log.debug("*** Cities: %s" % k)
+#            thea_globals.log.debug("Locations: %s" % EnvLocationsMenuItems)
+            if line.isupper() and l>0:
+                continue
+#                thea_globals.log.debug("Locations Cities: %s" % k)
+        k+=1
+    file.close()
+
+    return EnvLocationsMenuItems
 
 def defTheaGuiProperties():
 
@@ -3755,15 +3873,16 @@ def getLocation(menuLine,EnvLocationsArr,scene):
         :return: tuple with loc, long and time zone
         :rtype: (str, str, str)
     '''
-
     if len(EnvLocationsArr) > 10:
-        line = EnvLocationsArr[int(menuLine)+1]
+        line = EnvLocationsArr[int(menuLine)] #CHANGED took out +1
         loc = line[34:]
         lat = loc[0:8].split("'")
+        lat[1] = lat[1].strip(" ")
         latS = False
         longE = False
+        long = []
         try:
-           if lat[1] == " S":
+           if lat[1] == "S":
               latS = True
            lat = lat[0].lstrip()
            lat = lat.replace(" ", ".")
@@ -3772,7 +3891,9 @@ def getLocation(menuLine,EnvLocationsArr,scene):
            else:
                lat = eval(lat) * 1.0
            long = loc[12:21].split("'")
-           if long[1] == " E":
+           long[1] = long[1].strip(" ")
+#           thea_globals.log.debug("Long: %s" % long[1])
+           if long[1] == "E":
                longE = True
            long = long[0].lstrip()
            long = long.replace(" ", ".")

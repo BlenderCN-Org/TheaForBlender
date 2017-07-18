@@ -582,7 +582,6 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
 #         import tempfile
 #         tempDir = tempfile.gettempdir()
 #         lampFilename = os.path.join(tempDir,'lamp.xml')
-
         (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(bpy.context.scene)
         xmlFilename = currentBlendFile.replace('.blend', '.xml')
 
@@ -775,6 +774,8 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                 thea_globals.log.debug("Lamp updated")
                 self.updateLamp(context)
                 thea_globals.lampUpdated = False
+                self.updateEnvironment(context)
+                thea_globals.worldUpdated = False
 #                 context.window_manager.event_timer_remove(RENDER_PT_thea_startIR._timer)
 #                 RENDER_PT_thea_startIR._timer = context.window_manager.event_timer_add(RENDER_PT_thea_startIR.START_DELAY, context.window)
 

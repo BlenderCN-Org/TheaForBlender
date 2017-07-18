@@ -1888,6 +1888,7 @@ class EnvironmentOptions:
                 file.write('<Parameter Name=\"./%s/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % (identifier, ('1' if self.enabledParameter else '0')))
 
     def __init__(self):
+        self.skyType = "Sun+Sky"
         self.turbidity = 2.5
         self.ozone = 0.35
         self.waterVapor = 2.0
@@ -1895,11 +1896,15 @@ class EnvironmentOptions:
         self.wavelengthExponent = 1.3
 #        CHANGED> Added missing Abledo
         self.albedo = 0.5
+        self.locEnable = True
+        self.location = ""
         self.latitude = 0.0
         self.longitude = 0.0
-        self.timezone = "GT+00"
-        self.date = "1/6/2010"
-        self.localtime = "12:00:00"
+        self.timezone = "GHANA - Acra"
+        self.date = ""
+        self.localtime = ""
+        self.polarAngle = 22.992
+        self.azimuthAngle = -177.906
         self.illumination = None
         self.backgroundColor = RgbTexture()
         self.illuminationMap = None
@@ -1974,20 +1979,28 @@ class EnvironmentOptions:
         file.write('<Parameter Name=\"Wavelength Exponent\" Type=\"Real\" Value=\"%s\"/>\n' % self.wavelengthExponent)
 #        CHANGED > Added missing Albedo
         file.write('<Parameter Name=\"Albedo\" Type=\"Real\" Value=\"%s\"/>\n' % self.albedo)
-        file.write('<Parameter Name=\"./Location/Latitude\" Type=\"Real\" Value=\"%s\"/>\n' % self.latitude)
-        file.write('<Parameter Name=\"./Location/Longitude\" Type=\"Real\" Value=\"%s\"/>\n' % self.longitude)
-        file.write('<Parameter Name=\"./Location/Timezone\" Type=\"String\" Value=\"%s\"/>\n' % self.timezone)
-        file.write('<Parameter Name=\"./Location/Date\" Type=\"String\" Value=\"%s\"/>\n' % self.date)
-        file.write('<Parameter Name=\"./Location/Time\" Type=\"String\" Value=\"%s\"/>\n' % self.localtime)
+#CHANGED> Only add location when ON otherwise we cant render sky only with manual sun
+        if self.locEnable:
+            thea_globals.log.debug("*** Locations Menu: %s" % self.locEnable)
+            file.write('<Parameter Name=\"./Location/Location\" Type=\"String\" Value=\"%s\"/>\n' % self.location)
+#            from TheaForBlender.thea_render_main import getLocMenu
+#            locFile = getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))]
+            file.write('<Parameter Name=\"./Location/Latitude\" Type=\"Real\" Value=\"%s\"/>\n' % self.latitude)
+            file.write('<Parameter Name=\"./Location/Longitude\" Type=\"Real\" Value=\"%s\"/>\n' % self.longitude)
+            file.write('<Parameter Name=\"./Location/Timezone\" Type=\"String\" Value=\"%s\"/>\n' % self.timezone)
+            file.write('<Parameter Name=\"./Location/Date\" Type=\"String\" Value=\"%s\"/>\n' % self.date)
+            file.write('<Parameter Name=\"./Location/Time\" Type=\"String\" Value=\"%s\"/>\n' % self.localtime)
+            file.write('<Parameter Name=\"./Sun/Polar Angle (deg)\" Type=\"Real\" Value=\"%s\"/>\n' % self.polarAngle)
+            file.write('<Parameter Name=\"./Sun/Azimuth (deg)" Type=\"Real\" Value=\"%s\"/>\n' % self.azimuthAngle)
         file.write('<Parameter Name=\"Background Color\" Type=\"RGB\" Value=\"%s %s %s\"/>\n' % (self.backgroundColor.r(), self.backgroundColor.g(), self.backgroundColor.b()))
         file.write('<Parameter Name=\"Illumination\" Type=\"String\" Value=\"')
         if self.illumination == "Dome":
             file.write('Dome\"/>\n')
         elif self.illumination == "IBL":
             file.write('Image Based Lighting\"/>\n')
-        elif self.illumination == "PhysicalSky":
+        elif self.illumination == "PhysicalSky" or self.locEnable:
             file.write('Physical Sky\"/>\n')
-            file.write('<Parameter Name="Sky Type" Type="String" Value="Sun+Sky"/>\n')
+            file.write('<Parameter Name="Sky Type" Type="String" Value="%s"/>\n' % self.skyType)
             file.write('<Parameter Name="Sun Direction" Type="String" Value="%s %s %s"/>\n' % (self.sunDirectionX, self.sunDirectionY, self.sunDirectionZ))
         else:
              file.write('None\"/>\n')
@@ -2243,6 +2256,8 @@ class RenderOptions:
         self.transparencyDepth = 15
         self.internalReflectionDepth = 15
         self.SSSDepth = 15
+        self.ClampLevelEnable = False
+        self.ClampLevel = 1
         self.ImgTheaFile = False
 
     def write(self, file):
@@ -2432,6 +2447,9 @@ class RenderOptions:
             file.write('<Parameter Name=\"./Render/Progressive/Transparency Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.transparencyDepth)
             file.write('<Parameter Name=\"./Render/Progressive/Internal Reflection Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.internalReflectionDepth)
             file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.SSSDepth)
+            if self.ClampLevelEnable:
+                file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.ClampLevelEnable)
+                file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.ClampLevel)
             if self.AOEnable:
                 file.write('<Parameter Name=\"./Render/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
                 file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
@@ -2611,12 +2629,13 @@ class XMLExporter:
         self.file.write('</Object>\n')
         #// it is necessary to describe the primary/active modules as there might exist more than one!
         self.file.write('<Parameter Name=\"./Scenes/Active\" Type=\"String\" Value=\"%s\"/>\n' % self.name ) #// scene.
-        #// issue a special "parameter command" to generate sun according to given parameters - if settings indicate physical sky.
-        #// this special command should be at the very end - after activating scene - to work properly.
-        if self.environmentOptions.illumination=="PhysicalSky" and self.environmentOptions.overrideSun == False:
-            self.file.write('<Parameter Name=\"GenerateSun\" Type=\"Boolean\" Value=\"1\"/>\n')
         #// end of file.
         self.file.write('</Root>\n')
+        # CHANGED needs to go after root in order to work
+        #// issue a special "parameter command" to generate sun according to given parameters - if settings indicate physical sky.
+        #// this special command should be at the very end - after activating scene - to work properly.
+        if self.environmentOptions.illumination=="PhysicalSky" and self.environmentOptions.overrideSun == False: # and self.environmentOptions.skyType == "Sun+Sky":
+            self.file.write('<Parameter Name=\"GenerateSun\" Type=\"Boolean\" Value=\"1\"/>\n')
 
     def findMaterial(self, name):
         '''find material in materialList

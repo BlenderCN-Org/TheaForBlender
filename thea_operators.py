@@ -1199,17 +1199,23 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                 name = line.split("Name=\"")[0].split('"')[1]
                 name = name.replace(name[:9],'')
                 ob = scene.objects.get(name)
+                thea_globals.log.debug("Model to sync: %s" % name)
                 if ob in bpy.context.selected_objects:
-                    if line.find('=Frame')>0:
-                        foundOb = True
-                        frame_str = line.split('"')[5]
-                        frame_arr = frame_str.split(" ")
-                        listItems = []
-                        ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1]), float(frame_arr[5]), float(frame_arr[9]), 0), (float(frame_arr[2]), float(frame_arr[6]), float(frame_arr[10]), 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
-#                        print (name, " synced")
-#                        synced = name
-#                        if foundOb:
-                        self.report({'ERROR'}, "Synced:%s" % name)
+                    foundOb = True
+            if foundOb and (line.find('<Parameter Name="Frame"') >= 0):
+                if ob.type in ['MESH']:
+                    thea_globals.log.debug("Model to sync: %s" % ob)
+    #                        thea_globals.log.debug("Model to sync: %s" % name)
+                    frame_str = line.split('"')[5]
+                    frame_arr = frame_str.split(" ")
+                    listItems = []
+                    thea_globals.log.debug("Model to sync: %s" % frame_str)
+                    ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1]), float(frame_arr[5]), float(frame_arr[9]), 0), (float(frame_arr[2]), float(frame_arr[6]), float(frame_arr[10]), 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
+                    foundOb = False
+    #                        print (name, " synced")
+    #                        synced = name
+    #                        if foundOb:
+                    self.report({'ERROR'}, "Synced:%s" % name)
 
             if line.find('<Object Identifier="./Lights/') >= 0:
                 name = line.split(" ")[3].split('"')[1]
@@ -1473,6 +1479,8 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                     if line.find('<Object Identifier="Omni Light')>= 0:
                         line = next(it)
                         foundOb = True
+                        if line.find('<Object Identifier="./Color/Constant Spectrum Texture"')>=0:
+                            line = next(it)
                         if line.find('<Object Identifier="./Color/Constant Texture')>=0:
                             line = next(it)
                             if line.find('Name="Color"') >=0:
@@ -1518,6 +1526,7 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                         line = next(it)
                         line = next(it)
                         if line.find('Name="Power"'):
+#                            omniPower = float(line.split('"')[5])
                             omniPower = float(line.split('"')[5])
                             ob.data.thea_EmittancePower = omniPower
                             thea_globals.log.debug("%s Power: %s" % (name,omniPower))
@@ -1529,12 +1538,18 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                         line = next(it)
                         if line.find('Name="Unit"'):
                             omniUnit = line.split('"')[5]
-                            ob.data.thea_EmittanceUnit = omniUnit
-                            thea_globals.log.debug("%s Power: %s" % (name,omniUnit))
+                            if ob.type in ('SPOT'):
+                                ob.data.thea_EmittanceUnit = omniUnit
+                            else:
+                                ob.data.thea_SunEmittanceUnit = omniUnit
+                            thea_globals.log.debug("%s Unit: %s" % (name,omniUnit))
                         line = next(it)
                         if line.find('Name="Attenuation"'):
                             omniAtte = line.split('"')[5]
-                            ob.data.thea_EmittanceAttenuation = omniAtte
+                            if ob.type in ('SPOT'):
+                                ob.data.thea_EmittanceAttenuation = omniAtte
+                            else:
+                                ob.data.thea_SunAttenuation = omniAtte
                             thea_globals.log.debug("%s Attenuation: %s" % (name,omniAtte))
                     line = next(it)
                     line = next(it)
@@ -1707,7 +1722,7 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                         if ob.type in ('CAMERA') and ob:
                             ob.matrix_world = (float(frame_arr[0]), float(frame_arr[4]), float(frame_arr[8]), 0), (float(frame_arr[1])*-1, float(frame_arr[5])*-1, float(frame_arr[9])*-1, 0), (float(frame_arr[2])*-1, float(frame_arr[6])*-1, float(frame_arr[10])*-1, 0), (float(frame_arr[3]), float(frame_arr[7]), float(frame_arr[11]), 1)
                             self.report({'ERROR'}, "Synced:%s" % name)
-
+                            foundOb = False
 #                            synced = name
 #                        thea_globals.log.debug("Frame found: %s" % camFrame)
                     line = next(it)
@@ -1930,20 +1945,20 @@ class RENDER_PT_thea_RefractionMappingFile(bpy.types.Operator):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-class RENDER_PT_thea_updateLoc(bpy.types.Operator):
-    bl_idname = "thea.update_loc"
-    bl_label = "Update location"
-
-
-
-    def invoke(self, context, event):
-       scene = context.scene
-       loc = getLocation(scene.thea_EnvLocationsMenu, getLocations()[1], scene)
-       if loc[0] != "":
-           scene.thea_EnvLat = loc[0]
-           scene.thea_EnvLong = loc[1]
-           scene.thea_EnvTZ = str(loc[2])
-       return {'FINISHED'}
+#class RENDER_PT_thea_updateLoc(bpy.types.Operator):
+#    bl_idname = "thea.update_loc"
+#    bl_label = "Update location"
+#
+#
+#
+#    def invoke(self, context, event):
+#       scene = context.scene
+#       loc = getLocation(scene.thea_EnvLocationsMenu, getLocations2(), scene)
+#       if loc[0] != "":
+#           scene.thea_EnvLat = loc[0]
+#           scene.thea_EnvLong = loc[1]
+#           scene.thea_EnvTZ = str(loc[2])
+#       return {'FINISHED'}
 
 class RENDER_PT_thea_RefreshRender(bpy.types.Operator):
     bl_idname = "thea.refresh_render"
@@ -2186,7 +2201,7 @@ def item_iorMenu(self, context):
     if len(dataPath ) > 5:
         i = 2
         for entry in sorted(os.listdir(os.path.join(dataPath,"ior"))):
-            ior.append((entry,os.path.join(dataPath,"ior",entry)))
+#            ior.append((entry,os.path.join(dataPath,"ior",entry)))
             iorMenuItems.append((str(i),entry[:-4],""))
             i+=1
 #            thea_globals.log.debug("*** IORmenu Items: %s" % iorMenuItems)
@@ -2319,6 +2334,75 @@ class theaLUTmenu(bpy.types.Operator):
 #        thea_globals.log.debug("*** IORmenu Items: %s" % item)
         try:
             bpy.data.materials[setattr(mat,"thea_LUT", item)]
+        except:
+            pass
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.invoke_search_popup(self)
+        return {'FINISHED'}
+
+#def item_locMenu(self, context):
+#    '''Get locations names and coordinates from locations.txt file
+#
+#        :return: tuple with menu entries and list with locations.txt content required for mapping
+#        :rtype: ([(str,str,str)], [str])
+#    '''
+#    maxLines = 1200
+#    locationMenuItems = []
+##    EnvLocationsArr = []
+#
+#    locationMenuItems.append(("0","",""))
+##    EnvLocationsArr.append("")
+##     else:
+##         #print("dataPath: %s" % dataPath)
+#    #locPath = os.path.join(dataPath,"Locations","locations.txt")
+#
+#    locPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "locations.txt")
+#    try:
+#        file = open(locPath)
+#    except:
+#        file = False
+#    #print("locations file: ",locPath)
+#    if file:
+#        #print("locations found")
+#        l = 0
+#        for line in file:
+#            if l>0 and l<maxLines:
+#                locationMenuItems.append((str(l-1),line[:34].strip(),""))
+##                EnvLocationsArr.append(line)
+#            l+=1
+#
+#    return locationMenuItems
+from TheaForBlender.thea_render_main import getLocMenu
+
+class thea_location_search(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "thea.location_search"
+    bl_label = "Locations menu search"
+    bl_property = "my_locations"
+    bl_description = "Quick search in Locations Menu"
+#    my_enum = bpy.props.EnumProperty(items=item_cb)
+#    items = []
+#    items.append(("0","",""))
+    my_locations = bpy.props.EnumProperty(items=getLocMenu())
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+
+
+    def execute(self, context):
+        mat = context.material
+#        self.report({'INFO'}, "Selected: %s" % self.my_enum)
+        item = self.my_locations
+#        thea_globals.log.debug("*** IORmenu Items: %s" % item)
+        try:
+            setattr(bpy.data.scenes["Scene"],"thea_EnvLocationsMenu", item)
+#            bpy.data.scenes[setattr(scene,"thea_EnvLocationsMenu", item)]
+#            bpy.data.scenes[setattr(scene,"thea_EnvLocationsMenu", item)]
         except:
             pass
         return {'FINISHED'}
