@@ -2459,6 +2459,12 @@ class RENDER_PT_theaIBL(WorldButtonsPanel, bpy.types.Panel):
            layout.prop(scene,"thea_IBLFilename")
            layout.prop(scene,"thea_IBLRotation")
            layout.prop(scene,"thea_IBLIntensity")
+           split = layout.split()
+           col = split.column()
+           col.prop(scene,"thea_IBLEnableColor")
+           sub = split.column()
+           sub.active = scene.thea_IBLEnableColor == True
+           sub.prop(scene, "thea_IBLColorFilename")
 
 
 class RENDER_PT_theaBackgroundMapping(WorldButtonsPanel, bpy.types.Panel):

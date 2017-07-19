@@ -283,6 +283,7 @@ CollectionProperty= bpy.types.CollectionProperty
 StringProperty= bpy.types.StringProperty
 
 
+
 def setPaths(scene, verbose=False):
     """Recognize required Thea and export paths
 

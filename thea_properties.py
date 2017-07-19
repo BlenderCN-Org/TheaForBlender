@@ -657,6 +657,10 @@ def worldUpdated(self, context):
 
     from . import thea_globals
     thea_globals.worldUpdated = True
+    scene = context.scene
+    scn = scene
+    (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scn)
+
     for sunOb in bpy.data.objects:
        if sunOb.type == 'LAMP' and sunOb.data.type == 'SUN':
            sunName = sunOb.data.name
@@ -685,6 +689,89 @@ def worldUpdated(self, context):
 
        except:
            pass
+
+    #    def makeImg():
+#    #    import bpy
+#        img = "IBL-color.png"
+#        img2 = "/Users/romboutversluijs/Desktop/"+img
+#        try:
+#            img = bpy.data.images['IBL Color']
+#        except:
+#            img = False
+#            thea_globals.log.debug("img: %s" % img)
+#        if not img:
+#        #image_object = bpy.data.images.new(name="pixeltest", width=40, height=30)
+#            img = bpy.data.images.new('IBL Color', width=2, height=2)
+#        num_pixels = len(img.pixels)
+#        thea_globals.log.debug("Iimg Pixels: %s" % num_pixels)
+#        # drawing a pixel, changing pixel content
+#        for px in range(0, num_pixels, 2):
+#            cols = (0,0,6,6,0,0,5,5,0,0,1,1) #okeryellow
+#            leng = len(cols)
+##            cols = (mat.thea_BasicReflectanceCol[0], mat.thea_BasicReflectanceCol[1] , mat.thea_BasicReflectanceCol[2])
+#            for i in range(2):
+#                thea_globals.log.debug("creating coor img:%s %s" % (px, img.pixels[px+i]))
+#                img.pixels[px] = cols[i]
+#            img.filepath_raw = img2
+#            img.file_format = 'PNG'
+#            img.save()
+#            img.reload()
+
+    def makeIBLcolorFile():
+        size = 2, 2
+        fileName = 'IBL-color'
+
+        try:
+            image = bpy.data.images[fileName]
+        except:
+            image = False
+        if not image:
+            image = bpy.data.images.new(fileName, width=size[0], height=size[1])
+        ## For white image
+        # pixels = [1.0] * (4 * size[0] * size[1])
+
+        pixels = [None] * size[0] * size[1]
+        for x in range(size[0]):
+            for y in range(size[1]):
+                # assign RGBA to something useful
+#                r = x / size[0]
+#                g = y / size[1]
+#                b = (1 - r) * g
+#                a = 1.0
+                r = scene.thea_IBLColorFilename[0]
+                g = scene.thea_IBLColorFilename[1]
+                b = scene.thea_IBLColorFilename[2]
+                a = 1.0
+
+                pixels[(y * size[0]) + x] = [r, g, b, a]
+
+        # flatten list
+        pixels = [chan for px in pixels for chan in px]
+
+        # assign pixels
+        image.pixels = pixels
+
+        # write image
+        image.filepath_raw = os.path.join(currentBlendDir, fileName+".png")
+        image.file_format = 'PNG'
+        image.save()
+        old = scene.thea_IBLFilename
+        if old[-3:] == "hdr":
+            global oldFile
+            oldFile = scene.thea_IBLFilename
+
+        if image.save:
+            if scene.thea_IBLEnableColor:
+                scene.thea_IBLFilename = os.path.join(currentBlendDir, fileName+".png")
+
+        if scene.thea_IBLEnableColor<1:
+            if old[-3:] == "png":
+                scene.thea_IBLFilename = oldFile
+#                oldFileCheck = False
+    #                oldFile = True
+
+    if thea_globals.worldUpdated:
+        makeIBLcolorFile()
 
 def worldFilenameUpdated(self, context, origin=""):
     '''Create texture and set it when one of the world filename properties are updated
@@ -948,7 +1035,7 @@ Scene.thea_BackgroundMappingFilename = bpy.props.StringProperty(
                 description="Background map file path",
                 default= "",
                 subtype = 'FILE_PATH',
-                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_BackgroundMappingFilename"))
+                update=lambda a,b: worldFilenameUpdated(a,b,"thea_BackgroundMappingFilename"))
 
 Scene.thea_BackgroundMappingRotation = bpy.props.FloatProperty(
                 min=-10000000.00,
@@ -993,7 +1080,7 @@ Scene.thea_ReflectionMappingFilename = bpy.props.StringProperty(
                 description="Reflection map file path",
                 default= "",
                 subtype = 'FILE_PATH',
-                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_ReflectionMappingFilename"))
+                update=lambda a,b: worldFilenameUpdated(a,b,"thea_ReflectionMappingFilename"))
 
 Scene.thea_ReflectionMappingRotation = bpy.props.FloatProperty(
                 min=-10000000.00,
@@ -1038,7 +1125,7 @@ Scene.thea_RefractionMappingFilename = bpy.props.StringProperty(
                 description="Refraction map file path",
                 default= "",
                 subtype = 'FILE_PATH',
-                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_RefractionMappingFilename"))
+                update=lambda a,b: worldFilenameUpdated(a,b,"thea_RefractionMappingFilename"))
 
 Scene.thea_RefractionMappingRotation = bpy.props.FloatProperty(
                 min=-10000000.00,
@@ -1099,6 +1186,20 @@ Scene.thea_IBLIntensity = bpy.props.FloatProperty(
                 default=1,
                 name="Intensity",
                 description="Intensity",
+                update=worldUpdated)
+#CHANGED> Added IBL color input
+Scene.thea_IBLEnableColor = bpy.props.BoolProperty(
+                name="Color Based Lighting",
+                description="Enables Color Based Lighting",
+                default= False,
+                update=worldUpdated)
+
+Scene.thea_IBLColorFilename = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                name="IBL Color",
+                default=(0, 0, 0),
+                description="IBL Color Filename",
+                subtype="COLOR",
                 update=worldUpdated)
 
 Scene.thea_EnvPSEnable = bpy.props.BoolProperty(
@@ -1874,6 +1975,8 @@ def diffuseColorUpdated(self, context):
     materialUpdated(context)
 
 
+
+
 def materialFilenameUpdated(self, context, origin=""):
     '''Create texture and set it when one of the material filename properties are updated
 
@@ -2005,6 +2108,7 @@ def materialFilenameUpdated(self, context, origin=""):
     mat.thea_MaterialLayoutVersion = 2.0;
     thea_globals.materialUpdate = True
     #materialUpdated(context)
+
 
 Mat.thea_OldLayout = bpy.props.BoolProperty(
                 name="Old layout",
