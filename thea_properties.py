@@ -721,12 +721,25 @@ def worldUpdated(self, context):
         size = 2, 2
         fileName = 'IBL-color'
 
+#        image = None
+#        image = bpy.data.images.get("IBL-color")
+#        if image == None:
+#            try:
+#                image = bpy.data.images.load(imageFile)
+#                image.name = "IBL-color"
+#                thea_globals.log.debug("IBL-color Image: %s" % imageFile)
+#            except:
+#                image = None
+##                                       CHANGED> Added reload, new renders wont reload otherwise
+#        img = bpy.data.images["IBL-color"].reload()
+
         try:
             image = bpy.data.images[fileName]
         except:
             image = False
         if not image:
             image = bpy.data.images.new(fileName, width=size[0], height=size[1])
+        image.filepath_raw = os.path.join(currentBlendDir, fileName+".png")
         ## For white image
         # pixels = [1.0] * (4 * size[0] * size[1])
 
@@ -752,7 +765,6 @@ def worldUpdated(self, context):
         image.pixels = pixels
 
         # write image
-        image.filepath_raw = os.path.join(currentBlendDir, fileName+".png")
         image.file_format = 'PNG'
         image.save()
         old = scene.thea_IBLFilename
@@ -855,7 +867,7 @@ Scene.thea_MediumAbsorptionFilename = bpy.props.StringProperty(
                   default = "",
                   description = "Absorption texture file path",
                   subtype = 'FILE_PATH',
-                  update=lambda a,b: materialFilenameUpdated(a,b,"thea_MediumAbsorptionFilename")
+                  update=lambda a,b: worldFilenameUpdated(a,b,"thea_MediumAbsorptionFilename")
                   )
 
 Scene.thea_MediumScatterCol = bpy.props.FloatVectorProperty(
@@ -1986,8 +1998,6 @@ def materialFilenameUpdated(self, context, origin=""):
     '''
     thea_globals.log.debug("materialFilenameUpdated: %s, %s, %s, %s" % (self, context, origin, context.material.get(origin)))
     mat = context.material
-#    CHANGED > Added material update here, now when textures are added changede whatever, ir updates as well
-    thea_globals.materialUpdated = True
     imgName = context.material.get(origin)
     texName = mat.name+"_"+origin
     exists = False
@@ -2121,14 +2131,16 @@ def updateUnbiasedPreview(self, context):
         :param context: context
     '''
     mat = context.material
+    # Dirty trick to update when scene i picked :)
+    mat.diffuse_color = mat.diffuse_color
     thea_globals.unbiasedPreview = getattr(mat, "thea_EnableUnbiasedPreview")
 
 Mat.thea_EnableUnbiasedPreview = bpy.props.BoolProperty(
 #    CHANGED > Shorter button description
-                name="Unbiased",
-                description="Use unbiased engine for rendering preview",
-                default= False,
-                update=updateUnbiasedPreview)
+    name="Unbiased",
+    description="Use unbiased engine for rendering preview",
+    default= False,
+    update=updateUnbiasedPreview)
 
 def updatePreviewScene(self, context):
     '''Set thea_globals.previewScene when preview scene property is updated
@@ -2136,6 +2148,8 @@ def updatePreviewScene(self, context):
         :param context: context
     '''
     mat = context.material
+    # Dirty trick to update when scene i picked :)
+    mat.diffuse_color = mat.diffuse_color
     thea_globals.previewScene = getTheaPreviewScenesMenuItems()[int(getattr(mat, "thea_PreviewScenesMenu"))][1]+".scn.thea"
 #     print("thea_globals.previewScene: ", thea_globals.previewScene)
 
@@ -5106,8 +5120,8 @@ Lamp.thea_manualSun = bpy.props.BoolProperty(
                 update=lampUpdated)
 
 Lamp.thea_enableSoftShadow = bpy.props.BoolProperty(
-                name="Soft Shadow",
-                description="Soft Shadow",
+                name="Soft Shadow (m)",
+                description="Enables Soft Shadow, Soft radius size (m). Use low numbers, this represents bulb size",
                 default= True,
                 update=lampUpdated)
 
@@ -5115,9 +5129,9 @@ Lamp.thea_softRadius = bpy.props.FloatProperty(
                 min=0,
                 max=100000,
                 precision=3,
-                default=0.200,
+                default=0.050,
                 name="",
-                description="Size",
+                description="Soft radius size (m). Use low numbers, this represents bulb size",
                 update=lampUpdated)
 
 Lamp.thea_radiusMultiplier = bpy.props.FloatProperty(

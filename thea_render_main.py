@@ -719,7 +719,12 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 #                     cam.filmHeight = camData.ortho_scale * 563.333333 #* 750
 #                     cam.focalLength = camData.ortho_scale * 563.333333 #* 750
 #                    cam.filmHeight = 80 / camData.lens * 1000
-                    cam.filmHeight = camData.ortho_scale * 1000
+                    if camData.sensor_fit == 'VERTICAL':
+                        cam.filmHeight = camData.ortho_scale * 1000
+                        thea_globals.log.debug("LENS scale: %s - Sensor: %s - Fac: %s" % (camData.ortho_scale, camData.sensor_fit,fac))
+                    elif camData.sensor_fit == 'HORIZONTAL' or 'AUTO':
+                        cam.filmHeight = (camData.ortho_scale * 1000) / fac
+                        thea_globals.log.debug("LENS scale: %s - Sensor: %s - Fac: %s" % (camData.ortho_scale, camData.sensor_fit,fac))
                     cam.focalLength = camData.lens
 #               CHANGED > New check for distance/distance_object and check if pinhole is active
                 if camData.dof_distance >= 0:
@@ -877,7 +882,10 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
             pass
         thea_globals.log.debug("camData.camera: %s" % camData.camera)
         thea_globals.log.debug("area.spaces.active.region_3d.view_perspective: %s" % area.spaces.active.region_3d.view_perspective)
-        cam.filmHeight = 32 / fac
+        if camData.camera.data.type != 'ORTHO':
+            cam.filmHeight = camData.camera.data.ortho_scale * 1000
+        else:
+            cam.filmHeight = 32 / fac
         cam.focalLength = camData.lens / 2
 #         cam.filmHeight = camData.camera.sensor_height
         if (area.spaces.active.region_3d.view_perspective == 'CAMERA'):
@@ -896,6 +904,15 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 #         thea_globals.log.debug("camData.camera.data.sensor_height: %s" % camData.camera.data.sensor_height)
 #         cam.filmHeight = camData.camera.data.sensor_height / 2
         cam.fNumber = 0
+#        if camData.camera.type != 'ORTHO':
+#            cam.projection = "Parallel"
+#            if camData.camera.data.sensor_fit == 'VERTICAL':
+#                cam.filmHeight = camData.camera.data.ortho_scale * 1000
+#                thea_globals.log.debug("LENS scale: %s - Sensor: %s - Fac: %s" % (camData.camera.data.ortho_scale, camData.camera.data.sensor_fit,fac))
+#            elif camData.camera.data.sensor_fit == 'HORIZONTAL' or 'AUTO':
+#                cam.filmHeight = (camData.camera.data.ortho_scale * 1000) / fac
+#                thea_globals.log.debug("LENS scale: %s - Sensor: %s - Fac: %s" % (camData.camera.data.ortho_scale, camData.camera.data.sensor_fit,fac))
+#            cam.focalLength = camData.camera.data.lens
 
 
 
@@ -1991,7 +2008,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.getRenderOptions().animationOptions.frameRate = int(scn.render.fps / scn.render.fps_base)
 
     if area:
-        exporter.getRenderOptions().activeCamera = '## Current View ##'
+        exporter.getRenderOptions().activeCamera = scn.camera.name #'## Current View ##'
     else:
         if scn.camera:
             exporter.getRenderOptions().activeCamera = scn.camera.name
@@ -2622,7 +2639,13 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                 elif camData.type == "ORTHO":
                     cam.projection = "Parallel"
 #                    cam.filmHeight = (camOb.scale*1000)/fac
-                    cam.filmHeight = 80 / camData.lens
+                    if camData.sensor_fit == 'VERTICAL':
+                        cam.filmHeight = camData.ortho_scale * 1000
+                        thea_globals.log.debug("LENS scale: %s - Sensor: %s - Fac: %s" % (camData.ortho_scale, camData.sensor_fit,fac))
+                    elif camData.sensor_fit == 'HORIZONTAL' or 'AUTO':
+                        cam.filmHeight = (camData.ortho_scale * 1000) / fac
+                        thea_globals.log.debug("LENS scale: %s - Sensor: %s - Fac: %s" % (camData.ortho_scale, camData.sensor_fit,fac))
+                    cam.focalLength = camData.lens
                 if camData.dof_distance > 0:
                     cam.focusDistance = camData.dof_distance
                     try:
@@ -3245,7 +3268,6 @@ def renderPreview(scene,):
                     <Parameter Name="Shift Y (mm)" Type="Real" Value="-0"/>\n\
                     <Parameter Name="Resolution" Type="String" Value="%sx%s"/>\n\
                     <Parameter Name="Frame" Type="Transform" Value="1 -2.6783e-09 7.39087e-09 0.0226645 -7.81677e-09 -0.238969 0.971027 -3.96692 -8.34513e-10 -0.971027 -0.238969 1.376 "/>\n\
-                    message "./Scenes/Active/Cameras/camera/Make Active"/>\n\
                     <Parameter Name="Focus Distance" Type="Real" Value="1"/>\n\
                     <Parameter Name="Shutter Speed" Type="Real" Value="500"/>\n\
                     <Parameter Name="f-number" Type="String" Value="Pinhole"/>\n\
@@ -3273,7 +3295,8 @@ def renderPreview(scene,):
     else:
         scriptFile.write('set \"./Scenes/Active/Cameras/Active/Resolution\" = \"%sx%s\"\n' % (x,y))
 #    CHANGED > Added make active for better preview
-    scriptFile.write('message "./Scenes/Active/Cameras/Camera/Make Active\"\n')
+#    scriptFile.write('message "./Scenes/Active/Cameras/Camera/Make Active\"\n')
+    scriptFile.write('set "./Scenes/Active/Render/Interactive/Engine Core" = "Presto (MC)"\n')
     scriptFile.write('message \"LoadObject \'./Scenes/Active/Proxies/Appearance/@Material@\' \'%s\'\" \n' % matFilename)
     scriptFile.write('message "./UI/Viewport/Tweak Material"\n')
     if getattr(material, "thea_EnableUnbiasedPreview"):
@@ -3283,7 +3306,7 @@ def renderPreview(scene,):
     args.append(str(theaPath))
     args.append(scriptFilename)
     args.append(outputImage)
-
+#    thea_globals.log.debug("Arg outputImge mat preview: %s" % args)
     scriptFile.close()
     ##print (args)
     return args
@@ -4545,7 +4568,7 @@ class TheaRender(bpy.types.RenderEngine):
                         if data.find('v')>0:
                             socketServerIsRunning = True
                         else:
-                            startTheaRemoteDarkroom(previewGeneratorPort, show=False, idletimeout=30)
+                            startTheaRemoteDarkroom(previewGeneratorPort, show=False, idletimeout=25)
                             message = b'version'
                             data = sendSocketMsg('localhost', previewGeneratorPort, message)
                             if data.find('v')>0:
@@ -4571,6 +4594,7 @@ class TheaRender(bpy.types.RenderEngine):
                                 outputImage = args[2]
                                 ##print("outputImage: ", outputImage)
                                 #if thea_globals.unbiasedPreview == False:
+                                #Doesnt make sense to render from camera frame using Unbiased preview
                                 if getattr(material, "thea_EnableUnbiasedPreview") == False:
                                     #switch to camera frame
                                     message = b'message "./UI/Viewport/Theme/RW_CMFR"'
@@ -4782,6 +4806,7 @@ class TheaRender(bpy.types.RenderEngine):
 #                                        imageFile = line.split(" ")[2].replace("\"", "").rstrip()
                                         img = None
                                         img = bpy.data.images.get("TheaRenderResult")
+                                        thea_globals.log.debug("ThearenderResult Imagea: %s" % imageFile)
                                         if img == None:
                                             try:
                                                 img = bpy.data.images.load(imageFile)

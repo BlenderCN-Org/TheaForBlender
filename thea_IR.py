@@ -413,10 +413,10 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
             else:
                 camM = area.spaces.active.region_3d.view_matrix.inverted()
                 message = 'set "./UI/Viewport/Camera/Active" = "%s"' % ("IR view")
+#            thea_globals.log.debug("CAMERA TYPE: %s" % bpy.data.cameras["Camera.001"].type)
             data = sendSocketMsg('localhost', port, message.encode())
             #print("message: ",message, data)
             thea_globals.log.debug("message: %s -\n data: %s" % (message, data))
-
 
 #             #print("message: ",message, data)
 
@@ -447,6 +447,7 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                         sensor_width = bpy.context.scene.camera.data.sensor_height * fac
                         shiftLensX = sensor_height * bpy.context.scene.camera.data.shift_x
                         shiftLensY = sensor_height * bpy.context.scene.camera.data.shift_y * -1
+
                     else:
                         sensor_width = bpy.context.scene.camera.data.sensor_width
                         sensor_height = sensor_width / fac
@@ -471,6 +472,15 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
                     clip_start = area.spaces.active.clip_start
                     clip_end = area.spaces.active.clip_end
 
+
+                clip_start_enable = ('1' if getattr(bpy.context.scene.camera, "thea_zClippingNear") else '0')
+                clip_end_enable = ('1' if getattr(bpy.context.scene.camera, "thea_zClippingFar") else '0')
+                message = 'set "./UI/Viewport/Camera/Z-Clipping Near" = %s' % clip_start_enable
+                data = sendSocketMsg('localhost', port, message.encode())
+                message = 'set "./UI/Viewport/Camera/Z-Clipping Far" = %s' % clip_end_enable
+                data = sendSocketMsg('localhost', port, message.encode())
+
+#                message = 'set "./UI/Viewport/Camera/Projection" = %s' % ("Parallel")
                 message = 'set "./UI/Viewport/Camera/Z-Clipping Near Distance" = %s' % clip_start
                 data = sendSocketMsg('localhost', port, message.encode())
                 message = 'set "./UI/Viewport/Camera/Z-Clipping Far Distance" = %s' % clip_end
@@ -480,6 +490,34 @@ class RENDER_PT_thea_startIR(bpy.types.Operator):
 
                 message = 'set "./UI/Viewport/Camera/Film Height (mm)" = "%s"' % h
                 data = sendSocketMsg('localhost', port, message.encode(), waitForResponse=True)
+
+                if (area.spaces.active.region_3d.view_perspective == 'ORTHO'):
+                    message = 'set "./Scenes/Active/Cameras/IR view/Projection" = "Parallel"'
+#                    message = 'message "./UI/Viewport/Theme/ST_VPAR"'
+                    data = sendSocketMsg('localhost', port, message.encode())
+                    thea_globals.log.debug("message: %s -\n data: %s" % (message, data))
+
+                    if bpy.context.scene.camera.data.sensor_fit == 'VERTICAL':
+                        sensor_height = bpy.context.scene.camera.data.ortho_scale * 1000
+
+                    elif bpy.context.scene.camera.data.sensor_fit == 'HORIZONTAL' or 'AUTO':
+                        sensor_height = (bpy.context.scene.camera.data.ortho_scale * 1000) / fac
+
+                    message = 'set "./UI/Viewport/Camera/Film Height (mm)" = "%s"' % (sensor_height)
+                    data = sendSocketMsg('localhost', port, message.encode(), waitForResponse=True)
+                if bpy.context.scene.camera.data.type == 'ORTHO':
+                    message = 'set "./Scenes/Active/Cameras/%s/Projection" = "Parallel"' % (bpy.context.scene.camera.name)
+#                    message = 'set "./UI/Viewport/Theme/ST_VPAR"'
+                    data = sendSocketMsg('localhost', port, message.encode(), waitForResponse=True)
+                    if bpy.context.scene.camera.data.sensor_fit == 'VERTICAL':
+                        sensor_height = bpy.context.scene.camera.data.ortho_scale * 1000
+
+                    elif bpy.context.scene.camera.data.sensor_fit == 'HORIZONTAL' or 'AUTO':
+                        sensor_height = (bpy.context.scene.camera.data.ortho_scale * 1000) / fac
+
+                    message = 'set "./UI/Viewport/Camera/Film Height (mm)" = "%s"' % (sensor_height)
+                    data = sendSocketMsg('localhost', port, message.encode(), waitForResponse=True)
+
 
 
 

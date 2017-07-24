@@ -2142,7 +2142,7 @@ class RenderOptions:
         self.animationOptions = AnimationOptions()
         self.activeCamera = None
         self.engine = "Unbiased (TR1)"
-        self.interactiveEngine = "Presto (AO)"
+        self.interactiveEngine = "Presto (MC)"
         self.supersampling = "DefaultSS"
 #        CHANGED> Added adaptive bias +displacement
         self.adaptiveBias = "25"
@@ -3690,6 +3690,7 @@ class XMLExporter:
 
             object = ob.blenderObject
             exportModel = Model()
+
 #             exportModel.name = re.sub('[^0-9a-zA-Z]+', '_', ob.name)
             exportModel.name = ob.name
 

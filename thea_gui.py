@@ -64,7 +64,8 @@ del properties_world
 
 
 from bl_ui import properties_material
-for member in ('MATERIAL_PT_context_material', 'MATERIAL_PT_preview', 'MATERIAL_PT_custom_props', 'MaterialButtonsPanel', 'PropertyPanel', 'bpy', 'check_material', 'simple_material'):
+#for member in ('MATERIAL_PT_context_material', 'MATERIAL_PT_preview', 'MATERIAL_PT_custom_props', 'MaterialButtonsPanel', 'PropertyPanel', 'bpy', 'check_material', 'simple_material'):
+for member in ('MATERIAL_PT_context_material', 'MATERIAL_PT_custom_props', 'MaterialButtonsPanel', 'PropertyPanel', 'bpy', 'check_material', 'simple_material'):
     subclass = getattr(properties_material, member)
     try:        subclass.COMPAT_ENGINES.add('THEA_RENDER')
     except: pass
@@ -354,6 +355,39 @@ class MATERIAL_PT_LUT(MaterialButtonsPanel, bpy.types.Panel):
        colR.operator("thea.lutmenu", text="Search", icon="VIEWZOOM")
 #       thea_globals.log.debug("*** LUT current index: %s" % mat.get('thea_LUT'))
        #col.operator("thea.set_library_material", text="Set library material")
+
+
+#---------------------------------------
+# Material preview UI
+#---------------------------------------
+class TheaMaterialPreview(MaterialButtonsPanel, bpy.types.Panel):
+    bl_idname = "MATERIAL_PT_MatPreview"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "material"
+    bl_label = "Preview"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    COMPAT_ENGINES = set(['THEA_RENDER'])
+    panelMatPreview = True
+
+    @classmethod
+    def poll( cls, context):
+        engine = context.scene.render.engine
+        return (engine in cls.COMPAT_ENGINES) and context.object is not None and context.object.active_material is not None and (thea_globals.panelMatPreview is True)
+
+    def draw( self, context):
+        layout = self.layout
+        scene = context.scene
+        row = layout.row()
+        split = row.split(percentage=0.9)
+        colL = split.column()
+        colL.operator("thea.big_preview")
+        colR = split.column()
+        colR.label("")
+        layout.template_preview( context.material, show_buttons=True, preview_id="MATERIAL_PT_MatPreview")
+
+
 
 
 class MATERIAL_PT_Color(MaterialButtonsPanel, bpy.types.Panel):
@@ -1618,16 +1652,15 @@ class VIEW3D_PT_theaIR_Advanced(bpy.types.Panel):
         row.prop(scene,"thea_DrawPreviewto3dView")
         row = box.row()
         row.prop(scene,"thea_SavePreviewtoImage")
-#         row = box.row()
-#         row.prop(scene,"thea_RefreshDelay")
+        row = box.row()
+#        row.prop(scene,"thea_RefreshDelay")
         if getattr(scene,"thea_DrawPreviewto3dView"):# or getattr(scene,"thea_SavePreviewtoImage"):
             row = box.row()
             row.prop(scene,"thea_Fit3dView")
             row = box.row()
             row.prop(scene,"thea_IRBlendAlpha")
-
-
-#                 layout.prop(scene,"thea_RefreshDelay")
+            row = box.row()
+            row.prop(scene,"thea_RefreshDelay")
             row = box.row()
             row.prop(scene,"thea_IRShowTheaWindow")
 

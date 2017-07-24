@@ -25,6 +25,7 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+from bpy.types import Operator
 
 import bpy
 import subprocess
@@ -747,6 +748,81 @@ class MATERIAL_PT_thea_BasicSyncTheaToBlender(bpy.types.Operator):
             mat.shadow_ray_bias = 0.0
         return {'FINISHED'}
 
+class VIEW3D_MT_RefreshBigPreview(Operator):
+    bl_idname = "thea.refresh_big_preview"
+    bl_label = "Refresh Big Preview"
+    bl_context = "material"
+
+    def execute(self, context):
+        mat = context.object.active_material
+        return mat
+
+def refreshMatPreview():
+    mat = bpy.context.object.active_material
+    return mat
+
+class VIEW3D_MT_BigPreview(Operator):
+    bl_idname = "thea.big_preview"
+    bl_label = "Big Preview"
+    bl_context = "material"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'PREVIEW'
+
+    sceneLoaded = False
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+
+    heightRand = random()
+    height = thea_globals.panelMatHeight
+
+    def draw_header(self, context):
+        layout = self.layout
+        mat = context.material
+        context.object.active_material.diffuse_color = mat.diffuse_color
+        layout.label("Big Preview")
+
+#    @classmethod
+#    def poll( cls, context):
+#        engine = context.scene.render.engine
+#        return (engine in cls.COMPAT_ENGINES) and context.object is not None and context.object.active_material is not None and (thea_globals.panelMatPreview is True)
+    def modal(self, context, event):
+        if event.type in {'RIGHTMOUSE', 'ESC', 'LEFTMOUSE'}:
+            self.execute(context)
+            return {'CANCELLED'}
+        mat = bpy.context.active_object.active_material
+        return {"RUNNING_MODAL"}
+
+    def execute(self, context):
+        print("Closing big preview")
+        thea_globals.panelMatPreview = True
+        return {'FINISHED'}
+
+    def cancel(self, context):
+        thea_globals.panelMatPreview = True
+        self.execute(context)
+        thea_globals.log.debug("Closing Big: %s")
+
+    def check(self, context):
+        return False
+
+
+    def invoke(self, context, event):
+        thea_globals.panelMatPreview = False
+#        thea_globals.materialUpdated = True
+        wm = context.window_manager
+        print("Invoke big preview")
+        return wm.invoke_props_dialog(self, width=800, height=800)
+
+        return {"RUNNING_MODAL"}
+
+    def draw(self, context):
+        layout = self.layout
+        mat = context.object.active_material
+        col = layout.column()
+        thea_globals.log.debug("Active object Big render: %s - Material:%s" % (bpy.context.scene.objects.active, mat))
+#        layout.scale_y = 2
+        layout.template_preview( refreshMatPreview(), show_buttons=False, preview_id = "thea.big_preview") #  ??? this make render stop and only reernder when
+        layout.label(" ")
+
 
 
 
@@ -1217,8 +1293,9 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
     #                        if foundOb:
                     self.report({'ERROR'}, "Synced:%s" % name)
 
-            if line.find('<Object Identifier="./Lights/') >= 0:
-                name = line.split(" ")[3].split('"')[1]
+            if line.find('<Object Identifier="./Lights/') >=0:
+                name = line.split("Name=\"")[0].split('"')[1]
+                name = name.replace(name[:9],'')
                 ob = scene.objects.get(name)
                 lampColor = []
                 lampTexProj = ""
@@ -1262,6 +1339,7 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                 ligthLayer = ""
                 ligthBuff = ""
                 ligthInterF = False
+#                thea_globals.log.debug("*** Selected obj in Blender: %s - Name in Thea: %s" % (obj, ob))
                 if ob in bpy.context.selected_objects:
                     thea_globals.log.debug("*** Selected Objects Type: %s" % ob.type)
                     line = next(it)
@@ -1628,6 +1706,7 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
         #                    listItems.append(name)
 #                            print (name, " synced")
                             self.report({'ERROR'}, "Synced:%s" % name)
+                            foundOb = False
 
 #                            synced = name
 #                            foundOb = True
@@ -1767,7 +1846,10 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                             ob.data.type = "ORTHO"
 #                                    ob.data.ortho_scale = camFocalLength * .0001 # OLD SCALE VALUE
 #                            ob.data.ortho_scale = camFocalLength * .0001 # NEW CALCULATION - slight mismatch though
-                            ob.data.ortho_scale = camFilmHeight * .001 # NEW CALCULATION - slight mismatch though
+                            if ob.data.sensor_fit == 'VERTICAL':
+                                ob.data.ortho_scale = camFilmHeight * .001 # NEW CALCULATION - slight mismatch though
+                            if ob.data.sensor_fit == 'HORIZONTAL' or 'AUTO':
+                                ob.data.ortho_scale = camfilmHeight * .001 * ratio #NEW horizontal and vertical differnce calculation
                             ob.data.shift_x = 0
                             ob.data.shift_y = 0
         #                        elif: camProjec == "Cylindrical"

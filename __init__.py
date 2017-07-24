@@ -33,6 +33,8 @@ bl_info = {
     "location": "Render>Engine>Thea Render",
     "description": "Thea Render",
     "warning": "",
+    "wiki_url": "https://thearender.com/site/index.php/products/thea-for-blender.html",
+    "tracker_url": "http://thearender.com/forum/viewforum.php?f=70&sid=5afab1703d99826f7cb8926cfe68b2b1",
     "category": "Render"}
 
 
@@ -122,6 +124,9 @@ def register():
 
         km = bpy.context.window_manager.keyconfigs.active.keymaps['3D View Generic']
         kmi = km.keymap_items.new('thea.update_ir',value='PRESS',type='F11',ctrl=False,alt=False,shift=False,oskey=True)
+
+        km = bpy.context.window_manager.keyconfigs.active.keymaps['3D View Generic']
+        kmi = km.keymap_items.new('thea.big_preview',value='PRESS',type='B',ctrl=False,alt=True,shift=True,oskey=False)
 
 
 
