@@ -2024,6 +2024,12 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
 
        if getattr(scene, "thea_enginesMenu") in ("Channels"):
 #           if getattr(scene, "thea_showChannels"):
+
+           if (getattr(scene, "thea_enablePresets")!=False):
+               col = layout.column()
+               col = col.box()
+               col.label("Not all channels are supported with certain presets.")
+#               col.label(" ")
            split = layout.split()
            row = layout.row()
            col = split.column()
@@ -2041,40 +2047,40 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
                col.prop(scene,"thea_channelObjectId")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
                col.prop(scene,"thea_channelMaterialId")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")) or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelShadow")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelRawDiffuseColor")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelRawDiffuseLighting")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelRawDiffuseGI")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelDirect")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelAO")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelGI")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelSelfIllumination")
 #CHANGED> Turned this back on
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelSSS")
 #           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
 #               col.prop(scene,"thea_channelSeparatePassesPerLight")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelReflection")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelRefraction")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelTransparent")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelIrradiance")
 #CHANGED> Turned mask id back ON
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelMask")
 #CHNAGED> Turned invert mask channel back ON
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelInvertMask")
 
 
