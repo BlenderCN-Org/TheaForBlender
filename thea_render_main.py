@@ -690,6 +690,10 @@ def exportCameras(scene,frame, anim=False, exporter=None, area=None, obList=None
 
 #                    cam.projection = getattr(camOb, 'thea_projection', 'Perspective')
                     cam.projection = getattr(camOb, "thea_projection")
+#                    #    CHANGED > Added region render options
+#                    cam.regionRender = scn.thea_regionRender
+#                    cam.regionsettings = scn.thea_regionSettings
+
                     #   CHANGED > added diaphgrama and blades
                     cam.diaphragm = camOb.thea_diaphragma
                     cam.blades = camOb.thea_diapBlades
@@ -1834,7 +1838,87 @@ def exportMeshObjects(scene,frame, anim=False, exporter=None, obList=None):
 #        thea_globals.log.debug("exporting object: %s time: %s" % (ob.name, t2-t1))
 
 
+def regionRenderThea(scene):
 
+    scn = scene
+    (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene)
+
+    xmlFilename = currentBlendFile.replace('.blend', '.xml')
+    os.chdir(os.path.dirname(theaPath))
+#    exportFrame(scene,frame,exporter=exporter)
+
+    fileFormat = ".png"
+    if scn.render.image_settings.file_format == "JPEG":
+        fileFormat = ".jpg"
+    if scn.render.image_settings.file_format == "PNG":
+        fileFormat = ".png"
+    if scn.render.image_settings.file_format == "BMP":
+        fileFormat = ".bmp"
+    if scn.render.image_settings.file_format == "HDR":
+        fileFormat = ".hdr"
+    if scn.render.image_settings.file_format == "OPEN_EXR":
+        fileFormat = ".exr"
+    if scn.render.image_settings.file_format == "TIFF":
+        fileFormat = ".tif"
+
+    args = []
+#    global scriptFile
+    scriptFilename = os.path.join(exportPath, os.path.basename(currentBlendFile.replace('.blend', '_regionRender.ipt.thea')))
+    scriptFile = open(scriptFilename, "w")
+
+    if getattr(bpy.context.scene, "thea_showMerge"):
+        if scn.thea_SceneMerReverseOrder:
+            #load another scene and then merge exported one
+            if os.path.exists(scn.thea_mergeFilePath):
+                mergeString = (" %s %s %s %s %s %s" % (scn.thea_SceneMerModels, scn.thea_SceneMerLights, scn.thea_SceneMerCameras, scn.thea_SceneMerRender, scn.thea_SceneMerEnv, scn.thea_SceneMerMaterials))
+                scriptFile.write('message \"Load ' +  scn.thea_mergeFilePath + '\"\n')
+                scriptFile.write('message \"Merge ' + os.path.join(exportPath, os.path.basename(xmlFilename) + mergeString + '\"\n'))
+            else:
+                scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(xmlFilename) + '\"\n'))
+        else:
+            scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(xmlFilename) + '\"\n'))
+
+            #merge another scene after load
+            if os.path.exists(scn.thea_mergeFilePath):
+                mergeString = (" %s %s %s %s %s %s" % (scn.thea_SceneMerModels, scn.thea_SceneMerLights, scn.thea_SceneMerCameras, scn.thea_SceneMerRender, scn.thea_SceneMerEnv, scn.thea_SceneMerMaterials))
+                scriptFile.write('message \"Merge ' +  scn.thea_mergeFilePath + mergeString + '\"\n')
+    else:
+        scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(xmlFilename) + '\"\n'))
+
+    args.append(scriptFilename)
+#    if scn.thea_regionRender !=True:
+#        scriptFile.write('message \"Render\"\n')
+#    else:
+    if scn.thea_regionRender == True:
+        ## REGIONS  2x2 || 3x3 || 4x4 || 5x5 || 6x6 || 7x7 || 8x8
+        # NIGEC SHORT CODE VERSION altered
+        iREnd = ""
+        iCEnd = ""
+        iSelindex = ""
+        tilesize = ""
+        C = ""
+        R = ""
+        iSelindex = scn.thea_regionSettings
+        iREnd = (int(iSelindex) + 2)
+        iCEnd = (int(iSelindex) + 2)
+        tilesize = str(iREnd) + "," + str(iCEnd)
+        regionData=""
+#            R = 1
+#            C = 1
+
+        for C in range(1, int(iCEnd+1)):
+            for R in range(1, int(iREnd+1)):
+                regionData += 'set \"./Scenes/Active/Cameras/'+scn.camera.name+'/Region\" = \"Part ('+str(R)+","+str(C)+'):('+tilesize+')"\n'\
+                              'message "Render"\n'\
+                              'message \"SaveImage %s\"\n' % (os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip())+"_R"+str(R)+"_C" +str(C)+fileFormat))
+                R += 1
+            C += 1
+
+        thea_globals.log.debug("*** REGION DATA: %s - R:%s - C:%s" % (iSelindex, iREnd, iCEnd))
+        scriptFile.write('set "./Scenes/Active/Cameras/'+scn.camera.name+'/Render Region"' +' = "1"'+"\n"+regionData+"\n")
+
+    scriptFile.close()
+    return args
 
 def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, exportMode="Full", xmlFile=None):
     '''Export whole scene for the given frame
@@ -2036,7 +2120,17 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
 
     exporter.getRenderOptions().checkChannels = scn.thea_showChannels
 
-    exporter.getRenderOptions().threads = scn.thea_DistTh
+    if scene.thea_DistTh == '0':
+        exporter.getRenderOptions().threads = "Max"
+    if scene.thea_DistTh == '1':
+        exporter.getRenderOptions().threads = "1"
+    if scene.thea_DistTh == '2':
+        exporter.getRenderOptions().threads = "2"
+    if scene.thea_DistTh == '3':
+        exporter.getRenderOptions().threads = "4"
+    if scene.thea_DistTh == '4':
+        exporter.getRenderOptions().threads = "8"
+
     exporter.getRenderOptions().bucketRendering = getattr(scn, "thea_BucketRendering")
     exporter.getRenderOptions().extendedTracing = getattr(scn, "thea_ExtendedTracing")
     exporter.getRenderOptions().transparencyDepth = getattr(scn, "thea_TransparencyDepth")
@@ -2045,6 +2139,8 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.getRenderOptions().ClampLevelEnable = getattr(scn, "thea_ClampLevelEnable")
     exporter.getRenderOptions().ClampLevel = getattr(scn, "thea_ClampLevel")
     exporter.getRenderOptions().priority = scn.thea_DistPri
+    if scn.thea_DistNet == '0':
+        exporter.getRenderOptions().network = "None"
     if scn.thea_DistNet == '1':
         exporter.getRenderOptions().network = "Client"
     if scn.thea_DistNet == '2':
@@ -2237,6 +2333,9 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
         exporter.getRenderOptions().alphaChannel = scn.get('thea_channelAlpha')
 
     exporter.getRenderOptions().deviceMask = scn.thea_IRDevice
+#    exporter.getRenderOptions().cpuDevice = scn.thea_cpuDevice
+#    exporter.getRenderOptions().cpuThreadsEnable = scn.thea_cpuThreadsEnable
+#    exporter.getRenderOptions().cpuThreads = scn.thea_cpuThreads
 
     exporter.renderOptions.AOEnable = scn.thea_AOEnable
     exporter.renderOptions.AOMultiply = scn.thea_AOMultiply
@@ -2499,11 +2598,25 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     args = []
     if scn.get('thea_startTheaAfterExport'):
         args.append(str(theaPath))
-        args.append("-load")
-        #args.append(os.path.join(exportPath,os.path.basename(xmlFilename)))
-        args.append(fileName)
+        if scene.thea_regionRender:
+            if scene.thea_regionDarkroom:
+                args.append("-darkroom")
         args.append(" -license")
         args.append("blender")
+
+        args.append("-load")
+        scriptFilename = os.path.join(exportPath, os.path.basename(currentBlendFile.replace('.blend', '_exportFrame.ipt.thea')))
+        scriptFile = open(scriptFilename, "w")
+        scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(xmlFilename) + '\"\n'))
+#        fileName = fil
+        args.append(scriptFilename)
+#        args.append(fileName)
+        if scene.thea_regionRender:
+            regionRenderThea(scene)
+            thea_globals.log.debug("ARGS:" % args)
+            fileName = currentBlendFile.replace('.blend', '_regionRender.ipt.thea')
+            iptFileName = os.path.join(exportPath,os.path.basename(fileName))
+            args.append(iptFileName)
         return args
     else:
         return True
@@ -2707,12 +2820,12 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                 message = 'message "Render"\n'
                 scriptFile.write(message)
 #                CHNAGED> Added fileformat here for better reuse variable imFilename
-                message = 'message "SaveImage '+os.path.join(framesDir,os.path.basename(imgFilename)+fileFormat)+'"\n'
+                message = 'message "SaveImage '+os.path.join(framesDir,os.path.basename(imgFilename[:-4].strip())+fileFormat)+'"\n'
                 scriptFile.write(message)
                 #    CHANGED> Added channels for still camera's'
 #                outputImage = os.path.join(framesDir, os.path.basename(imgFilename) + fileFormat)
-                outputIMG = os.path.join(framesDir, os.path.basename(imgFilename) +".img.thea")
-                outputChannelImage = os.path.join(framesDir, os.path.basename(imgFilename))
+                outputIMG = os.path.join(framesDir, os.path.basename(imgFilename[:-4].strip()) +".img.thea")
+                outputChannelImage = os.path.join(framesDir, os.path.basename(imgFilename[:-4].strip()))
                 exporter.getRenderOptions().checkChannels = scn.thea_showChannels
                 checkChannels = exporter.getRenderOptions().checkChannels
                 try:
@@ -2724,21 +2837,21 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                 if checkChannels == True:
                    try:
                        if scn.thea_channelNormal:
-                           scriptFile.write('message \"SaveChannel \'Normal\' %s\"\n' % os.path.join(framesDir,"normal",outputChannelImage+"_Normal"+fileFormat ))
+                           scriptFile.write('message \"SaveChannel \'Normal\' %s\"\n' % os.path.join(framesDir,"normal",outputChannelImage+"_normal"+fileFormat ))
                        if scn.thea_channelPosition:
-                           scriptFile.write('message \"SaveChannel \'Position\' %s\"\n' % os.path.join(framesDir,"position",outputChannelImage+"_Position"+ fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Position\' %s\"\n' % os.path.join(framesDir,"position",outputChannelImage+"_position"+ fileFormat))
                        if scn.thea_channelUV:
-                           scriptFile.write('message \"SaveChannel \'UV\' %s\"\n' % os.path.join(framesDir,"uv",outputChannelImage+"_UV"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'UV\' %s\"\n' % os.path.join(framesDir,"uv",outputChannelImage+"_uv"+fileFormat))
                        if scn.thea_channelDepth:
-                           scriptFile.write('message \"SaveChannel \'Depth\' %s\"\n' % os.path.join(framesDir, "depth", outputChannelImage+"_Depth"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Depth\' %s\"\n' % os.path.join(framesDir, "depth", outputChannelImage+"_depth"+fileFormat))
                        if alphaMode:
-                           scriptFile.write('message \"SaveChannel \'Alpha\' %s\"\n' % os.path.join(framesDir, "alpha", outputChannelImage+"_ALpha"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Alpha\' %s\"\n' % os.path.join(framesDir, "alpha", outputChannelImage+"_aLpha"+fileFormat))
                        if scn.thea_channelObjectId:
-                           scriptFile.write('message \"SaveChannel \'Object Id\' %s\"\n' % os.path.join(framesDir, "object_id", outputChannelImage+"_Object"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Object Id\' %s\"\n' % os.path.join(framesDir, "object_id", outputChannelImage+"_object_ID"+fileFormat))
                        if scn.thea_channelMaterialId:
-                           scriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage+"_MaterID"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage+"_material_ID"+fileFormat))
                        if scn.thea_channelShadow:
-                           scriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage+"_Shadow"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage+"_shadow"+fileFormat))
             #            CHANGED> Added mask back in CHECK numbering system
                        if scn.thea_channelMask:
                            maskIndexList = []
@@ -2747,34 +2860,34 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                                if ob.thMaskID == True:
                                    maskIndex = ob.thMaskIDindex
                                    if not maskIndex in maskIndexList:
-                                       scriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_Mask" + str(maskIndex) + fileFormat)))
+                                       scriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_mask" + str(maskIndex) + fileFormat)))
                                        maskIndexList.append(maskIndex)
                        if scn.thea_channelRawDiffuseColor:
-                           scriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage+"_rawDiffuseColor"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage+"_raw-diffuse-color"+fileFormat))
                        if scn.thea_channelRawDiffuseLighting:
-                           scriptFile.write('message \"SaveChannel \'Raw Diffuse Lighting\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_lighting",outputChannelImage+"_rawDiffuseLight"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Raw Diffuse Lighting\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_lighting",outputChannelImage+"_raw-diffuse-light"+fileFormat))
                        if scn.thea_channelRawDiffuseGI:
-                           scriptFile.write('message \"SaveChannel \'Raw Diffuse GI\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_gi",outputChannelImage+"_rawDiffuseGI"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Raw Diffuse GI\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_gi",outputChannelImage+"_raw-diffuse-gi"+fileFormat))
                        if scn.thea_channelSelfIllumination:
-                           scriptFile.write('message \"SaveChannel \'Self Illumination\' %s\"\n' % os.path.join(framesDir,"self_illumination",outputChannelImage+"_SelfIllumunitation"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Self Illumination\' %s\"\n' % os.path.join(framesDir,"self_illumination",outputChannelImage+"_self-illumunitation"+fileFormat))
                        if scn.thea_channelDirect:
-                           scriptFile.write('message \"SaveChannel \'Direct\' %s\"\n' % os.path.join(framesDir, "direct", outputChannelImage+"_Direct"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Direct\' %s\"\n' % os.path.join(framesDir, "direct", outputChannelImage+"_direct"+fileFormat))
                        if scn.thea_channelAO:
-                           scriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % os.path.join(framesDir, "ao", outputChannelImage+"_AO"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % os.path.join(framesDir, "ao", outputChannelImage+"_ao"+fileFormat))
                        if scn.thea_channelGI:
-                            scriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage+"_GI"+fileFormat))
+                            scriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage+"_gi"+fileFormat))
                        if scn.thea_channelSSS:
-                            scriptFile.write('message \"SaveChannel \'SSS\' %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage+"_SSS"+fileFormat))
+                            scriptFile.write('message \"SaveChannel \'SSS\' %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage+"_sss"+fileFormat))
                        if scn.thea_channelSeparatePassesPerLight:
-                            scriptFile.write('message \"SaveChannel Separate Passes Per Light %s\"\n' % os.path.join(framesDir, "PassesPerLight", outputChannelImage+"_PassesPerLight+"+fileFormat))
+                            scriptFile.write('message \"SaveChannel Separate Passes Per Light %s\"\n' % os.path.join(framesDir, "PassesPerLight", outputChannelImage+"_passes-per-light+"+fileFormat))
                        if scn.thea_channelReflection:
-                           scriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage+"_Reflection"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage+"_reflection"+fileFormat))
                        if scn.thea_channelRefraction:
-                           scriptFile.write('message \"SaveChannel \'Refraction\' %s\"\n' % os.path.join(framesDir, "refraction", outputChannelImage+"_Refraction"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Refraction\' %s\"\n' % os.path.join(framesDir, "refraction", outputChannelImage+"_tefraction"+fileFormat))
                        if scn.thea_channelTransparent:
-                           scriptFile.write('message \"SaveChannel \'Transparent\' %s\"\n' % os.path.join(framesDir, "transparent", outputChannelImage+"_Transparent"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Transparent\' %s\"\n' % os.path.join(framesDir, "transparent", outputChannelImage+"_transparent"+fileFormat))
                        if scn.thea_channelIrradiance:
-                           scriptFile.write('message \"SaveChannel \'Irradiance\' %s\"\n' % os.path.join(framesDir,"irradiance",outputChannelImage+"_Irradiance"+fileFormat))
+                           scriptFile.write('message \"SaveChannel \'Irradiance\' %s\"\n' % os.path.join(framesDir,"irradiance",outputChannelImage+"_irradiance"+fileFormat))
                    except: pass
                 firstFrame = False
 
@@ -2841,15 +2954,15 @@ def renderFrame(scene,frame,anim=True):
                 channelDir = os.path.join(framesDir,ch)
                 if not os.path.isdir(channelDir):
                     os.mkdir(channelDir)
-        outputImage = os.path.join(framesDir, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:] + fileFormat)
+        outputImage = os.path.join(framesDir, os.path.basename(xmlFilename[:-4].strip()) +"_"+scn.camera.name +"_"+frameS[-4:] + fileFormat)
 #       CHANGED > added img.thea file for animation, though this is tricky, will take away a lot of time cause it saves out img file 2 times
-        outputIMG = os.path.join(framesDir, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:] + ".img.thea")
-        outputChannelImage = os.path.basename(xmlFilename)+"_"+scn.camera.name +"_"+frameS[-4:]
+        outputIMG = os.path.join(framesDir, os.path.basename(xmlFilename[:-4].strip()) +"_"+scn.camera.name +"_"+frameS[-4:] + ".img.thea")
+        outputChannelImage = os.path.basename(xmlFilename[:-4].strip())+"_"+scn.camera.name +"_"+frameS[-4:]
     else:
-        outputImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:] + fileFormat)
+        outputImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip()) +"_"+scn.camera.name +"_"+frameS[-4:] + fileFormat)
 #       CHANGED > added img.thea file for animation, though this is tricky, will take away a lot of time cause it saves out img file 2 times
-        outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:] + ".img.thea")
-        outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:])
+        outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip()) +"_"+scn.camera.name +"_"+frameS[-4:] + ".img.thea")
+        outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip()) +"_"+scn.camera.name +"_"+frameS[-4:])
 
 
     args = []
@@ -2880,22 +2993,22 @@ def renderFrame(scene,frame,anim=True):
         scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(xmlFilename) + '\"\n'))
 
 
-#     if os.name == "nt":
-#         theaPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "WIN", "TheaRemoteDarkroom.exe")
-#     if os.name == "posix":
-#         import stat
-#         darkroomfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "OSX", "TheaRemoteDarkroom.app/Contents/MacOS/TheaRemoteDarkroom")
-#         os.chmod(darkroomfile, stat.S_IEXEC)
-#         theaPath = darkroomfile
-
-
+    #     if os.name == "nt":
+    #         theaPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "WIN", "TheaRemoteDarkroom.exe")
+    #     if os.name == "posix":
+    #         import stat
+    #         darkroomfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "OSX", "TheaRemoteDarkroom.app/Contents/MacOS/TheaRemoteDarkroom")
+    #         os.chmod(darkroomfile, stat.S_IEXEC)
+    #         theaPath = darkroomfile
     args.append(scriptFilename)
     args.append(saveScriptFilename)
 #         args.append(str(theaPath))
     if scn.get('thea_HideThea') != False:
         args.append("-hidden")
     args.append(exitCom)
+#    if scn.thea_regionRender !=True:
     scriptFile.write('message \"Render\"\n')
+
     thea_globals.log.debug("*** Save 2 Export only: %s" % getattr(scn,"thea_save2Export", False))
     if anim and (getattr(scn,"thea_save2Export")!=True):
 
@@ -2943,21 +3056,21 @@ def renderFrame(scene,frame,anim=True):
         if checkChannels == True:
             #                                    CHANGED > added single quote ' before and after each channel, else it wont save on mac. WIndows is different i ebeleive
             if exporter.getRenderOptions().normalChannel:
-                saveScriptFile.write('message \"SaveChannel \'Normal\' %s\"\n' % os.path.join(framesDir,"normal",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Normal\' %s\"\n' % os.path.join(framesDir,"normal",outputChannelImage + "_normal"+ fileFormat))
             if exporter.getRenderOptions().positionChannel:
-                saveScriptFile.write('message \"SaveChannel \'Position\' %s\"\n' % os.path.join(framesDir,"position",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Position\' %s\"\n' % os.path.join(framesDir,"position",outputChannelImage + "_position"+ fileFormat))
             if exporter.getRenderOptions().uvChannel:
-                saveScriptFile.write('message \"SaveChannel \'UV\' %s\"\n' % os.path.join(framesDir,"uv",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'UV\' %s\"\n' % os.path.join(framesDir,"uv",outputChannelImage + "_uv"+ fileFormat))
             if exporter.getRenderOptions().depthChannel:
-                saveScriptFile.write('message \"SaveChannel \'Depth\' %s\"\n' % os.path.join(framesDir, "depth", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Depth\' %s\"\n' % os.path.join(framesDir, "depth", outputChannelImage + "_depth"+ fileFormat))
             if alphaMode:
-                saveScriptFile.write('message \"SaveChannel \'Alpha\' %s\"\n' % os.path.join(framesDir, "alpha", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Alpha\' %s\"\n' % os.path.join(framesDir, "alpha", outputChannelImage + "_alpha"+ fileFormat))
             if exporter.getRenderOptions().objectIdChannel:
-                saveScriptFile.write('message \"SaveChannel \'Object Id\' %s\"\n' % os.path.join(framesDir, "object_id", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Object Id\' %s\"\n' % os.path.join(framesDir, "object_id", outputChannelImage + "_objectID"+ fileFormat))
             if exporter.getRenderOptions().materialIdChannel:
-                saveScriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage + "_materialID"+ fileFormat))
             if exporter.getRenderOptions().shadowChannel:
-                saveScriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage + "_Shadow"+ fileFormat))
 #            CHANGED> Added mask back in CHECK numbering system
             if exporter.getRenderOptions().maskChannel:
                 maskIndexList = []
@@ -2966,38 +3079,38 @@ def renderFrame(scene,frame,anim=True):
                     if ob.thMaskID == True:
                         maskIndex = ob.thMaskIDindex
                         if not maskIndex in maskIndexList:
-                            saveScriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_Mask" + str(maskIndex) + fileFormat)))
+                            saveScriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_mask" + str(maskIndex) + fileFormat)))
                             maskIndexList.append(maskIndex)
     #                    thea_globals.log.debug("Mask Index Number: %s" % maskIndex)
 #            if exporter.getRenderOptions().invertMaskChannel:
 #                scriptFile.write('message \"SaveChannel Mask %s\"\n' % os.path.join(framesDir,"mask",outputChannelImage + fileFormat))
             if exporter.getRenderOptions().rawDiffuseColorChannel:
-                saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage + "_raw-diffuse-color" + fileFormat))
             if exporter.getRenderOptions().rawDiffuseLightingChannel:
-                saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Lighting\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_lighting",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Raw Diffuse Lighting\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_lighting",outputChannelImage + "_raw-diffuse-lighting" + fileFormat))
             if exporter.getRenderOptions().rawDiffuseGIChannel:
-                saveScriptFile.write('message \"SaveChannel \'Raw Diffuse GI\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_gi",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Raw Diffuse GI\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_gi",outputChannelImage  + "_raw-diffuse-gi"+ fileFormat))
             if exporter.getRenderOptions().selfIlluminationChannel:
-                saveScriptFile.write('message \"SaveChannel \'Self Illumination\' %s\"\n' % os.path.join(framesDir,"self_illumination",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Self Illumination\' %s\"\n' % os.path.join(framesDir,"self_illumination",outputChannelImage + "_self-illumination" + fileFormat))
             if exporter.getRenderOptions().directChannel:
-                saveScriptFile.write('message \"SaveChannel \'Direct\' %s\"\n' % os.path.join(framesDir, "direct", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Direct\' %s\"\n' % os.path.join(framesDir, "direct", outputChannelImage + "_direct" + fileFormat))
             if exporter.getRenderOptions().AOChannel:
-                saveScriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % os.path.join(framesDir, "ao", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'AO\' %s\"\n' % os.path.join(framesDir, "ao", outputChannelImage + "_ao" + fileFormat))
             if exporter.getRenderOptions().giChannel:
-                saveScriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage + "_gi" + fileFormat))
 #            CHANGED> Turned this backon + light passes
             if exporter.getRenderOptions().sssChannel:
-                scriptFile.write('message \"SaveChannel SSS %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage + fileFormat))
+                scriptFile.write('message \"SaveChannel SSS %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage  + "_sss"+ fileFormat))
             if exporter.getRenderOptions().separatePassesPerLightChannel:
-                scriptFile.write('message \"SaveChannel Passes Per Light %s\"\n' % os.path.join(framesDir, "passes per light", outputChannelImage + fileFormat))
+                scriptFile.write('message \"SaveChannel Passes Per Light %s\"\n' % os.path.join(framesDir, "passes per light", outputChannelImage + "_passes-per-light" + fileFormat))
             if exporter.getRenderOptions().reflectionChannel:
-                saveScriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage + "_reflection" + fileFormat))
             if exporter.getRenderOptions().refractionChannel:
-                saveScriptFile.write('message \"SaveChannel \'Refraction\' %s\"\n' % os.path.join(framesDir, "refraction", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Refraction\' %s\"\n' % os.path.join(framesDir, "refraction", outputChannelImage + "_refraction" + fileFormat))
             if exporter.getRenderOptions().transparentChannel:
-                saveScriptFile.write('message \"SaveChannel \'Transparent\' %s\"\n' % os.path.join(framesDir, "transparent", outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Transparent\' %s\"\n' % os.path.join(framesDir, "transparent", outputChannelImage + "_transparent" + fileFormat))
             if exporter.getRenderOptions().irradianceChannel:
-                saveScriptFile.write('message \"SaveChannel \'Irradiance\' %s\"\n' % os.path.join(framesDir,"irradiance",outputChannelImage + fileFormat))
+                saveScriptFile.write('message \"SaveChannel \'Irradiance\' %s\"\n' % os.path.join(framesDir,"irradiance",outputChannelImage + "_irradiance" + fileFormat))
 
 #         args.append("-exit")
 
@@ -3023,9 +3136,9 @@ def renderFrame(scene,frame,anim=True):
                 thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
     else:
         #save rendered image also in exportPath dir
-        outputImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + fileFormat)
-        outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name + ".img.thea")
-        outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename) +"_"+scn.camera.name )
+        outputImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].rstrip()) +"_"+scn.camera.name + fileFormat)
+        outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].rstrip()) +"_"+scn.camera.name + ".img.thea")
+        outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].rstrip()) +"_"+scn.camera.name )
     if getattr(scn,"thea_save2Export")!=False:
         if color_mode == "RGBA":
             saveScriptFile.write('message \"SaveChannel +Alpha %s\"\n' % outputImage)
@@ -4447,9 +4560,23 @@ class TheaRender(bpy.types.RenderEngine):
 
 
         # compute resolution
-
         x= int(r.resolution_x*r.resolution_percentage*0.01)
         y= int(r.resolution_y*r.resolution_percentage*0.01)
+
+#        # calculate region render image size NOT USED NO MORE
+#        if scene.thea_regionRender:
+#            if scene.thea_regionSettings == "1":
+#                x = x/2
+#                y = y/2
+#            if scene.thea_regionSettings == "2":
+#                x = x/3
+#                y = y/3
+#            if scene.thea_regionSettings == "3":
+#                x = x/4
+#                y = y/4
+#            if scene.thea_regionSettings == "4":
+#                x = x/8
+#                y = y/8
 
 
         if (x<=80) or (y<=80):

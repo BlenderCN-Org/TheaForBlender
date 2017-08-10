@@ -1803,6 +1803,7 @@ class ThCamera:
         self.interpolatedMotion = InterpolatedMotion()
         self.frame = Transform()
         self.renderRegion = False
+#        self.regionsettings = ""
         self.region = ""
         self.camLocked = 1
         self.zClippingNear = False
@@ -1834,9 +1835,9 @@ class ThCamera:
         file.write('<Parameter Name=\"Diaphragm\" Type=\"String\" Value=\"%s\"/>\n' % self.diaphragm)
         file.write('<Parameter Name=\"Projection\" Type=\"String\" Value=\"%s\"/>\n' % self.projection)
         file.write('<Parameter Name=\"Region\" Type=\"String\" Value=\"%s\"/>\n' % self.region)
+        file.write('<Parameter Name=\"Render Region\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.renderRegion else '0'))
 #        CHANGED>Added camera lock (handy when its eported so you dont accidently move the camera)
         file.write('<Parameter Name=\"Locked\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.camLocked)
-        file.write('<Parameter Name=\"Render Region\" Type=\"String\" Value=\"%s\"/>\n' % ('1' if self.renderRegion else '0'))
         file.write('<Parameter Name=\"Z-Clipping Near\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.zClippingNear else '0'))
         file.write('<Parameter Name=\"Z-Clipping Far\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.zClippingFar else '0'))
         file.write('<Parameter Name=\"Z-Clipping Near Distance\" Type=\"Real\" Value=\"%s\"/>\n ' % self.zClippingNearDistance)
@@ -2250,6 +2251,9 @@ class RenderOptions:
         self.FMFieldDensity = 100000
         self.FMCellSize = 1000
         self.deviceMask = "GPU+CPU"
+#        self.cpuDevice = "Low"
+#        self.cpuThreadsEnable = True
+#        self.cpuThreads = "MAX"
         self.bucketRendering = False
         self.bucketResolution = "64x64"
         self.extendedTracing = False
@@ -2349,21 +2353,22 @@ class RenderOptions:
             else:
                 file.write(str(self.threads))
             file.write('\"/>\n')
-            file.write('<Parameter Name=\"./Render/Priority\" Type=\"String\" Value=\"%s\"/>\n' % ('Low' if int(self.priority)==0 else 'Normal'))
-            file.write('<Parameter Name=\"./Render/Network\" Type=\"String\" Value=\"')
-            if self.network == "Client":
-                file.write('Client')
-            elif self.network == "Server":
-                file.write('Server')
-            elif self.network == "Pure Server":
-                file.write('Pure Server')
-            else:
-                file.write('None')
-            file.write('\"/>\n')
-            file.write('<Parameter Name=\"./Render/Server Port\" Type=\"Integer\" Value=\"%s\"/>\n' % self.serverport)
-            addr = str(self.serveraddress)
-            addr = addr.replace('\'', '')
-            file.write('<Parameter Name=\"./Render/Server Address\" Type=\"String\" Value=\"%s\"/>\n' % addr)
+            if getattr(scn, "thea_distributionRender") != False:
+                file.write('<Parameter Name=\"./Render/Priority\" Type=\"String\" Value=\"%s\"/>\n' % ('Low' if int(self.priority)==0 else 'Normal'))
+                file.write('<Parameter Name=\"./Render/Network\" Type=\"String\" Value=\"')
+                if self.network == "Client":
+                    file.write('Client')
+                elif self.network == "Server":
+                    file.write('Server')
+                elif self.network == "Pure Server":
+                    file.write('Pure Server')
+                else:
+                    file.write('None')
+                file.write('\"/>\n')
+                file.write('<Parameter Name=\"./Render/Server Port\" Type=\"Integer\" Value=\"%s\"/>\n' % self.serverport)
+                addr = str(self.serveraddress)
+                addr = addr.replace('\'', '')
+                file.write('<Parameter Name=\"./Render/Server Address\" Type=\"String\" Value=\"%s\"/>\n' % addr)
 
             file.write('<Parameter Name=\"./Render/Channels/Color\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.colorChannel else '0'))
             file.write('<Parameter Name=\"./Render/Channels/Normal\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.normalChannel else '0'))
@@ -2391,7 +2396,7 @@ class RenderOptions:
             file.write('<Parameter Name=\"./Render/Channels/Invert Mask Channel\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.invertMaskChannel else '0'))
 
             file.write('<Parameter Name=\"./Render/Tracing Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.rayTracingDepth)
-            file.write('<Parameter Name=\"./Render/Progressive/Diffuse Depth\" Type=\"Integer\" Value=\"%s\"/>' % self.rayDiffuseDepth)
+            file.write('<Parameter Name=\"./Render/Progressive/Diffuse Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.rayDiffuseDepth)
             file.write('<Parameter Name=\"./Render/Glossy Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.rayGlossyDepth)
             file.write('<Parameter Name=\"./Render/Trace Reflections\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.rayTraceReflections else '0'))
             file.write('<Parameter Name=\"./Render/Trace Refractions\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.rayTraceRefractions else '0'))
@@ -2441,8 +2446,12 @@ class RenderOptions:
             file.write('<Parameter Name=\"./Render/IrrCache/Min Distance (px)\" Type=\"Real\" Value=\"%s\"/> \n' % (self.ICMinDistance*100))
             file.write('<Parameter Name=\"./Render/IrrCache/Max Distance (px)\" Type=\"Real\" Value=\"%s\"/> \n' % (self.ICMaxDistance*100))
             file.write('<Parameter Name=\"./Render/Device Mask\" Type=\"String\" Value=\"%s\"/> \n' % self.deviceMask)
+#            file.write('<Parameter Name=\"./Device #0/Run Threads\" Type=\"String\" Value="%s"/>\n' % self.renderOptions.cpuThreads)
+#            file.write('<Parameter Name=\"./Device #0/Enabled\" Type=\"Boolean\" Value=\"%s"/>\n' % ('1' if self.renderOptions.cpuThreadsEnable else '0'))
+#            file.write('<Parameter Name=\"./Device #0/Priority\" Type=\"String\" Value="%s"/>\n' % self.renderOptions.cpuDevice)
             file.write('<Parameter Name=\"./Render/Bucket Rendering\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.bucketRendering else '0'))
             file.write('<Parameter Name=\"./Render/Bucket Resolution\" Type=\"String\" Value=\"%s\"/>\n' % self.bucketResolution)
+
             file.write('<Parameter Name=\"./Render/Extended Tracing\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.extendedTracing else '0'))
             file.write('<Parameter Name=\"./Render/Progressive/Transparency Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.transparencyDepth)
             file.write('<Parameter Name=\"./Render/Progressive/Internal Reflection Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.internalReflectionDepth)
@@ -2458,9 +2467,9 @@ class RenderOptions:
                 file.write('<Parameter Name=\"./Render/Ambient Occlusion/Samples\" Type=\"Integer\" Value=\"%s\"/>\n' % self.AOSamples)
                 file.write('<Parameter Name=\"./Render/Ambient Occlusion/Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.AODistance)
                 file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.AODistance)
-                file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Intensity\" Type=\"Real\" Value=\"%s\"/>' % self.AOIntensity)
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Low Color\" Type="RGB" Value="%s %s %s"/>' % (self.AOLowColor[0], self.AOLowColor[1],self.AOLowColor[2]))
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/High Color\" Type="RGB" Value="%s %s %s"/>' % (self.AOHighColor[0], self.AOHighColor[1],self.AOHighColor[2]))
+                file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Intensity\" Type=\"Real\" Value=\"%s\"/>\n' % self.AOIntensity)
+                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Low Color\" Type="RGB" Value="%s %s %s"/>\n' % (self.AOLowColor[0], self.AOLowColor[1],self.AOLowColor[2]))
+                file.write('<Parameter Name=\"./Render/Ambient Occlusion/High Color\" Type="RGB" Value="%s %s %s"/>\n' % (self.AOHighColor[0], self.AOHighColor[1],self.AOHighColor[2]))
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2636,6 +2645,8 @@ class XMLExporter:
         #// this special command should be at the very end - after activating scene - to work properly.
         if self.environmentOptions.illumination=="PhysicalSky" and self.environmentOptions.overrideSun == False: # and self.environmentOptions.skyType == "Sun+Sky":
             self.file.write('<Parameter Name=\"GenerateSun\" Type=\"Boolean\" Value=\"1\"/>\n')
+        self.file.write('</Root>\n')
+
 
     def findMaterial(self, name):
         '''find material in materialList

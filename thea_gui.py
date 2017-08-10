@@ -1480,63 +1480,77 @@ class RENDER_PT_theaLUTTools(RenderButtonsPanel, bpy.types.Panel):
                 pass
 
 
-class RENDER_PT_theaRender(RenderButtonsPanel, bpy.types.Panel):
-#   CHANGED > Different naming so i made more sense
-    bl_label = "Thea Production & Export"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (engine in cls.COMPAT_ENGINES)
-
-    def draw(self, context):
-
-        layout = self.layout
-        scene = context.scene
-
-        rd = context.scene.render
-
-        split = layout.split()
-
-        col = split.column()
-
-        if scene.get('thea_Warning'):
-            if len(scene.get('thea_Warning')) > 5:
-                row = layout.row()
-                row.label(text=scene['thea_Warning'])
-#    CHANGED> Added render option window like cycles
-        split = layout.split(percentage=0.33)
-        split.label(text="Display:")
-        row = split.row(align=True)
-        row.prop(rd, "display_mode", text="")
-        row.prop(rd, "use_lock_interface", icon_only=True)
-        split = layout.split()
-        colL = split.column()
-        colR = split.column()
-        colL.operator("render.render", text="Image", icon='RENDER_STILL')
-#      CHANGED > Changged to shorter name
-        colR.operator("thea.export_frame", text="Export to Studio" )
-        split = layout.split()
-        colL = split.column()
-        colR = split.column()
-        colL.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
-        #colL.operator("thea.render_animation", text="Render Animation")
-        #colR.prop(scene,"thea_startTheaAfterExport")
-#        CHANGED > Changed to shorter name
-        colR.operator("thea.save_frame", text="Save XML file")
-        split = layout.split()
-        row = layout.row()
-        col = split.column()
-        col.prop(scene,"thea_ExportAnimation")
-        col.prop(scene,"thea_AnimationEveryFrame")
-        col.prop(scene,"thea_HideThea")
-        col.prop(scene,"thea_ExitAfterRender")
-        col.prop(scene,"thea_stopOnErrors")
-        col.prop(scene,"thea_Reuse")
-        col.prop(scene,"thea_Selected")
-        col.prop(scene,"thea_RenderRefreshResult")
-        row = layout.row()
+#class RENDER_PT_theaRender(RenderButtonsPanel, bpy.types.Panel):
+##   CHANGED > Different naming so i made more sense
+#    bl_label = "Thea Production & Export"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#        return (engine in cls.COMPAT_ENGINES)
+#
+#    def draw(self, context):
+#
+#        layout = self.layout
+#        scene = context.scene
+#
+#        rd = context.scene.render
+#
+#        split = layout.split()
+#
+#        col = split.column()
+#
+#        if scene.get('thea_Warning'):
+#            if len(scene.get('thea_Warning')) > 5:
+#                row = layout.row()
+#                row.label(text=scene['thea_Warning'])
+##    CHANGED> Added render option window like cycles
+#        split = layout.split(percentage=0.33)
+#        split.label(text="Display:")
+#        row = split.row(align=True)
+#        row.prop(rd, "display_mode", text="")
+#        row.prop(rd, "use_lock_interface", icon_only=True)
+#        split = layout.split()
+#        colL = split.column()
+#        colR = split.column()
+#        colL.operator("render.render", text="Image", icon='RENDER_STILL')
+##      CHANGED > Changged to shorter name
+#        colR.operator("thea.export_frame", text="Export to Studio" )
+#        split = layout.split()
+#        colL = split.column()
+#        colR = split.column()
+#        colL.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+#        #colL.operator("thea.render_animation", text="Render Animation")
+#        #colR.prop(scene,"thea_startTheaAfterExport")
+##        CHANGED > Changed to shorter name
+#        colR.operator("thea.save_frame", text="Save XML file")
+#        col = layout.column()
+#        col.label("Extra Options:")
+#        split = layout.split()
+#        colL = split.column()
+#        colL.prop(scene,"thea_regionRender", text="Region Render")
+#        if scene.thea_regionRender:
+#            colL.prop(bpy.context.scene, "thea_regionSettings")
+##            colL = split.column()
+#            colR = split.column()
+#            colR.prop(scene, "thea_regionDarkroom")
+#            colR.operator("thea.export_frame", text="Render Region Studio" )
+#            col = layout.column()
+#        if scene.thea_regionRender !=True:
+#            col = layout.column()
+##        split = layout.split()
+##        row = layout.row()
+#
+#        col.prop(scene,"thea_ExportAnimation")
+#        col.prop(scene,"thea_AnimationEveryFrame")
+#        col.prop(scene,"thea_HideThea")
+#        col.prop(scene,"thea_ExitAfterRender")
+#        col.prop(scene,"thea_stopOnErrors")
+#        col.prop(scene,"thea_Reuse")
+#        col.prop(scene,"thea_Selected")
+#        col.prop(scene,"thea_RenderRefreshResult")
+#        row = layout.row()
 
 
 class VIEW3D_PT_theaIR(bpy.types.Panel):
@@ -1816,61 +1830,253 @@ class RENDER_PT_theaPresets(RenderButtonsPanel, bpy.types.Panel):
 
 class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
 #   CHANGED > Better and more understanding naming
-    bl_label = "Thea Engines"
+    bl_label = "Thea Render"
     COMPAT_ENGINES = set(['THEA_RENDER'])
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
-        return (getattr(context.scene, "thea_enablePresets") != True) and (engine in cls.COMPAT_ENGINES)
+        return (engine in cls.COMPAT_ENGINES)
+#        return (getattr(context.scene, "thea_enablePresets") != True) and (engine in cls.COMPAT_ENGINES)
+#                (getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)", "Presto (MC)", "Presto (AO)")))and
 
     def draw(self, context):
        layout = self.layout
-
+       rd = context.scene.render
        scene = context.scene
+       layout.prop(scene, "thea_enginesMenu", expand=True)
        split = layout.split()
        row = layout.row()
        col = split.column()
-       col.prop(scene,"thea_RenderEngineMenu")
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
-           col.prop(scene,"thea_IRDevice")
-       col.prop(scene,"thea_AASamp")
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
-           col.prop(scene,"thea_adaptiveBias")
-       col.prop(scene,"thea_RenderMBlur")
-#       CHANGED> added displacement
-       col.prop(scene,"thea_displacemScene")
-       col.prop(scene,"thea_RenderVolS")
-       col.prop(scene,"thea_RenderLightBl")
-#      CHANGED > Added Clay render
-       split = layout.split()
-       colL = split.column()
-       colR = split.column()
-       row.label("Clay Render:")
-       row = layout.row()
-       colL.prop(scene,"thea_clayRender", text="Enable")
-       sub = colR
-       sub.active = bpy.context.scene.thea_clayRender == True
-       sub.prop(bpy.context.scene, "thea_clayRenderReflectance")
-#       if getattr(scene, "thea_clayRender"):
-#           row = layout.row()
-#           colR.prop(scene,"thea_clayRenderReflectance")
-#       row = layout.row()
-       split = layout.split()
-       col.label("Termination:")
-       col.prop(scene,"thea_RenderTime")
-       #col.prop(scene,"thea_RenderMaxPasses")
-       col.prop(scene,"thea_RenderMaxSamples")
-#      CHANGED > Added Marker names + Custom Name
-       col = split.column()
-       col.label("Extra's:")
-#      CHANGED > Added button to save img.thea file
-       col.prop(scene,"thea_ImgTheaFile")
-       col.prop(scene,"thea_save2Export")
-       col.prop(scene,"thea_markerName")
-       col.prop(scene,"thea_customOutputName")
-       if getattr(scene, "thea_customOutputName"):
-           col.prop(scene,"thea_customName")
+       if getattr(context.scene, "thea_enablePresets") != False:
+            try:
+                scene.thea_enginesMenu.Settings
+            except:
+                pass
+#       layout.prop(scene, "thea_enginesMenu", expand=True)
+       if getattr(scene, "thea_enginesMenu") in ("Render & Export"):
+           if scene.get('thea_Warning'):
+               if len(scene.get('thea_Warning')) > 5:
+                  row = layout.row()
+                  row.label(text=scene['thea_Warning'])
+    #    CHANGED> Added render option window like cycles
+           split = layout.split(percentage=0.33)
+           split.label(text="Display:")
+           row = split.row(align=True)
+           row.prop(rd, "display_mode", text="")
+           row.prop(rd, "use_lock_interface", icon_only=True)
+           split = layout.split()
+           colL = split.column()
+           colR = split.column()
+           colL.operator("render.render", text="Image", icon='RENDER_STILL')
+    #      CHANGED > Changged to shorter name
+           colR.operator("thea.export_frame", text="Export to Studio" )
+           split = layout.split()
+           colL = split.column()
+           colR = split.column()
+           colL.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+           #colL.operator("thea.render_animation", text="Render Animation")
+           #colR.prop(scene,"thea_startTheaAfterExport")
+    #       CHANGED > Changed to shorter name
+           colR.operator("thea.save_frame", text="Save XML file")
+           col = layout.column()
+           col.label("Extra Options:")
+           split = layout.split()
+           colL = split.column()
+           colL.prop(scene,"thea_regionRender", text="Region Render")
+           if scene.thea_regionRender:
+               colL.prop(bpy.context.scene, "thea_regionSettings")
+    #           colL = split.column()
+               colR = split.column()
+               colR.prop(scene, "thea_regionDarkroom")
+               colR.operator("thea.export_frame", text="Render Region Studio" )
+               col = layout.column()
+           if scene.thea_regionRender !=True:
+               col = layout.column()
+    #       split = layout.split()
+    #       row = layout.row()
+
+           col.prop(scene,"thea_ExportAnimation")
+           col.prop(scene,"thea_AnimationEveryFrame")
+           col.prop(scene,"thea_HideThea")
+           col.prop(scene,"thea_ExitAfterRender")
+           col.prop(scene,"thea_stopOnErrors")
+           col.prop(scene,"thea_Reuse")
+           col.prop(scene,"thea_Selected")
+           col.prop(scene,"thea_RenderRefreshResult")
+       if getattr(scene, "thea_enginesMenu") in ("Engines"):
+           col.label("Main:")
+           col = layout.column(align=True)#align=True)
+           col.prop(scene,"thea_RenderEngineMenu")
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", ("Presto (MC)")):
+               col.prop(scene,"thea_IRDevice")
+           col.prop(scene,"thea_AASamp")
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)", "Presto (AO)", "Presto (MC)"):
+               col.prop(scene,"thea_RTTracingDepth")
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
+               col.prop(scene,"thea_adaptiveBias")
+#           split = layout.split()
+#           col.label("Tracing Depth:")
+    #       CHANGED > Caustics only for AMC engine
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
+               col.prop(scene,"thea_RTGlossyDepth")
+               col.prop(scene,"thea_RTDiffuseDepth")
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
+               col.prop(scene, "thea_GICaustics", text="Caustics")
+    #       CHANGED > Extended only for PResto engine
+
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
+               col = layout.column()
+               col.prop(scene, "thea_ExtendedTracing")
+               sub = layout.column()#align=True)
+               sub.active = scene.thea_ExtendedTracing == True
+               sub.prop(scene, "thea_TransparencyDepth")
+               sub.prop(scene, "thea_InternalReflectionDepth")
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (MC)"):
+               sub.prop(scene, "thea_SSSDepth")
+    #           layout.label("Ambient Occlusion:")
+    #           split = layout.split()
+    #           col = split.column()
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
+               col = layout.column()
+               col.prop(scene, "thea_AOEnable", text="Ambient Occlusion:")
+               sub = layout.column()#align=True)
+               sub.active = scene.thea_AOEnable == True
+               sub.prop(scene,"thea_AODistance")
+               sub.prop(scene,"thea_AOIntensity")
+           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
+    #           split = layout.split()
+               col = layout.column()
+               col.prop(scene, "thea_ClampLevelEnable", text="Clamp Level:")
+               sub = col
+               sub.active = scene.thea_ClampLevelEnable == True
+               sub.prop(scene, "thea_ClampLevel")
+           split = layout.split()
+           col = layout.column()
+           col.prop(scene,"thea_RenderMBlur")
+    #       CHANGED> added displacement
+           col.prop(scene,"thea_displacemScene")
+           col.prop(scene,"thea_RenderVolS")
+           col.prop(scene,"thea_RenderLightBl")
+    #      CHANGED > Added Clay render
+
+
+           split = layout.split()
+           colL = split.column()
+           colR = split.column()
+           colL.label("Clay Render:")
+           colR.label("")
+           colL.prop(scene,"thea_clayRender", text="Enable:")
+           sub = colR
+           sub.active = bpy.context.scene.thea_clayRender == True
+           sub.prop(bpy.context.scene, "thea_clayRenderReflectance")
+
+           split = layout.split()
+           col.separator()
+           col = layout.column()
+           col.label("Termination:")
+           col.prop(scene,"thea_RenderTime")
+           #col.prop(scene,"thea_RenderMaxPasses")
+           col.prop(scene,"thea_RenderMaxSamples")
+
+           split = layout.split()
+           col.separator()
+           col.label("Distribution Render:")
+           col.prop(scene,"thea_distributionRender", text="Enable")
+           if scene.thea_distributionRender:
+               col.prop(scene,"thea_DistTh")
+               col.prop(scene,"thea_DistPri")
+               col.prop(scene,"thea_DistNet")
+               if getattr(context.scene,"thea_DistNet") in ("1","2", "3"):
+                  col.prop(scene,"thea_DistPort")
+                  col.prop(scene,"thea_DistAddr")
+               if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
+                  col.prop(scene,"thea_BucketRendering")
+
+#           if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
+#               col = layout.column(align=True)
+#               col.label("Device:")
+#               col.prop(scene,"thea_IRDevice")
+#               col.prop(scene,"thea_cpuDevice")
+#               split = layout.split()
+#               col = split.column()
+#               colL = col
+#               colR = col
+#               sub = colR
+#               colL.prop(scene,"thea_cpuThreadsEnable")
+#               sub.active = scene.thea_cpuThreadsEnable == True
+#               sub.prop(scene,"thea_cpuThreads")
+#               col.separator()
+
+    #      CHANGED > Added Marker names + Custom Name
+#           col.separator()
+#           col = split.column()
+           col = layout.column()
+           col.label("Extra Options:")
+    #      CHANGED > Added button to save img.thea file
+           col.prop(scene,"thea_ImgTheaFile")
+           col.prop(scene,"thea_save2Export")
+           col.prop(scene,"thea_markerName")
+           col.prop(scene,"thea_customOutputName")
+           if getattr(scene, "thea_customOutputName"):
+               col.prop(scene,"thea_customName")
+
+
+       if getattr(scene, "thea_enginesMenu") in ("Channels"):
+#           if getattr(scene, "thea_showChannels"):
+           split = layout.split()
+           row = layout.row()
+           col = split.column()
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelNormal")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelPosition")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelUV")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelDepth")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelAlpha")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelObjectId")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelMaterialId")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelShadow")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelRawDiffuseColor")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelRawDiffuseLighting")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelRawDiffuseGI")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelDirect")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
+               col.prop(scene,"thea_channelAO")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelGI")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelSelfIllumination")
+#CHANGED> Turned this back on
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
+               col.prop(scene,"thea_channelSSS")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelSeparatePassesPerLight")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelReflection")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+               col.prop(scene,"thea_channelRefraction")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
+               col.prop(scene,"thea_channelTransparent")
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)")):
+               col.prop(scene,"thea_channelIrradiance")
+#CHANGED> Turned mask id back ON
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelMask")
+#CHNAGED> Turned invert mask channel back ON
+           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+               col.prop(scene,"thea_channelInvertMask")
+
 
 
 class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
@@ -1996,33 +2202,33 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
 
 
 
-class RENDER_PT_theaDistribution(RenderButtonsPanel, bpy.types.Panel):
-    bl_label = "Distribution"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-#   CHANGED > Added this to hide when remote is not active
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (getattr(context.scene, "thea_showRemoteSetup") != False) and (engine in cls.COMPAT_ENGINES)
-
+#class RENDER_PT_theaDistribution(RenderButtonsPanel, bpy.types.Panel):
+#    bl_label = "Distribution"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+##   CHANGED > Added this to hide when remote is not active
 #    @classmethod
 #    def poll(cls, context):
 #        engine = context.scene.render.engine
-#        return (engine in cls.COMPAT_ENGINES)
-
-    def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       split = layout.split()
-       row = layout.row()
-       col = split.column()
-       col.prop(scene,"thea_DistTh")
-       col.prop(scene,"thea_DistPri")
-       col.prop(scene,"thea_DistNet")
-       col.prop(scene,"thea_DistPort")
-       col.prop(scene,"thea_DistAddr")
-       col.prop(scene,"thea_BucketRendering")
+#        return (getattr(context.scene, "thea_showRemoteSetup") != False) and (engine in cls.COMPAT_ENGINES)
+#
+##    @classmethod
+##    def poll(cls, context):
+##        engine = context.scene.render.engine
+##        return (engine in cls.COMPAT_ENGINES)
+#
+#    def draw(self, context):
+#       layout = self.layout
+#       scene = context.scene
+#       split = layout.split()
+#       row = layout.row()
+#       col = split.column()
+#       col.prop(scene,"thea_DistTh")
+#       col.prop(scene,"thea_DistPri")
+#       col.prop(scene,"thea_DistNet")
+#       col.prop(scene,"thea_DistPort")
+#       col.prop(scene,"thea_DistAddr")
+#       col.prop(scene,"thea_BucketRendering")
 
 class RENDER_PT_BiasedSettings(RenderButtonsPanel, bpy.types.Panel):
     bl_label = "Biased Settings"
@@ -2164,57 +2370,57 @@ class RENDER_PT_BiasedSettings(RenderButtonsPanel, bpy.types.Panel):
            row.prop(scene,"thea_ICForceInterpolation")
 
 
-class RENDER_PT_IREngineSettings(RenderButtonsPanel, bpy.types.Panel):
-    bl_label = "Interactive Engine Settings"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return ((getattr(context.scene, "thea_enablePresets") != True) and
-                (getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)", "Presto (MC)", "Presto (AO)"))) and (engine in cls.COMPAT_ENGINES)
-
-    def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-#       split = layout.split()
-       col = layout.column()#align=True)
-       col.prop(scene,"thea_RTTracingDepth")
-#       CHANGED > Caustics only for AMC engine
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
-           col.prop(scene,"thea_RTGlossyDepth")
-           col.prop(scene,"thea_RTDiffuseDepth")
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
-           layout.prop(scene, "thea_GICaustics", text="Caustics")
-#       CHANGED > Extended only for PResto engine
-
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
-#           col = layout.column()
-           layout.prop(scene, "thea_ExtendedTracing")
-           sub = layout.column()#align=True)
-           sub.active = scene.thea_ExtendedTracing == True
-           sub.prop(scene, "thea_TransparencyDepth")
-           sub.prop(scene, "thea_InternalReflectionDepth")
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (MC)"):
-           sub.prop(scene, "thea_SSSDepth")
-#           layout.label("Ambient Occlusion:")
-#           split = layout.split()
-#           col = split.column()
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
-#           col = layout.column()
-           layout.prop(scene, "thea_AOEnable", text="Ambient Occlusion:")
-           sub = layout.column()#align=True)
-           sub.active = scene.thea_AOEnable == True
-           sub.prop(scene,"thea_AODistance")
-           sub.prop(scene,"thea_AOIntensity")
-       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
-#           split = layout.split()
-#           col = layout.column()
-           layout.prop(scene, "thea_ClampLevelEnable", text="Clamp Level:")
-           sub = layout.column()
-           sub.active = scene.thea_ClampLevelEnable == True
-           sub.prop(scene, "thea_ClampLevel")
-
+#class RENDER_PT_IREngineSettings(RenderButtonsPanel, bpy.types.Panel):
+#    bl_label = "Interactive Engine Settings"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#        return ((getattr(context.scene, "thea_enablePresets") != True) and
+#                (getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)", "Presto (MC)", "Presto (AO)"))) and (engine in cls.COMPAT_ENGINES)
+#
+#    def draw(self, context):
+#       layout = self.layout
+#       scene = context.scene
+##       split = layout.split()
+#       col = layout.column()#align=True)
+#       col.prop(scene,"thea_RTTracingDepth")
+##       CHANGED > Caustics only for AMC engine
+#       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
+#           col.prop(scene,"thea_RTGlossyDepth")
+#           col.prop(scene,"thea_RTDiffuseDepth")
+#       if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
+#           layout.prop(scene, "thea_GICaustics", text="Caustics")
+##       CHANGED > Extended only for PResto engine
+#
+#       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
+##           col = layout.column()
+#           layout.prop(scene, "thea_ExtendedTracing")
+#           sub = layout.column()#align=True)
+#           sub.active = scene.thea_ExtendedTracing == True
+#           sub.prop(scene, "thea_TransparencyDepth")
+#           sub.prop(scene, "thea_InternalReflectionDepth")
+#       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (MC)"):
+#           sub.prop(scene, "thea_SSSDepth")
+##           layout.label("Ambient Occlusion:")
+##           split = layout.split()
+##           col = split.column()
+#       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
+##           col = layout.column()
+#           layout.prop(scene, "thea_AOEnable", text="Ambient Occlusion:")
+#           sub = layout.column()#align=True)
+#           sub.active = scene.thea_AOEnable == True
+#           sub.prop(scene,"thea_AODistance")
+#           sub.prop(scene,"thea_AOIntensity")
+#       if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
+##           split = layout.split()
+##           col = layout.column()
+#           layout.prop(scene, "thea_ClampLevelEnable", text="Clamp Level:")
+#           sub = layout.column()
+#           sub.active = scene.thea_ClampLevelEnable == True
+#           sub.prop(scene, "thea_ClampLevel")
+#
 
 
 
@@ -2346,77 +2552,77 @@ class RENDER_PT_theaMergeScene(RenderButtonsPanel, bpy.types.Panel):
 
 
 
-class RENDER_PT_theaChannels(RenderButtonsPanel, bpy.types.Panel):
-    bl_label = "Thea Channels"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (engine in cls.COMPAT_ENGINES)
-
-    def draw_header(self, context):
-       scene = context.scene
-       mat  = context.material
-       self.layout.prop(scene, "thea_showChannels", text="")
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-
-        if getattr(scene, "thea_showChannels"):
-           split = layout.split()
-           row = layout.row()
-           col = split.column()
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelNormal")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelPosition")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelUV")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelDepth")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelAlpha")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelObjectId")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelMaterialId")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelShadow")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelRawDiffuseColor")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelRawDiffuseLighting")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelRawDiffuseGI")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelDirect")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
-               col.prop(scene,"thea_channelAO")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelGI")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelSelfIllumination")
-#CHANGED> Turned this back on
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
-               col.prop(scene,"thea_channelSSS")
+#class RENDER_PT_theaChannels(RenderButtonsPanel, bpy.types.Panel):
+#    bl_label = "Thea Channels"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#        return (engine in cls.COMPAT_ENGINES)
+#
+#    def draw_header(self, context):
+#       scene = context.scene
+#       mat  = context.material
+#       self.layout.prop(scene, "thea_showChannels", text="")
+#
+#    def draw(self, context):
+#        layout = self.layout
+#        scene = context.scene
+#
+#        if getattr(scene, "thea_showChannels"):
+#           split = layout.split()
+#           row = layout.row()
+#           col = split.column()
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelNormal")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelPosition")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelUV")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelDepth")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelAlpha")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelObjectId")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelMaterialId")
 #           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-#               col.prop(scene,"thea_channelSeparatePassesPerLight")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelReflection")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
-               col.prop(scene,"thea_channelRefraction")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
-               col.prop(scene,"thea_channelTransparent")
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)")):
-               col.prop(scene,"thea_channelIrradiance")
-#CHANGED> Turned mask id back ON
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelMask")
-#CHNAGED> Turned invert mask channel back ON
-           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelInvertMask")
+#               col.prop(scene,"thea_channelShadow")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelRawDiffuseColor")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelRawDiffuseLighting")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelRawDiffuseGI")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelDirect")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
+#               col.prop(scene,"thea_channelAO")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelGI")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelSelfIllumination")
+##CHANGED> Turned this back on
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
+#               col.prop(scene,"thea_channelSSS")
+##           if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
+##               col.prop(scene,"thea_channelSeparatePassesPerLight")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelReflection")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
+#               col.prop(scene,"thea_channelRefraction")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
+#               col.prop(scene,"thea_channelTransparent")
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)")):
+#               col.prop(scene,"thea_channelIrradiance")
+##CHANGED> Turned mask id back ON
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelMask")
+##CHNAGED> Turned invert mask channel back ON
+#           if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
+#               col.prop(scene,"thea_channelInvertMask")
 #CHANGED > Added GLobal Medium Panel
 class RENDER_PT_theaGlobMedium(WorldButtonsPanel, bpy.types.Panel):
     bl_label = "Global Medium"

@@ -210,6 +210,7 @@ class RENDER_PT_thea_RenderAnimation(bpy.types.Operator):
         return {'FINISHED'}
 
 
+
 class RENDER_PT_thea_ExportFrame(bpy.types.Operator):
     bl_idname = "thea.export_frame"
     bl_label = "Export current frame"

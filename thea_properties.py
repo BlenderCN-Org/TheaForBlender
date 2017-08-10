@@ -95,20 +95,53 @@ def TheaPathUpdated(self, context, origin=""):
 
 
 Scene.thea_ApplicationPath = bpy.props.StringProperty(
-                  name = "Thea Application path",
-                  default = "",
-                  description = "Path to Thea executable",
-                  subtype = 'FILE_PATH',
-                  update=lambda a,b: TheaPathUpdated(a,b,"thea_ApplicationPath")
-                  )
+    name = "Thea Application path",
+    default = "",
+    description = "Path to Thea executable",
+    subtype = 'FILE_PATH',
+    update=lambda a,b: TheaPathUpdated(a,b,"thea_ApplicationPath")
+    )
 
 Scene.thea_DataPath = bpy.props.StringProperty(
-                  name = "Thea Data path",
-                  default = "",
-                  description = "Path to Thea data directory",
-                  subtype = 'FILE_PATH',
-                  update=lambda a,b: TheaPathUpdated(a,b,"thea_DataPath")
-                  )
+    name = "Thea Data path",
+    default = "",
+    description = "Path to Thea data directory",
+    subtype = 'FILE_PATH',
+    update=lambda a,b: TheaPathUpdated(a,b,"thea_DataPath")
+    )
+
+def items_engineMenu(self,context):
+    '''set list engineMenu
+
+        :return: list of tuples with files and paths
+        :rtype: [(str, str, str)]
+    '''
+    items1 = [("Render & Export", "Render & Export", "Render & Export settings"),
+            ("Engines", "Engines", "Engines Settings"),
+            ("Channels", "Channels", "Channels per render engine")]
+    items2 = [("Render & Export", "Render & Export", "Render & Export settings"),
+            ("Channels", "Channels", "Channels per render engine")]
+    scene = context.scene
+    engineMenuItems = []
+    if scene.thea_enablePresets !=True:
+        i = 0
+        for i in range(0,3):
+            engineMenuItems.append(items1[i])
+            i+=1
+    else:
+        i = 0
+        for i in range(0,2):
+            engineMenuItems.append(items2[i])
+            i+=1
+#    thea_globals.log.debug("EngineMenu Items: %s" % engineMenuItems)
+    return engineMenuItems
+
+Scene.thea_enginesMenu = bpy.props.EnumProperty(
+    items=(items_engineMenu),
+    name="Engine Menu",
+    description="Choose engine with Settings & Channels for that engine ",
+    )
+
 
 #CHANGED > Added more info on description from manual
 Scene.thea_RenderEngineMenu = bpy.props.EnumProperty(
@@ -213,10 +246,29 @@ Scene.thea_clayRenderReflectance = bpy.props.IntProperty(
                 name="Reflectance (%)",
                 description="By changing the Reflectance percentage you can decrease/increase the diffuse material reflectance (from black to white).",
                 update=engineUpdated)
+#CHANGED> Added regionrender
+Scene.thea_regionRender = bpy.props.BoolProperty(
+                name="Render Region",
+                description="By enabling this option, the image wil be rendered in a grid manner in Thea studio. The number of images generated in a grid of 2x2, 3x3, 4x4 or 8x8. Saves memory, when memory limit is reached use this option.",
+                default= False,
+                update=engineUpdated)
+
+Scene.thea_regionDarkroom = bpy.props.BoolProperty(
+                name="Darkoom Mode",
+                description="By enabling this option, region render will be rendered in Darkroom mode only. This doesnt load Thea's GUI and therefor takes even less memory.",
+                default= False,
+                update=engineUpdated)
+
+Scene.thea_regionSettings = bpy.props.EnumProperty(
+                items=(("0", "2x2", "2x2"),("1","3x3","3x3"),("2","4x4","4x4"),("3","5x5","5x5"),("4","6x6","6x6"),("5","7x7","4x4"),("6","8x8", "8x8")),
+                name="Render region settings",
+                description="Region render settings. the number of images generated in a grid of 2x2, 3x3, 4x4 or 8x8. Saves memory, when memory limit is reached use this option.",
+                default="0")
+
 #CHANGED > Added markernaming + Custom naming
 Scene.thea_markerName = bpy.props.BoolProperty(
                 name="Marker naming",
-                description="Enables filenaming according to current marker",
+                description="Enables filenaming according to current marker.",
                 default= False)
 # CHANGED added export save only
 Scene.thea_save2Export = bpy.props.BoolProperty(
@@ -226,12 +278,12 @@ Scene.thea_save2Export = bpy.props.BoolProperty(
 
 Scene.thea_customOutputName = bpy.props.BoolProperty(
                 name="Custom output naming",
-                description="Enables custom output file naming",
+                description="Enables custom output file naming.",
                 default= False)
 
 Scene.thea_customName = bpy.props.StringProperty(
                 name="Output name",
-                description="Replace file output naming with custom naming",
+                description="Replace file output naming with custom naming.",
                 default= "")
 
 Scene.thea_RenderRefreshResult = bpy.props.BoolProperty(
@@ -241,7 +293,7 @@ Scene.thea_RenderRefreshResult = bpy.props.BoolProperty(
 
 Scene.thea_ExportAnimation = bpy.props.BoolProperty(
                 name="Export Animation data of objects",
-                description="Export Animation data of objects",
+                description="Export Animation data of objects.",
                 default= True)
 
 Scene.thea_AnimationEveryFrame = bpy.props.BoolProperty(
@@ -284,6 +336,10 @@ Scene.thea_RenderLightBl = bpy.props.BoolProperty(
 #                name="Save img.thea",
 #                description="Save img.thea for use with relight",
 #                default= False)
+Scene.thea_distributionRender = bpy.props.BoolProperty(
+                name="Distribution Render:",
+                description="Distribution Render, renders the image over a network using Nodes.",
+                default= False)
 
 Scene.thea_DistTh = bpy.props.EnumProperty(
                 items=(("0", "Max", "Max"),("1","1","1"),("2","2","2"),("4","4", "4"),("8", "8", "8")),
@@ -292,7 +348,7 @@ Scene.thea_DistTh = bpy.props.EnumProperty(
                 default="0")
 
 Scene.thea_DistPri = bpy.props.EnumProperty(
-                items=(("0","Low","Low"),("1","Normal","Normal")),
+                items=(("0","Lower","Lower"),("1","Low","Low"),("2","Normal","Normal")),
                 name="Priority",
                 description="Priority",
                 default="0")
@@ -4823,9 +4879,27 @@ Scene.thea_IRExportAnimation = bpy.props.BoolProperty(
 
 Scene.thea_IRDevice = bpy.props.EnumProperty(
                 items=(("GPU+CPU","GPU+CPU","GPU+CPU"),("GPU","GPU","GPU"),("CPU","CPU","CPU")),
-                name="Device",
-                description="Device",
+                name="Device Mask",
+                description="Device Mask",
                 default="GPU+CPU")
+
+#Scene.thea_cpuDevice = bpy.props.EnumProperty(
+#                items=(("Lowest","Lowest","Lowest"),("Lower","Lower","Lower"),("Low","Low","Low"),("Normal","Normal","Normal"),("High","High","High")),
+#                name="CPU",
+#                description="CPU",
+#                default="Low")
+#
+#Scene.thea_cpuThreadsEnable = bpy.props.BoolProperty(
+#                name="CPU Threads",
+#                description="CPU Threads",
+#                default= True)
+#
+#Scene.thea_cpuThreads = bpy.props.EnumProperty(
+#                items=(("Auto","Auto","Auto"),("MAX","MAX","MAX"),("Max-1","Max-1","Max-1"),("Max-2","Max-2","Max-2"),("Max-GPUs","Max-GPUs","Max-GPUs"),("Max-GPUs-1","Max-GPUs-1","Max-GPUs-1"),("Max-GPUs-2","Max-GPUs-2","Max-GPUs-2"),("1","1","1"),("2","2","2"),("4","4","4"),("8","8","8")),
+#                name="CPU Threads",
+#                description="CPU Threads",
+#                default="MAX")
+
 
 Scene.thea_IRResolution = bpy.props.EnumProperty(
                 items=(("Full 3D view size", "Full 3D view size", "Full 3D view size"),("Half size", "Half size", "Half size"),("Quarter size", "Quarter size", "Quarter size")),
