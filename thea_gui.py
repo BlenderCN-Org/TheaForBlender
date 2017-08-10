@@ -1862,26 +1862,27 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
     #    CHANGED> Added render option window like cycles
            split = layout.split(percentage=0.33)
            split.label(text="Display:")
-           row = split.row(align=True)
+           row = split.row()
            row.prop(rd, "display_mode", text="")
            row.prop(rd, "use_lock_interface", icon_only=True)
            split = layout.split()
-           colL = split.column()
-           colR = split.column()
+           colL = split.column(align=True)
+           colR = split.column(align=True)
            colL.operator("render.render", text="Image", icon='RENDER_STILL')
-    #      CHANGED > Changged to shorter name
-           colR.operator("thea.export_frame", text="Export to Studio" )
-           split = layout.split()
-           colL = split.column()
-           colR = split.column()
            colL.operator("render.render", text="Animation", icon='RENDER_ANIMATION').animation = True
+    #      CHANGED > Changged to shorter name
+
+#           split = layout.split(align=True)
+#           colL = split.column(align=True)
+#           colR = split.column(align=True)
+           colR.operator("thea.export_frame", text="Export to Studio" )
            #colL.operator("thea.render_animation", text="Render Animation")
            #colR.prop(scene,"thea_startTheaAfterExport")
     #       CHANGED > Changed to shorter name
            colR.operator("thea.save_frame", text="Save XML file")
-           col = layout.column()
+           col = layout.column(align=True)
            col.label("Extra Options:")
-           split = layout.split()
+           split = layout.split(align=True)
            colL = split.column()
            colL.prop(scene,"thea_regionRender", text="Region Render")
            if scene.thea_regionRender:
@@ -1890,9 +1891,9 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
                colR = split.column()
                colR.prop(scene, "thea_regionDarkroom")
                colR.operator("thea.export_frame", text="Render Region Studio" )
-               col = layout.column()
+               col = layout.column(align=True)
            if scene.thea_regionRender !=True:
-               col = layout.column()
+               col = layout.column(align=True)
     #       split = layout.split()
     #       row = layout.row()
 
@@ -1905,12 +1906,14 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
            col.prop(scene,"thea_Selected")
            col.prop(scene,"thea_RenderRefreshResult")
        if getattr(scene, "thea_enginesMenu") in ("Engines"):
-           col.label("Main:")
+
            col = layout.column(align=True)#align=True)
+           col.label("Main:")
            col.prop(scene,"thea_RenderEngineMenu")
            if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", ("Presto (MC)")):
                col.prop(scene,"thea_IRDevice")
            col.prop(scene,"thea_AASamp")
+           col = layout.column(align=True)
            if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)", "Presto (AO)", "Presto (MC)"):
                col.prop(scene,"thea_RTTracingDepth")
            if getattr(context.scene, "thea_RenderEngineMenu") in ("Adaptive (AMC)"):
@@ -1926,9 +1929,9 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
     #       CHANGED > Extended only for PResto engine
 
            if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
-               col = layout.column()
+               col = layout.column(align=True)
                col.prop(scene, "thea_ExtendedTracing")
-               sub = layout.column()#align=True)
+               sub = layout.column(align=True)#align=True)
                sub.active = scene.thea_ExtendedTracing == True
                sub.prop(scene, "thea_TransparencyDepth")
                sub.prop(scene, "thea_InternalReflectionDepth")
@@ -1938,21 +1941,21 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
     #           split = layout.split()
     #           col = split.column()
            if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)"):
-               col = layout.column()
+               col = layout.column(align=True)
                col.prop(scene, "thea_AOEnable", text="Ambient Occlusion:")
-               sub = layout.column()#align=True)
+               sub = layout.column(align=True)#align=True)
                sub.active = scene.thea_AOEnable == True
                sub.prop(scene,"thea_AODistance")
                sub.prop(scene,"thea_AOIntensity")
            if getattr(context.scene, "thea_RenderEngineMenu") in ("Presto (AO)", "Presto (MC)"):
     #           split = layout.split()
-               col = layout.column()
+               col = layout.column(align=True)
                col.prop(scene, "thea_ClampLevelEnable", text="Clamp Level:")
                sub = col
                sub.active = scene.thea_ClampLevelEnable == True
                sub.prop(scene, "thea_ClampLevel")
            split = layout.split()
-           col = layout.column()
+           col = layout.column(align=True)
            col.prop(scene,"thea_RenderMBlur")
     #       CHANGED> added displacement
            col.prop(scene,"thea_displacemScene")
@@ -1973,7 +1976,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
 
            split = layout.split()
            col.separator()
-           col = layout.column()
+           col = layout.column(align=True)
            col.label("Termination:")
            col.prop(scene,"thea_RenderTime")
            #col.prop(scene,"thea_RenderMaxPasses")
@@ -1981,6 +1984,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
 
            split = layout.split()
            col.separator()
+           col = layout.column(align=True)
            col.label("Distribution Render:")
            col.prop(scene,"thea_distributionRender", text="Enable")
            if scene.thea_distributionRender:
@@ -2011,7 +2015,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
     #      CHANGED > Added Marker names + Custom Name
 #           col.separator()
 #           col = split.column()
-           col = layout.column()
+           col = layout.column(align=True)
            col.label("Extra Options:")
     #      CHANGED > Added button to save img.thea file
            col.prop(scene,"thea_ImgTheaFile")
@@ -2032,7 +2036,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
 #               col.label(" ")
            split = layout.split()
            row = layout.row()
-           col = split.column()
+           col = split.column(align=True)
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
                col.prop(scene,"thea_channelNormal")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
