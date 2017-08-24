@@ -1908,9 +1908,9 @@ def regionRenderThea(scene):
 
         for C in range(1, int(iCEnd+1)):
             for R in range(1, int(iREnd+1)):
-                regionData += 'set \"./Scenes/Active/Cameras/'+scn.camera.name+'/Region\" = \"Part ('+str(R)+","+str(C)+'):('+tilesize+')"\n'\
+                regionData += 'set \"./Scenes/Active/Cameras/'+scn.camera.name+'/Region\" = \"Part ('+str(C)+","+str(R)+'):('+tilesize+')"\n'\
                               'message "Render"\n'\
-                              'message \"SaveImage %s\"\n' % (os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip())+"_R"+str(R)+"_C" +str(C)+fileFormat))
+                              'message \"SaveImage %s\"\n' % (os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip())+"_C"+str(C)+"_R" +str(R)+fileFormat))
                 R += 1
             C += 1
 

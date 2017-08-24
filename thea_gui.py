@@ -2015,7 +2015,9 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
     #      CHANGED > Added Marker names + Custom Name
 #           col.separator()
 #           col = split.column()
+           col.separator()
            col = layout.column(align=True)
+
            col.label("Extra Options:")
     #      CHANGED > Added button to save img.thea file
            col.prop(scene,"thea_ImgTheaFile")
