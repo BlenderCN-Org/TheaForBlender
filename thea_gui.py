@@ -1000,7 +1000,7 @@ class MATERIAL_PT_Clipping(MaterialButtonsPanel, bpy.types.Panel):
     def draw_header(self, context):
        scene = context.scene
        mat  = context.material
-       self.layout.prop(mat, "thea_Clipping")
+       self.layout.prop(mat, "thea_Clipping", text="")
 
     def draw(self, context):
        layout = self.layout
@@ -2105,7 +2105,26 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         layout = self.layout
 #        CHANGED > added for object picker zdepth
         obj = context.object
+        split = layout.split()
+        col = split.column()
+        col.prop(scene,"thea_DisplayMenuEnable", text="Display Presets")
+        if getattr(scene, "thea_DisplayMenuEnable"):
+#            layout.label("Display presets:")
+            col.prop(scene,"thea_DisplayMenu", text="")
+            split = layout.split()
+            row = layout.row()
+            colL = split.column()
+            colR = split.column()
+            sub = colL
+            sub.operator("unload.displaypreset", text="Revert")
+            sub.active = thea_globals.displayPreset == True
+            sub.enabled = thea_globals.displayPreset == True
+            sub = colR
+            colR.operator("load.displaypreset", text="Set")
+            if getattr(scene,"thea_DisplayMenu") == thea_globals.displaySet:
+                sub.enabled = thea_globals.displayPreset == False
 
+        layout.separator()
         layout.prop(scene,"thea_DispISO")
         layout.prop(scene,"thea_DispShutter")
         layout.prop(scene,"thea_DispFNumber")
@@ -2890,6 +2909,8 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
     bl_label = "Thea Display"
     COMPAT_ENGINES = set(['THEA_RENDER'])
 
+    thea_globals.displayPreset = False
+
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
@@ -2899,14 +2920,40 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
     def draw(self, context):
         scene = context.scene
         layout = self.layout
+        split = layout.split()
+        col = split.column()
+        col.prop(scene,"thea_DisplayMenuEnable", text="Display Presets")
+        if getattr(scene, "thea_DisplayMenuEnable"):
+#            layout.label("Display presets:")
+            col.prop(scene,"thea_DisplayMenu", text="")
+            split = layout.split()
+            row = layout.row()
+            colL = split.column()
+            colR = split.column()
+            sub = colL
+            sub.operator("unload.displaypreset", text="Revert")
+            sub.active = thea_globals.displayPreset == True
+            sub.enabled = thea_globals.displayPreset == True
+            sub = colR
+            colR.operator("load.displaypreset", text="Set")
+#            sub.active = thea_globals.displayPreset == False
+            thea_globals.log.debug("DisplayReset: %s" % thea_globals.displayReset)
+            if getattr(scene,"thea_DisplayMenu") == thea_globals.displaySet:
+                sub.enabled = thea_globals.displayPreset == False
+
+
+        layout.separator()
+#        sub = col.column()
+#        sub.active = scene.thea_DisplayMenuEnable == False
+#        split = layout.split()
         layout.prop(scene,"thea_DispISO")
         layout.prop(scene,"thea_DispShutter")
         layout.prop(scene,"thea_DispFNumber")
         layout.prop(scene,"thea_DispGamma")
         layout.prop(scene,"thea_DispBrightness")
+#        layout.separator()
         layout.prop(scene,"thea_DispCRFMenu")
         split = layout.split()
-        row = layout.row()
         colL = split.column()
         colR = split.column()
 #       CHANGED > added the new active/inactive menu's, new sharpness, bloom items and diaphgrama options

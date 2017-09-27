@@ -2494,3 +2494,303 @@ class thea_location_search(bpy.types.Operator):
         wm = context.window_manager
         wm.invoke_search_popup(self)
         return {'FINISHED'}
+
+#def item_displayMenu(self, context):
+#    displayMenuItems = []
+#    displayMenuItems.append(("0","None",""))
+#    sceneLoaded = False
+#    try:
+#        if bpy.context.scene:
+#            sceneLoaded = True
+#    except:
+#        pass
+#    if sceneLoaded:
+#        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(bpy.context.scene)
+#    else:
+#        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene=None)
+#    ior = []
+#    if len(dataPath ) > 5:
+#        i = 2
+#        for entry in sorted(os.listdir(os.path.join(dataPath,"display"))):
+##            ior.append((entry,os.path.join(dataPath,"ior",entry)))
+#            displayMenuItems.append((str(i),entry[:-4],""))
+#            i+=1
+##            thea_globals.log.debug("*** IORmenu Items: %s" % iorMenuItems)
+#
+#    return displayMenuItems
+##    return [(str(i), "Item %i" % i, "") for i in range(100)]
+#
+#
+#class Displaymenu(bpy.types.Operator):
+#    """Tooltip"""
+#    bl_idname = "display.menu"
+#    bl_label = "Display Menu"
+#    bl_property = "my_enum"
+#    bl_description = "Quick search for Display files"
+##    my_enum = bpy.props.EnumProperty(items=item_cb)
+#    my_enum = bpy.props.EnumProperty(items=Displaymenu)
+#
+#    def draw(self, context):
+#        layout = self.layout
+#        scene = context.scene
+#        mat = context.material
+#
+#
+#    def execute(self, context):
+#        mat = context.material
+##        self.report({'INFO'}, "Selected: %s" % self.my_enum)
+#        item = self.my_enum
+##        thea_globals.log.debug("*** IORmenu Items: %s" % item)
+#        try:
+#            bpy.data.materials[setattr(mat,"thea_DisplayMenu", item)]
+#        except:
+#            pass
+#        return {'FINISHED'}
+#
+#    def invoke(self, context, event):
+#        wm = context.window_manager
+#        wm.invoke_search_popup(self)
+#        return {'FINISHED'}
+
+
+def saveDisplayPreset():
+    scene = bpy.context.scene
+
+    global DispISO, DispShutter, DispFNumber, DispFNumber, DispGamma, DispBrightness,\
+       DispCRFMenu, DispSharpness, DispSharpnessWeight, DispBurn, DispBurnWeight,\
+       DispVignetting, DispVignettingWeight, DispChroma, DispChromaWeight, DispContrast, \
+       DispContrastWeight, DispTemperature, DispTemperatureWeight, DispBloom, DispBloomItems,\
+       DispBloomWeight, DispGlareRadius, DispMinZ, DispMaxZ
+    if thea_globals.displayReset == -2:
+        DispISO = scene.thea_DispISO
+        DispShutter = scene.thea_DispShutter
+        DispFNumber = scene.thea_DispFNumber
+        DispGamma = scene.thea_DispGamma
+        DispBrightness = scene.thea_DispBrightness
+        DispCRFMenu = scene.thea_DispCRFMenu
+        DispSharpness = scene.thea_DispSharpness
+        DispSharpnessWeight = scene.thea_DispSharpnessWeight
+        DispBurn = scene.thea_DispBurn
+        DispBurnWeight = scene.thea_DispBurnWeight
+        DispVignetting = scene.thea_DispVignetting
+        DispVignettingWeight = scene.thea_DispVignettingWeight
+        DispChroma = scene.thea_DispChroma
+        DispChromaWeight = scene.thea_DispChromaWeight
+        DispContrast = scene.thea_DispContrast
+        DispContrastWeight = scene.thea_DispContrastWeight
+        DispTemperature = scene.thea_DispTemperature
+        DispTemperatureWeight = scene.thea_DispTemperatureWeight
+        DispBloom = scene.thea_DispBloom
+        DispBloomItems = scene.thea_DispBloomItems
+        DispBloomWeight = scene.thea_DispBloomWeight
+        DispGlareRadius = scene.thea_DispGlareRadius
+        DispMinZ = scene.thea_DispMinZ
+        DispMaxZ = scene.thea_DispMaxZ
+
+class IMAGE_PT_LoadDisplayPreset(bpy.types.Operator):
+    bl_idname = "load.displaypreset"
+    bl_label = "Load Display Preset"
+
+    def invoke(self, context, event):
+        scene = bpy.context.scene
+        thea_globals.displayPreset = True
+        saveDisplayPreset()
+#        thea_globals.displayReset += 1
+        if thea_globals.displayReset == -2:
+            thea_globals.displayReset = thea_globals.displayReset + 1
+        thea_globals.displaySet = scene.thea_DisplayMenu
+        displayFile = scene.thea_DisplayMenu
+        thea_globals.log.debug(displayFile)
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene)
+    #    xmlFilename = currentBlendFile.replace('.blend', '.xml')
+        fileName = os.path.join(dataPath,"Displays", os.path.basename(displayFile))
+        checkFile = extMat = os.path.exists(fileName)
+        if checkFile == False:
+            self.report({'ERROR'}, "Please select a preset")
+            return {'FINISHED'}
+        f = open(fileName)
+        i = 0
+        it = iter(f)
+        for line in it:
+            i+=1
+#            thea_globals.log.debug("*** Line: %s" % i)
+            if line.find('<Root Label="Display"') >=0:
+                line = next(it)
+                if line.find('Filter') >=0:
+                    Filter = line.split('"')[5]
+                    if Filter == "1":
+                        scene.thea_DispSharpness = True
+                    else:
+                        scene.thea_DispSharpness = False
+                line = next(it)
+                if line.find('Balance') >=0:
+                    Balance = line.split('"')[5]
+                    if Balance == "1":
+                        scene.thea_DispTemperature = True
+                    else:
+                        scene.thea_DispTemperature = False
+                line = next(it)
+                if line.find('Burn') >=0:
+                    Burn = line.split('"')[5]
+                    if Burn == "1":
+                        scene.thea_DispBurn = True
+                    else:
+                        scene.thea_DispBurn = False
+                line = next(it)
+                if line.find('Bloom') >=0:
+                    Bloom = line.split('"')[5]
+                    if Bloom == "1":
+                        scene.thea_DispBloom = True
+                    else:
+                        scene.thea_DispBloom = False
+                line = next(it)
+                if line.find('Glare') >=0:
+                    Glare = line.split('"')[5]
+                    if Glare == "0":
+                        scene.thea_DispBloomItems = Glare
+                line = next(it)
+                if line.find('Vignetting') >=0:
+                    Vignetting = line.split('"')[5]
+                    if Vignetting == "1":
+                        scene.thea_DispVignetting = True
+                    else:
+                        scene.thea_DispVignetting = False
+                line = next(it)
+                if line.find('Chroma') >=0:
+                    Chroma = line.split('"')[5]
+                    if Chroma == "1":
+                        scene.thea_DispChroma = True
+                    else:
+                        scene.thea_DispChroma = False
+                line = next(it)
+                if line.find('Contrast') >=0:
+                    Contrast = line.split('"')[5]
+                    if Contrast == "1":
+                        scene.thea_DispContrast = True
+                    else:
+                        scene.thea_DispContrast = False
+                line = next(it)
+                line = next(it)
+#                if line.find('Enable CRF') >=0:
+#                    CRFenable = line.split('"')[5]
+#                    if CRFenable == "1":
+#                        scene.thea_DispCRFMenu = True
+#                    else:
+#                        scene.thea_DispCRFMenu = False
+#                line = next(it)
+                if line.find('Sharpness') >=0:
+                    Sharpness = float(line.split('"')[5])
+                    scene.thea_DispSharpnessWeight = Sharpness * 100
+                    thea_globals.log.debug("Sharpness Weight: %s" % Sharpness)
+                line = next(it)
+                if line.find('Burn Weight') >=0:
+                    BurnWeight = float(line.split('"')[5])
+                    scene.thea_DispBurnWeight = BurnWeight * 100
+#                    thea_globals.log.debug("Burnweigth Weight: %s" % BurnWeight)
+                line = next(it)
+                if line.find('Glare Blade') >=0:
+                    GlareBlades = float(line.split('"')[5])
+                    if GlareBlades == '0':
+                        scene.thea_DispGlareRadius[0]
+                    if GlareBlades == '5':
+                        scene.thea_DispGlareRadius[1]
+                    if GlareBlades == '6':
+                        scene.thea_DispGlareRadius[2]
+                    if GlareBlades == '8':
+                        scene.thea_DispGlareRadius[3]
+                    if GlareBlades == '12':
+                        scene.thea_DispGlareRadius[4]
+                    line = next(it)
+                    if line.find('Bloom Weight') >=0:
+                        BloomWeight = float(line.split('"')[5])
+                        scene.thea_DispBloomWeight = BloomWeight * 100
+                    line = next(it)
+                    if line.find('Bloom Radius') >=0:
+                        BloomRadius = float(line.split('"')[5])
+                        scene.thea_DispGlareRadius = BloomRadius * 100
+                    line = next(it)
+                    if line.find('Vignetting Weight') >=0:
+                        Vignetting = float(line.split('"')[5])
+                        scene.thea_DispVignettingWeight = Vignetting * 100
+                    line = next(it)
+                    if line.find('Chroma Weight') >=0:
+                        Chroma = float(line.split('"')[5])
+                        scene.thea_DispChromaWeight = Chroma * 100
+                    line = next(it)
+                    if line.find('Contrast Weight') >=0:
+                        Contrast = float(line.split('"')[5])
+                        scene.thea_DispContrastWeight = Contrast * 100
+                    line = next(it)
+                    if line.find('Temperature') >=0:
+                        Temperature = float(line.split('"')[5])
+                        scene.thea_DispTemperatureWeight = Temperature
+                    line = next(it)
+                    if line.find('Gamma') >=0:
+                        Gamma = float(line.split('"')[5])
+                        scene.thea_DispGamma = Gamma
+                    line = next(it)
+                    if line.find('Brightness') >=0:
+                        Brightness = float(line.split('"')[5])
+                        scene.thea_DispBrightness = Brightness
+                    line = next(it)
+                    if line.find('ISO') >=0:
+                        ISO = float(line.split('"')[5])
+                        scene.thea_DispISO = ISO
+                    line = next(it)
+                    if line.find('Shutter Speed') >=0:
+                        Shutter = float(line.split('"')[5])
+                        scene.thea_DispShutter = Shutter
+                    line = next(it)
+                    if line.find('f-number') >=0:
+                        fnumber = float(line.split('"')[5])
+                        scene.thea_DispFNumber = fnumber
+                    line = next(it)
+#                    if line.find('Focus Distance') >=0:
+#                        focusdist = float(line.split('"')[5])
+#                        scene.thea_DispFNumber = focusdist
+                    line = next(it)
+                    if line.find('Min Z (m)') >=0:
+                        MinZ = float(line.split('"')[5])
+                        scene.thea_DispMinZ = MinZ
+                    line = next(it)
+                    if line.find('Max Z (m)') >=0:
+                        MaxZ = float(line.split('"')[5])
+                        scene.thea_DispMaxZ = MaxZ
+        f.close()
+        return {'FINISHED'}
+
+class IMAGE_PT_UnloadDisplayPreset(bpy.types.Operator):
+    bl_idname = "unload.displaypreset"
+    bl_label = "Unload Display Preset"
+
+    def execute(self, context):
+        scene = context.scene
+        thea_globals.displayPreset = False
+        if thea_globals.displayReset == -1:
+            thea_globals.displayReset = -2
+            scene.thea_DispISO = DispISO
+            scene.thea_DispShutter = DispShutter
+            scene.thea_DispFNumber = DispFNumber
+            scene.thea_DispGamma = DispGamma
+            scene.thea_DispBrightness = DispBrightness
+            scene.thea_DispCRFMenu = DispCRFMenu
+            scene.thea_DispSharpness = DispSharpness
+            scene.thea_DispSharpnessWeight = DispSharpnessWeight
+            scene.thea_DispBurn = DispBurn
+            scene.thea_DispBurnWeight = DispBurnWeight
+            scene.thea_DispVignetting = DispVignetting
+            scene.thea_DispVignettingWeight = DispVignettingWeight
+            scene.thea_DispChroma = DispChroma
+            scene.thea_DispChromaWeight = DispChromaWeight
+            scene.thea_DispContrast = DispContrast
+            scene.thea_DispContrastWeight = DispContrastWeight
+            scene.thea_DispTemperature = DispTemperature
+            scene.thea_DispTemperatureWeight = DispTemperatureWeight
+            scene.thea_DispBloom = DispBloom
+            scene.thea_DispBloomItems = DispBloomItems
+            scene.thea_DispBloomWeight = DispBloomWeight
+            scene.thea_DispGlareRadius = DispGlareRadius
+            scene.thea_DispMinZ = DispMinZ
+            scene.thea_DispMaxZ = DispMaxZ
+
+        return{'FINISHED'}

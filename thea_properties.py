@@ -824,7 +824,7 @@ def worldUpdated(self, context):
         image.file_format = 'PNG'
         image.save()
         old = scene.thea_IBLFilename
-        if old[-3:] == "hdr":
+        if old[-3:] == "hdr" or old[-3:] == "exr":
             global oldFile
             oldFile = scene.thea_IBLFilename
 
@@ -1413,6 +1413,19 @@ def displayUpdated(self, context):
     '''
     thea_globals.displayUpdated = True
 
+Scene.thea_DisplayMenuEnable = bpy.props.BoolProperty(
+                name="Enable",
+                description="Enable",
+                default= False)
+
+Scene.thea_DisplayMenu = bpy.props.EnumProperty(
+                items=getTheaDisplayMenuItems(),
+                name="Display Presets",
+                description="Display Presets",
+                default="0",
+                update=displayUpdated)
+
+
 Scene.thea_DispISO = bpy.props.IntProperty(
                 min=1,
                 max=1000000,
@@ -1602,7 +1615,7 @@ Scene.thea_DispBloom = bpy.props.BoolProperty(
                 update=displayUpdated)
 
 Scene.thea_DispBloomItems = bpy.props.EnumProperty(
-                items=(('0', 'Radial', ''),('5', '5 Blades', '5'), ('6', '6 Blades','6'),('8', '8 Blades', '8'), ('12', '12 Blades', '12')),
+                items=(('0', 'Radial', ''),('1', '5 Blades', '5'), ('2', '6 Blades','6'),('3', '8 Blades', '8'), ('4', '12 Blades', '12')),
                 name="",
                 description="Glare",
                 default="0",

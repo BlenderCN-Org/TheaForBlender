@@ -1172,7 +1172,37 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
         omni.unit = getattr(lightData, "thea_EmittanceUnit")
 #        and omni.name.lower() == "sun"
         if lightData.type == 'POINT':
+            ltextures = lightData.texture_slots
+            omni.type = "Omni"
+            omni.multiplier = lightData.thea_EmittancePower#*10
             omni.sun = False
+            if len(ltextures) > 0:
+                for ltex in ltextures:
+                    try:
+                        texType = ltex.texture.type
+                    except:
+                        texType = None
+                    if (texType == 'IMAGE'):
+                        (shortname, extension) = os.path.splitext(ltex.texture.image.filepath)
+                        if lightData.thea_TextureFilename != 'None':
+                            omni.emitter = BitmapTexture(ltex.texture.image.filepath)
+                            omni.emitter.scaleX = ltex.scale[0]
+                            omni.emitter.scaleY = ltex.scale[1]
+#                           CHANGED > Added wifth and height values for input
+                            omni.width = lightData.thea_ProjectorWidth
+                            omni.height = lightData.thea_ProjectorHeight
+
+#                       CHANGED > Added Tone settings for lamp texture these where missing
+                        omni.emitter.invert = bpy.data.textures[ltex.name].thea_TexInvert
+                        omni.emitter.gamma = bpy.data.textures[ltex.name].thea_TexGamma
+                        omni.emitter.red = bpy.data.textures[ltex.name].thea_TexRed
+                        omni.emitter.green = bpy.data.textures[ltex.name].thea_TexGreen
+                        omni.emitter.blue = bpy.data.textures[ltex.name].thea_TexBlue
+                        omni.emitter.brightness = bpy.data.textures[ltex.name].thea_TexBrightness
+                        omni.emitter.contrast = bpy.data.textures[ltex.name].thea_TexContrast
+                        omni.emitter.saturation = bpy.data.textures[ltex.name].thea_TexSaturation
+                        omni.emitter.clampMax = bpy.data.textures[ltex.name].thea_TexClampMax
+                        omni.emitter.clampMin = bpy.data.textures[ltex.name].thea_TexClampMin
         if lightData.type == 'SUN':
     #        changed > to emittancePower like in studio
             omni.multiplier=lightData.thea_EmittancePower#*10
@@ -2118,7 +2148,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.getRenderOptions().customOutput = scn.thea_customOutputName
     exporter.getRenderOptions().customName = scn.thea_customName
 
-    exporter.getRenderOptions().checkChannels = scn.thea_showChannels
+    exporter.getRenderOptions().checkChannels = True #scn.thea_showChannels
 
     if scene.thea_DistTh == '0':
         exporter.getRenderOptions().threads = "Max"
@@ -2607,7 +2637,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
         args.append("-load")
         scriptFilename = os.path.join(exportPath, os.path.basename(currentBlendFile.replace('.blend', '_exportFrame.ipt.thea')))
         scriptFile = open(scriptFilename, "w")
-        scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(xmlFilename) + '\"\n'))
+        scriptFile.write('message \"Load ' + os.path.join(exportPath, os.path.basename(fileName) + '\"\n'))
 #        fileName = fil
         args.append(scriptFilename)
 #        args.append(fileName)
@@ -2965,6 +2995,8 @@ def renderFrame(scene,frame,anim=True):
         outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].strip()) +"_"+scn.camera.name +"_"+frameS[-4:])
 
 
+
+
     args = []
 
     scriptFilename = os.path.join(exportPath, os.path.basename(currentBlendFile.replace('.blend', '_render.ipt.thea')))
@@ -3000,6 +3032,32 @@ def renderFrame(scene,frame,anim=True):
     #         darkroomfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "OSX", "TheaRemoteDarkroom.app/Contents/MacOS/TheaRemoteDarkroom")
     #         os.chmod(darkroomfile, stat.S_IEXEC)
     #         theaPath = darkroomfile
+         #       CHANGED > ADDED MARKER NAMING AND CUSTOM NAMING
+    if anim and exporter.getRenderOptions().customOutput:
+        prefix = exporter.getRenderOptions().customName
+        prefix = prefix + "_"
+        xmlFilename = prefix
+        outputImage = os.path.join(framesDir, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:] + fileFormat)
+#       CHANGED > added img.thea file for animation, though this is tricky, will take away a lot of time cause it saves out img file 2 times
+        outputIMG = os.path.join(framesDir, os.path.basename(xmlFilename) +"_"+scn.camera.name +"_"+frameS[-4:] + ".img.thea")
+        outputChannelImage = os.path.basename(xmlFilename)+"_"+scn.camera.name +"_"+frameS[-4:]
+
+    else:
+        prefix = ""
+    if anim and exporter.getRenderOptions().markerName:
+        frame_current = scn.frame_current
+        markers = scn.timeline_markers
+        for m in markers:
+            if m.frame == frame_current:
+#                for k,v in scn.timeline_markers.items():
+#                    frame = v.frame
+                name = m.name
+                outputImage = os.path.join(framesDir, prefix + os.path.basename(name) +"_"+scn.camera.name + fileFormat)
+                outputIMG = os.path.join(framesDir, prefix + os.path.basename(name) +"_"+scn.camera.name + ".img.thea")
+                outputChannelImage = os.path.join(framesDir, prefix + os.path.basename(name) +"_"+scn.camera.name )
+                thea_globals.log.debug("Save Markername as Filename: %s" % exporter.getRenderOptions().markerName)
+                thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
+
     args.append(scriptFilename)
     args.append(saveScriptFilename)
 #         args.append(str(theaPath))
@@ -3115,31 +3173,32 @@ def renderFrame(scene,frame,anim=True):
 #         args.append("-exit")
 
 
-#       CHANGED > ADDED MARKER NAMING AND CUSTOM NAMING
-    if exporter.getRenderOptions().customOutput:
-        prefix = exporter.getRenderOptions().customName
-        prefix = prefix + "_"
-        xmlFilename = prefix
-    else:
-        prefix = ""
-    if exporter.getRenderOptions().markerName:
-        frame_current = scn.frame_current
-        markers = scn.timeline_markers
-        for m in markers:
-            if m.frame == frame_current:
-#                for k,v in scn.timeline_markers.items():
-#                    frame = v.frame
-                name = m.name
-                outputImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + fileFormat)
-                outputIMG = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + ".img.thea")
-                outputChannelImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name )
-                thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
+
     else:
         #save rendered image also in exportPath dir
         outputImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].rstrip()) +"_"+scn.camera.name + fileFormat)
         outputIMG = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].rstrip()) +"_"+scn.camera.name + ".img.thea")
         outputChannelImage = os.path.join(exportPath, os.path.basename(xmlFilename[:-4].rstrip()) +"_"+scn.camera.name )
     if getattr(scn,"thea_save2Export")!=False:
+        if exporter.getRenderOptions().customOutput:
+            prefix = exporter.getRenderOptions().customName
+            prefix = prefix + "_"
+            xmlFilename = prefix
+        else:
+            prefix = ""
+        if exporter.getRenderOptions().markerName:
+            frame_current = scn.frame_current
+            markers = scn.timeline_markers
+            for m in markers:
+                if m.frame == frame_current:
+    #                for k,v in scn.timeline_markers.items():
+    #                    frame = v.frame
+                    name = m.name
+                    outputImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + fileFormat)
+                    outputIMG = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name + ".img.thea")
+                    outputChannelImage = os.path.join(exportPath, prefix + os.path.basename(name) +"_"+scn.camera.name )
+                    thea_globals.log.debug("Save Markername as Filename: %s" % exporter.getRenderOptions().markerName)
+                    thea_globals.log.debug("Prefix: %s Marker name: %s Frame: %s" % (prefix, name, frame))
         if color_mode == "RGBA":
             saveScriptFile.write('message \"SaveChannel +Alpha %s\"\n' % outputImage)
             exporter.getRenderOptions().alphaChannel = True
@@ -3148,6 +3207,7 @@ def renderFrame(scene,frame,anim=True):
                 saveScriptFile.write('message \"SaveLayeredImage %s\"\n' % outputImage)
             else:
                 saveScriptFile.write('message \"SaveImage %s\"\n' % outputImage)
+        thea_globals.log.debug("Save2Export: %s - Filename: %s" % (getattr(scn,"thea_save2Export"), outputImage))
         if checkChannels == True:
             if exporter.getRenderOptions().ImgTheaFile:
                 saveScriptFile.write('message \"SaveImage %s\"\n' % outputIMG)
@@ -3887,6 +3947,43 @@ def getTheaCRFMenuItems():
         crfMenuItems.append(("1","Please install Thea Studio to use CRF option",""))
 
     return crfMenuItems
+
+def getTheaDisplayMenuItems():
+    '''get list with menu items of the Display Presets directory
+
+        :return: list of tuples with files and paths
+        :rtype: [(str, str, str)]
+    '''
+
+    displayMenuItems = []
+    displayMenuItems.append(("0","None",""))
+    sceneLoaded = False
+    try:
+        if bpy.context.scene:
+            sceneLoaded = True
+    except:
+        pass
+    if sceneLoaded:
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(bpy.context.scene)
+    else:
+        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scene=None)
+    display = []
+    display.append((0,'None'))
+    if len(dataPath ) > 5:
+        i = 1
+        for entry in sorted(os.listdir(os.path.join(dataPath,"Displays"))):
+            if entry.endswith('.xml') and not entry.startswith('.'):
+                display.append((entry,os.path.join(dataPath,"Displays",entry)))
+                displayMenuItems.append((os.path.join(dataPath,"Displays",entry),entry[:-4],""))
+                i+=1
+#        for entry in sorted(os.listdir(os.path.join(dataPath,"Displays"))):
+#            display.append((entry,os.path.join(dataPath,"Displays",entry)))
+#            displayMenuItems.append((os.path.join(dataPath,"Displays",entry),entry[:-4],""))
+#            i+=1
+    else:
+        displayMenuItems.append(("1","Please install Thea Studio to use Display presets",""))
+
+    return displayMenuItems
 
 
 
