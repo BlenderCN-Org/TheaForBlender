@@ -2050,17 +2050,17 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
                col.prop(scene,"thea_channelAlpha")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelObjectId")
+               col.prop(scene,"thea_channelObject_Id")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-               col.prop(scene,"thea_channelMaterialId")
+               col.prop(scene,"thea_channelMaterial_Id")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")) or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelShadow")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
-               col.prop(scene,"thea_channelRawDiffuseColor")
+               col.prop(scene,"thea_channelRaw_Diffuse_Color")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
-               col.prop(scene,"thea_channelRawDiffuseLighting")
+               col.prop(scene,"thea_channelRaw_Diffuse_Lighting")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
-               col.prop(scene,"thea_channelRawDiffuseGI")
+               col.prop(scene,"thea_channelRaw_Diffuse_GI")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelDirect")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)"))or (getattr(scene, "thea_enablePresets")!=False):
@@ -2068,7 +2068,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelGI")
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
-               col.prop(scene,"thea_channelSelfIllumination")
+               col.prop(scene,"thea_channelSelf_Illumination")
 #CHANGED> Turned this back on
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)"))or (getattr(scene, "thea_enablePresets")!=False):
                col.prop(scene,"thea_channelSSS")
@@ -2087,7 +2087,7 @@ class RENDER_PT_theaMain(RenderButtonsPanel, bpy.types.Panel):
                col.prop(scene,"thea_channelMask")
 #CHNAGED> Turned invert mask channel back ON
            if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)"))or (getattr(scene, "thea_enablePresets")!=False):
-               col.prop(scene,"thea_channelInvertMask")
+               col.prop(scene,"thea_channelInvert_Mask")
 
 
 
@@ -2124,6 +2124,12 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
             if getattr(scene,"thea_DisplayMenu") == thea_globals.displaySet:
                 sub.enabled = thea_globals.displayPreset == False
 
+        layout.separator()
+        split = layout.split(percentage=0.35)
+        colL = split.column()
+        colR = split.column()
+        colL.label("Channel:")
+        colR.prop(scene,"thea_viewChannel", text="")
         layout.separator()
         layout.prop(scene,"thea_DispISO")
         layout.prop(scene,"thea_DispShutter")
@@ -2231,6 +2237,20 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         colL.prop(scene,"thea_ZdepthDOFmargin")
         colR.prop(scene, "thea_ZdepthClip")
 
+        layout.separator()
+#        col.prop(scene,"thea_analysis", text="Analysis:")
+        split = layout.split()
+        colL = split.column()
+        colR = split.column()
+        colL.label("Analysis:")
+        colR.prop(scene,"thea_analysisMenu", text="")
+#        thea_globals.log.debug(getattr(scene,"thea_analysisMenu"))
+        sub = layout.column()
+#        col.prop(scene,"thea_analysis", text="Analysis:")
+        sub.prop(scene,"thea_minIlLum")
+        sub.prop(scene,"thea_maxIlLum")
+        sub.active = scene.thea_analysisMenu == '1'
+        layout.separator()
 
 
 #class RENDER_PT_theaDistribution(RenderButtonsPanel, bpy.types.Panel):
@@ -2921,6 +2941,7 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         scene = context.scene
         layout = self.layout
         split = layout.split()
+
         col = split.column()
         col.prop(scene,"thea_DisplayMenuEnable", text="Display Presets")
         if getattr(scene, "thea_DisplayMenuEnable"):
@@ -2937,11 +2958,17 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
             sub = colR
             colR.operator("load.displaypreset", text="Set")
 #            sub.active = thea_globals.displayPreset == False
-            thea_globals.log.debug("DisplayReset: %s" % thea_globals.displayReset)
+#            thea_globals.log.debug("DisplayReset: %s" % thea_globals.displayReset)
             if getattr(scene,"thea_DisplayMenu") == thea_globals.displaySet:
                 sub.enabled = thea_globals.displayPreset == False
 
 
+        layout.separator()
+        split = layout.split(percentage=0.35)
+        colL = split.column()
+        colR = split.column()
+        colL.label("Channel:")
+        colR.prop(scene,"thea_viewChannel", text="")
         layout.separator()
 #        sub = col.column()
 #        sub.active = scene.thea_DisplayMenuEnable == False
@@ -3024,8 +3051,26 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
             colR.prop(scene,"thea_DispBloomWeight")
             colR.prop(scene,"thea_DispGlareRadius")
 
+        layout.label(text="Z-depth:")
         layout.prop(scene,"thea_DispMinZ")
         layout.prop(scene,"thea_DispMaxZ")
+
+        layout.separator()
+        col = layout.column()
+
+#        col.prop(scene,"thea_analysis", text="Analysis:")
+        split = layout.split()
+        colL = split.column()
+        colR = split.column()
+        colL.label("Analysis:")
+        colR.prop(scene,"thea_analysisMenu", text="")
+#        thea_globals.log.debug(getattr(scene,"thea_analysisMenu"))
+        sub = layout.column()
+#        col.prop(scene,"thea_analysis", text="Analysis:")
+        sub.prop(scene,"thea_minIlLum")
+        sub.prop(scene,"thea_maxIlLum")
+        sub.active = scene.thea_analysisMenu == '1'
+
 
         row = layout.row()
         layout.operator("thea.refresh_render")

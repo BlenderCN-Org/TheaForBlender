@@ -2048,6 +2048,10 @@ class DisplayOptions:
         self.glareRadius = 0.04
         self.minZ = 0.0
         self.maxZ = 10.0
+        self.analysis = 0
+        self.analysisMenu = "none"
+        self.minIlLum = 1000.0
+        self.maxIlLum = 15000.0
 
     def write(self, file):
         '''Write Display Options object
@@ -2089,6 +2093,10 @@ class DisplayOptions:
         file.write('<Parameter Name=\"Bloom Radius\" Type=\"Real\" Value=\"%s\"/>\n' % self.glareRadius)
         file.write('<Parameter Name=\"Min Z (m)\" Type=\"Real\" Value=\"%s\"/>\n' % self.minZ)
         file.write('<Parameter Name=\"Max Z (m)\" Type=\"Real\" Value=\"%s\"/>\n' % self.maxZ)
+        file.write('<Parameter Name=\"False Color\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.analysisMenu)
+        file.write('<Parameter Name=\"Min Il-Lum\" Type=\"Real\" Value=\"%s\"/>\n' % self.minIlLum)
+        file.write('<Parameter Name=\"Max Il-Lum\" Type=\"Real\" Value=\"%s\"/>\n' % self.maxIlLum)
+
 
         thea_globals.log.debug("dispay options: try")
         thea_globals.log.debug("dispay options: getTheaCRF")

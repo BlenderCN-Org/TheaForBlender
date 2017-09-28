@@ -2285,6 +2285,10 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
         scn.thea_DispMaxZ = scn.thea_ZdepthDOFmargin
     exporter.getDisplayOptions().minZ = scn.thea_DispMinZ
     exporter.getDisplayOptions().maxZ = scn.thea_DispMaxZ
+    exporter.getDisplayOptions().analysisMenu = scn.thea_analysisMenu
+    if scn.thea_analysisMenu == "Photometric" :
+        exporter.getDisplayOptions().minIlLum = scn.thea_minIlLum
+        exporter.getDisplayOptions().maxIlLum = scn.thea_maxIlLum
 
     imgThea = exporter.getRenderOptions().ImgTheaFile
     checkChannels = exporter.getRenderOptions().checkChannels
@@ -2302,19 +2306,19 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
         exporter.getRenderOptions().alphaChannel = getattr(scn,"thea_channelAlpha")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-        exporter.getRenderOptions().objectIdChannel = getattr(scn,"thea_channelObjectId")
+        exporter.getRenderOptions().objectIdChannel = getattr(scn,"thea_channelObject_Id")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-        exporter.getRenderOptions().materialIdChannel = getattr(scn,"thea_channelMaterialId")
+        exporter.getRenderOptions().materialIdChannel = getattr(scn,"thea_channelMaterial_Id")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
         exporter.getRenderOptions().maskChannel = getattr(scn,"thea_channelMask")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
         exporter.getRenderOptions().shadowChannel = getattr(scn,"thea_channelShadow")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-        exporter.getRenderOptions().rawDiffuseColorChannel = getattr(scn,"thea_channelRawDiffuseColor")
+        exporter.getRenderOptions().rawDiffuseColorChannel = getattr(scn,"thea_channelRaw_Diffuse_Color")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-        exporter.getRenderOptions().rawDiffuseLightingChannel = getattr(scn,"thea_channelRawDiffuseLighting")
+        exporter.getRenderOptions().rawDiffuseLightingChannel = getattr(scn,"thea_channelRaw_Diffuse_Lighting")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-        exporter.getRenderOptions().rawDiffuseGIChannel = getattr(scn,"thea_channelRawDiffuseGI")
+        exporter.getRenderOptions().rawDiffuseGIChannel = getattr(scn,"thea_channelRaw_Diffuse_GI")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
         exporter.getRenderOptions().directChannel = getattr(scn,"thea_channelDirect")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)")):
@@ -2322,7 +2326,7 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
         exporter.getRenderOptions().giChannel = getattr(scn,"thea_channelGI")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-        exporter.getRenderOptions().selfIlluminationChannel = getattr(scn,"thea_channelSelfIllumination")
+        exporter.getRenderOptions().selfIlluminationChannel = getattr(scn,"thea_channelSelf_Illumination")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (MC)")):
         exporter.getRenderOptions().sssChannel = getattr(scn,"thea_channelSSS")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Presto (AO)","Presto (MC)")):
@@ -2334,9 +2338,9 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)")):
         exporter.getRenderOptions().irradianceChannel = getattr(scn,"thea_channelIrradiance")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Presto (AO)","Presto (MC)")):
-        exporter.getRenderOptions().separatePassesPerLightChannel = getattr(scn,"thea_channelSeparatePassesPerLight")
+        exporter.getRenderOptions().separatePassesPerLightChannel = getattr(scn,"thea_channelSeparate_Passes_Per_Light")
     if (getattr(scene, 'thea_RenderEngineMenu') in ("Adaptive (BSD)","Unbiased (TR1)","Unbiased (TR2)","Presto (AO)","Presto (MC)","Adaptive (AMC)")):
-        exporter.getRenderOptions().invertMaskChannel = getattr(scn,"thea_channelInvertMask")
+        exporter.getRenderOptions().invertMaskChannel = getattr(scn,"thea_channelInvert_Mask")
 
 
 #     exporter.getRenderOptions().normalChannel = scn.get('thea_channelNormal')
@@ -2876,9 +2880,9 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                            scriptFile.write('message \"SaveChannel \'Depth\' %s\"\n' % os.path.join(framesDir, "depth", outputChannelImage+"_depth"+fileFormat))
                        if alphaMode:
                            scriptFile.write('message \"SaveChannel \'Alpha\' %s\"\n' % os.path.join(framesDir, "alpha", outputChannelImage+"_aLpha"+fileFormat))
-                       if scn.thea_channelObjectId:
+                       if scn.thea_channelObject_Id:
                            scriptFile.write('message \"SaveChannel \'Object Id\' %s\"\n' % os.path.join(framesDir, "object_id", outputChannelImage+"_object_ID"+fileFormat))
-                       if scn.thea_channelMaterialId:
+                       if scn.thea_channelMaterial_Id:
                            scriptFile.write('message \"SaveChannel \'Material Id\' %s\"\n' % os.path.join(framesDir, "material_id", outputChannelImage+"_material_ID"+fileFormat))
                        if scn.thea_channelShadow:
                            scriptFile.write('message \"SaveChannel \'Shadow\' %s\"\n' % os.path.join(framesDir,"shadow",outputChannelImage+"_shadow"+fileFormat))
@@ -2892,13 +2896,13 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                                    if not maskIndex in maskIndexList:
                                        scriptFile.write('message \"SaveChannel \'Mask #%s\' %s\"\n' % (maskIndex, os.path.join(framesDir,"mask",outputChannelImage + "_mask" + str(maskIndex) + fileFormat)))
                                        maskIndexList.append(maskIndex)
-                       if scn.thea_channelRawDiffuseColor:
+                       if scn.thea_channelRaw_Diffuse_Color:
                            scriptFile.write('message \"SaveChannel \'Raw Diffuse Color\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_color",outputChannelImage+"_raw-diffuse-color"+fileFormat))
-                       if scn.thea_channelRawDiffuseLighting:
+                       if scn.thea_channelRaw_Diffuse_Lighting:
                            scriptFile.write('message \"SaveChannel \'Raw Diffuse Lighting\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_lighting",outputChannelImage+"_raw-diffuse-light"+fileFormat))
-                       if scn.thea_channelRawDiffuseGI:
+                       if scn.thea_channelRaw_Diffuse_GI:
                            scriptFile.write('message \"SaveChannel \'Raw Diffuse GI\' %s\"\n' % os.path.join(framesDir,"raw_diffuse_gi",outputChannelImage+"_raw-diffuse-gi"+fileFormat))
-                       if scn.thea_channelSelfIllumination:
+                       if scn.thea_channelSelf_Illumination:
                            scriptFile.write('message \"SaveChannel \'Self Illumination\' %s\"\n' % os.path.join(framesDir,"self_illumination",outputChannelImage+"_self-illumunitation"+fileFormat))
                        if scn.thea_channelDirect:
                            scriptFile.write('message \"SaveChannel \'Direct\' %s\"\n' % os.path.join(framesDir, "direct", outputChannelImage+"_direct"+fileFormat))
@@ -2908,7 +2912,7 @@ def exportStillCameras(scene, exporter=None): #this will export ipt.thea script 
                             scriptFile.write('message \"SaveChannel \'GI\' %s\"\n' % os.path.join(framesDir, "gi", outputChannelImage+"_gi"+fileFormat))
                        if scn.thea_channelSSS:
                             scriptFile.write('message \"SaveChannel \'SSS\' %s\"\n' % os.path.join(framesDir, "sss", outputChannelImage+"_sss"+fileFormat))
-                       if scn.thea_channelSeparatePassesPerLight:
+                       if scn.thea_channelSeparate_Passes_Per_Light:
                             scriptFile.write('message \"SaveChannel Separate Passes Per Light %s\"\n' % os.path.join(framesDir, "PassesPerLight", outputChannelImage+"_passes-per-light+"+fileFormat))
                        if scn.thea_channelReflection:
                            scriptFile.write('message \"SaveChannel \'Reflection\' %s\"\n' % os.path.join(framesDir, "reflection", outputChannelImage+"_reflection"+fileFormat))
@@ -3986,9 +3990,6 @@ def getTheaDisplayMenuItems():
     return displayMenuItems
 
 
-
-
-
 def getTheaIORMenuItems():
     '''get list with menu items of the IOR directory
 
@@ -4478,6 +4479,12 @@ def updateDisplaySettings(port):
     data = sendSocketMsg('localhost', port, message.encode())
     message = 'set "./Scenes/Active/Display/Max Z (m)" = "%s"' % getattr(bpy.context.scene, 'thea_DispMaxZ')
     data = sendSocketMsg('localhost', port, message.encode())
+    message = 'set "./Scenes/Active/Display/False Color" = "%s"' % getattr(bpy.context.scene, 'thea_analysisMenu')
+    data = sendSocketMsg('localhost', port, message.encode())
+    message = 'set "./Scenes/Active/Display/Min Il-Lum" = "%s"' % getattr(bpy.context.scene, 'thea_minIlLum')
+    data = sendSocketMsg('localhost', port, message.encode())
+    message = 'set "./Scenes/Active/Display/Max Il-Lum" = "%s"' % getattr(bpy.context.scene, 'thea_maxIlLum')
+    data = sendSocketMsg('localhost', port, message.encode())
     crf = getTheaCRF()
     #print("getattr(bpy.context.scene, 'thea_DispCRFMenu'): ", getattr(bpy.context.scene, 'thea_DispCRFMenu'))
     if getattr(bpy.context.scene, 'thea_DispCRFMenu') != "0":
@@ -4949,6 +4956,7 @@ class TheaRender(bpy.types.RenderEngine):
         #tmpTheaRenderFile = os.path.join(os.path.dirname(bpy.data.filepath),"temp.png")
         #tmpTheaRenderFile = os.path.join(os.path.join(dataPath, "Temp"),"temp.png")
         tmpTheaRenderFile = os.path.join(os.path.join(exportPath, "~thexport"),"temp.png")
+        tmpTheaRenderChannel = os.path.join(os.path.join(exportPath, "~thexport"),"temp_channel.png")
 #       CHANGED > added save 'temp.img.thea' variable
         imgTheaRenderFile = os.path.join(os.path.join(exportPath, "~thexport"),"temp.img.thea")
         #tmpTheaRenderFile = os.path.join(dataPath, "temp.png")
@@ -5061,7 +5069,14 @@ class TheaRender(bpy.types.RenderEngine):
                                updateDisplaySettings(port)
                                thea_globals.displayUpdated = False
                                time1 = time.time()#os.times()[4]
-                               message = 'message "SaveImage %s"' % tmpTheaRenderFile
+#                               message = 'message "SaveImage %s"' % tmpTheaRenderFile
+                               thea_globals.log.debug("View Channel: %s" % getattr(scene, "thea_viewChannel", 0).replace("_"," "))
+                               if getattr(scene, "thea_viewChannel", 0).replace("_"," ") == "Color":
+                                   message = 'message "SaveImage %s"' % tmpTheaRenderFile
+                                   data = sendSocketMsg('localhost', port, message.encode())
+                               else:
+                                   message = 'message "SaveChannel '+ "'" + getattr(scene, "thea_viewChannel", 0).replace("_"," ") + "'"+' %s"' % tmpTheaRenderFile
+                                   data = sendSocketMsg('localhost', port, message.encode())
 #                              CHANGED > Added update status temp render file
                                self.update_stats(status, "Updating temp file: " + tmpTheaRenderFile)
                                data = sendSocketMsg('localhost', port, message.encode())
@@ -5081,8 +5096,12 @@ class TheaRender(bpy.types.RenderEngine):
 
                                if data.find('v')>0:
                                    time1 = time.time()#os.times()[4]
-                                   message = 'message "SaveImage %s"' % tmpTheaRenderFile
-                                   data = sendSocketMsg('localhost', port, message.encode())
+                                   if getattr(scene, "thea_viewChannel", 0).replace("_"," ")  == "Color":
+                                       message = 'message "SaveImage %s"' % tmpTheaRenderFile
+                                       data = sendSocketMsg('localhost', port, message.encode())
+                                   else:
+                                       message = 'message "SaveChannel '+ "'" + getattr(scene, "thea_viewChannel", 0).replace("_"," ") + "'"+' %s"' % tmpTheaRenderFile
+                                       data = sendSocketMsg('localhost', port, message.encode())
                                    #print("message, data: ", message, data)
                                    time2 = time.time()#os.times()[4]
                                    if (time2-time1)<1:

@@ -2794,3 +2794,5 @@ class IMAGE_PT_UnloadDisplayPreset(bpy.types.Operator):
             scene.thea_DispMaxZ = DispMaxZ
 
         return{'FINISHED'}
+
+

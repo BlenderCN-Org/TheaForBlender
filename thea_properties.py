@@ -1408,6 +1408,41 @@ Scene.thea_EnvUpdateSky = bpy.props.BoolProperty(
                 description="Update Sky",
                 default= True)
 
+
+def getViewChannelMenuItems(scene, context):
+    '''get list with menu items of the channels to preview in Displaysettings
+
+        :return: list of tuples with channel type
+        :rtype: [(str, str, str)]
+    '''
+
+    channels = ('Normal','Position','UV','Depth','Alpha','Object_Id','Material_Id','Shadow','Mask','Raw_Diffuse_Color','Raw_Diffuse_Lighting','Raw_Diffuse_GI','Self_Illumination','Direct','AO','GI','SSS','Separate_Passes_Per_Light','Reflection','Refraction','Transparent','Irradiance')
+    channelMenuItems = []
+    channelMenuItems.append(("Color","Color",""))
+    sceneLoaded = False
+    try:
+        if bpy.context.scene:
+#            scene = bpy.context.scene
+            sceneLoaded = True
+    except:
+        pass
+    if sceneLoaded:
+#        thea_globals.log.debug("DisplayUpdated: %s" % (getattr(scene,"thea_channel" + "Normal")))
+#        scene = bpy.context.scene
+        i = 1
+        for entry in sorted(channels):
+#            thea_globals.log.debug("CHannels: %s" % entry)
+    #        if bpy.context.scene.get('thea_channelNormal') == channels:
+            if getattr(scene,"thea_channel" + entry) == True:
+#                thea_globals.log.debug("Channel View: %s" % getattr(scene,"thea_channel" + entry))
+    #                channel.append((entry,channels)
+                channelMenuItems.append((entry.replace("_"," "),entry.replace("_"," "),""))
+                i+=1
+    else:
+        channelMenuItems.append(("1","Please install Thea Studio to use channel presets",""))
+
+    return channelMenuItems
+
 def displayUpdated(self, context):
     '''Set thea_globals.displayUpdated = True when one of the display properties are updated
     '''
@@ -1424,6 +1459,11 @@ Scene.thea_DisplayMenu = bpy.props.EnumProperty(
                 description="Display Presets",
                 default="0",
                 update=displayUpdated)
+
+Scene.thea_viewChannel = bpy.props.EnumProperty(
+                items=getViewChannelMenuItems, #[int(getattr(scene, "thea_Channel"))][1],
+                name="View Channel",
+                description="View Channel")
 
 
 Scene.thea_DispISO = bpy.props.IntProperty(
@@ -1657,7 +1697,37 @@ Scene.thea_DispVignettingWeight = bpy.props.FloatProperty(
                 subtype='PERCENTAGE',
                 update=displayUpdated)
 
+Scene.thea_analysis = bpy.props.BoolProperty(
+                name="Analysis",
+                description="Analysis",
+                default= False,
+                update=displayUpdated)
 
+Scene.thea_analysisMenu = bpy.props.EnumProperty(
+                items=(('0', 'None', ''),('1', 'Photometric', '')),
+                name="",
+                description="Analysis",
+                default="0",
+                update=displayUpdated)
+
+
+Scene.thea_minIlLum = bpy.props.FloatProperty(
+                min=-10000,
+                max=500000,
+                precision=0,
+                default=0,
+                name="Min Il-Lum",
+                description="Min Il-Lum",
+                update=displayUpdated)
+
+Scene.thea_maxIlLum = bpy.props.FloatProperty(
+                min=-10000,
+                max=500000,
+                precision=0,
+                default=15000,
+                name="Max Il-Lum",
+                description="Max Il-Lum",
+                update=displayUpdated)
 
 
 Scene.thea_MerModels = bpy.props.EnumProperty(
@@ -1813,12 +1883,12 @@ Scene.thea_channelAlpha = bpy.props.BoolProperty(
                 description="Alpha",
                 default= False)
 
-Scene.thea_channelObjectId = bpy.props.BoolProperty(
+Scene.thea_channelObject_Id = bpy.props.BoolProperty(
                 name="Object Id",
                 description="Object Id",
                 default= False)
 
-Scene.thea_channelMaterialId = bpy.props.BoolProperty(
+Scene.thea_channelMaterial_Id = bpy.props.BoolProperty(
                 name="Material Id",
                 description="Material Id",
                 default= False)
@@ -1833,22 +1903,22 @@ Scene.thea_channelMask = bpy.props.BoolProperty(
                 description="Mask",
                 default= False)
 
-Scene.thea_channelRawDiffuseColor = bpy.props.BoolProperty(
+Scene.thea_channelRaw_Diffuse_Color = bpy.props.BoolProperty(
                 name="Raw Diffuse Color",
                 description="Raw Diffuse Color",
                 default= False)
 
-Scene.thea_channelRawDiffuseLighting = bpy.props.BoolProperty(
+Scene.thea_channelRaw_Diffuse_Lighting = bpy.props.BoolProperty(
                 name="Raw Diffuse Lighting",
                 description="Raw Diffuse Lighting",
                 default= False)
 
-Scene.thea_channelRawDiffuseGI = bpy.props.BoolProperty(
+Scene.thea_channelRaw_Diffuse_GI = bpy.props.BoolProperty(
                 name="Raw Diffuse GI",
                 description="Raw Diffuse GI",
                 default= False)
 
-Scene.thea_channelSelfIllumination = bpy.props.BoolProperty(
+Scene.thea_channelSelf_Illumination = bpy.props.BoolProperty(
                 name="Self Illumination",
                 description="Self Illumination",
                 default= False)
@@ -1874,7 +1944,7 @@ Scene.thea_channelSSS = bpy.props.BoolProperty(
                 description="SSS",
                 default= False)
 
-Scene.thea_channelSeparatePassesPerLight = bpy.props.BoolProperty(
+Scene.thea_channelSeparate_Passes_Per_Light = bpy.props.BoolProperty(
                 name="Separate Passes Per Light",
                 description="Separate Passes Per Light",
                 default= False)
@@ -1899,7 +1969,7 @@ Scene.thea_channelIrradiance = bpy.props.BoolProperty(
                 description="Irradiance",
                 default= False)
 
-Scene.thea_channelInvertMask = bpy.props.BoolProperty(
+Scene.thea_channelInvert_Mask = bpy.props.BoolProperty(
                 name="Invert Mask Channel",
                 description="Invert Mask Channel",
                 default= False)
