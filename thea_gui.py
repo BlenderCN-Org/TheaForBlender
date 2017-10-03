@@ -2185,10 +2185,6 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         sub = colR.row()
         sub.active = scene.thea_DispContrast == True
         sub.prop(scene,"thea_DispContrastWeight")
-        split = layout.split()
-        row = layout.row()
-        colL = split.column()
-        colR = split.column()
 
         split = layout.split()
         row = layout.row()
@@ -2199,11 +2195,13 @@ class RENDER_PT_theaDisplay(RenderButtonsPanel, bpy.types.Panel):
         sub.active = scene.thea_DispTemperature == True
         sub.prop(scene,"thea_DispTemperatureWeight")
 
+        split = layout.split()
+        row = layout.row()
         colL.prop(scene,"thea_DispBloom")
         sub = colR.row()
         sub.active = scene.thea_DispBloom == True
         sub.prop(scene,"thea_DispBloomItems")
-        split = layout.split()
+#        split = layout.split()
         row = layout.row()
         if getattr(scene,"thea_DispBloom"):
             colR.prop(scene,"thea_DispBloomWeight")
@@ -3027,10 +3025,6 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         sub = colR.row()
         sub.active = scene.thea_DispContrast == True
         sub.prop(scene,"thea_DispContrastWeight")
-        split = layout.split()
-        row = layout.row()
-        colL = split.column()
-        colR = split.column()
 
         split = layout.split()
         row = layout.row()
@@ -3041,11 +3035,13 @@ class IMAGE_PT_thea_Display(DisplayButtonsPanel, bpy.types.Panel):
         sub.active = scene.thea_DispTemperature == True
         sub.prop(scene,"thea_DispTemperatureWeight")
 
+        split = layout.split()
+        row = layout.row()
         colL.prop(scene,"thea_DispBloom")
         sub = colR.row()
         sub.active = scene.thea_DispBloom == True
         sub.prop(scene,"thea_DispBloomItems")
-        split = layout.split()
+#        split = layout.split()
         row = layout.row()
         if getattr(scene,"thea_DispBloom"):
             colR.prop(scene,"thea_DispBloomWeight")

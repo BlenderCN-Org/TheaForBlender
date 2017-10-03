@@ -2646,6 +2646,11 @@ class XMLExporter:
         self.file.write('</Object>\n')
         #// it is necessary to describe the primary/active modules as there might exist more than one!
         self.file.write('<Parameter Name=\"./Scenes/Active\" Type=\"String\" Value=\"%s\"/>\n' % self.name ) #// scene.
+        # CHANGED needs to go after root in order to work
+        #// issue a special "parameter command" to generate sun according to given parameters - if settings indicate physical sky.
+        #// this special command should be at the very end - after activating scene - to work properly.
+        if self.environmentOptions.illumination=="PhysicalSky" and self.environmentOptions.overrideSun == False: # and self.environmentOptions.skyType == "Sun+Sky":
+            self.file.write('<Parameter Name=\"GenerateSun\" Type=\"Boolean\" Value=\"1\"/>\n')
         #// end of file.
         self.file.write('</Root>\n')
         # CHANGED needs to go after root in order to work
@@ -2653,7 +2658,7 @@ class XMLExporter:
         #// this special command should be at the very end - after activating scene - to work properly.
         if self.environmentOptions.illumination=="PhysicalSky" and self.environmentOptions.overrideSun == False: # and self.environmentOptions.skyType == "Sun+Sky":
             self.file.write('<Parameter Name=\"GenerateSun\" Type=\"Boolean\" Value=\"1\"/>\n')
-        self.file.write('</Root>\n')
+#        self.file.write('</Root>\n')
 
 
     def findMaterial(self, name):
