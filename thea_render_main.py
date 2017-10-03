@@ -2525,8 +2525,9 @@ def exportFrame(scene,frame, anim=False, exporter=None, area=None, obList=None, 
     exporter.environmentOptions.albedo = scn.thea_EnvPSalbedo
     exporter.environmentOptions.locEnable = scn.thea_locationEnable
     locCit = getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][1]
-    locCap = getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][2]
-    exporter.environmentOptions.location = locCap+" - "+locCit
+#    locCap = getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][2]
+#    exporter.environmentOptions.location = locCap+" - "+locCit
+    exporter.environmentOptions.location = locCit
     exporter.environmentOptions.latitude = scn.thea_EnvLat
     exporter.environmentOptions.longitude = scn.thea_EnvLong
     exporter.environmentOptions.timezone = ("GT+"+scn.thea_EnvTZ if int(scn.thea_EnvTZ)>0 else "GT"+scn.thea_EnvTZ)
@@ -3650,6 +3651,7 @@ def getLocations(maxLines=1200):
             if l>0 and l<maxLines:
                 EnvLocationsMenuItems.append((str(l-1),line[:34].strip(),""))
                 EnvLocationsArr.append(line)
+#                thea_globals.log.debug("Locations // Menuitems: %s - EnvLocArr: %s" % (EnvLocationsMenuItems, EnvLocationsArr))
             l+=1
     return (EnvLocationsMenuItems, EnvLocationsArr)
 
@@ -3688,6 +3690,7 @@ def getLocations2(maxLines=1250):
             if line.isupper() ==0 and (line != "\n") and (line != country[1])>=0:
 #                i+=1
                 EnvLocationsArr.append(line)
+#                thea_globals.log.debug("Locations: %s" % line)
 #                EnvLocationsMenuItems.append((str(i),EnvLocCity, EnvLocCapitals))
                 if line.isupper() and l>1:
                     continue
@@ -3746,17 +3749,16 @@ def getLocMenu():
 #            EnvLocCity.append(line[:34].strip(" "))
             EnvLocCity = line[:34].strip(" ")
             locCit = line.strip(" ")
-            EnvLocationsMenuItems.append((str(i),EnvLocCity, EnvLocCapitals))
-#            thea_globals.log.debug("Locations Cities: %s + %s" % (i,line))
+            EnvLocationsMenuItems.append((str(i),EnvLocCapitals +" - "+EnvLocCity, EnvLocCapitals))
+#            thea_globals.log.debug("Locations Cities: %s + %s - %s" % (i,EnvLocCity, EnvLocCapitals ))
 #            thea_globals.log.debug("Locations Cities: %s" % locCit)
 #            thea_globals.log.debug("*** Cities: %s" % k)
-#            thea_globals.log.debug("Locations: %s" % EnvLocationsMenuItems)
+            thea_globals.log.debug("Locations: %s" % EnvLocationsMenuItems)
             if line.isupper() and l>0:
                 continue
 #                thea_globals.log.debug("Locations Cities: %s" % k)
         k+=1
     file.close()
-
     return EnvLocationsMenuItems
 
 def defTheaGuiProperties():
