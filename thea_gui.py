@@ -3169,8 +3169,6 @@ class OBJECT_PT_theaTools(ObjectButtonsPanel, bpy.types.Panel):
        sub = colR
        sub.active = bpy.data.objects[bpy.context.active_object.name].thMaskID == True
        sub.prop(bpy.context.active_object, "thMaskIDindex")
-#       layout.separator()
-       layout.prop(bpy.context.active_object, "thSectionFrame")
 
 class OBJECT_OT_setCamProjection(bpy.types.Operator):
     bl_idname = "set.cam"

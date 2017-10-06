@@ -4664,11 +4664,6 @@ Obj.thMaskIDindex = bpy.props.IntProperty(
                 name="Index",
                 description="Index")
 
-Obj.thSectionFrame = bpy.props.BoolProperty(
-                name="Z-clipping Plane",
-                description="Z-clipping plane let's you a plane for clipping the scene. Instead of using Camera Z-clipping. Only works when this is enabled on a plane",
-                default= False)
-
 items_store = []
 def materialsList(scene, context):
     '''Return materials for object container

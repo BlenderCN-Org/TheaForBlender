@@ -168,40 +168,6 @@ class Preview:
         i = 0
         value = matData[i]+matData[i+1]+matData[i+2]+matData[i+3]
 
-#        mylist = []
-#        with open(filename, "rb") as f:
-#            for i in range (0, len(matData)):
-#                s = bytearray(matData)
-##                s = struct.unpack('=BH', f.read(3))
-##                mylist.append(s[0])
-#            thea_globals.log.debug("Sky data: %s" % s)
-
-#        byte_string = ''
-#        char = matData
-#        byte = ord(char)
-#        # print byte
-#        byte_string += chr(byte)
-#        while char != "":
-#            char = infile.read(1)
-#            if char != "":
-#                byte = ord(char)
-#                # print byte
-#                byte_string += chr(byte)
-#                thea_globals.log.debug("Sky data: %s" % byte_string)
-#        thea_globals.log.debug("Sky data: %s" % matData)
-#        for k in matData:
-#            if matData.find(\x05) >=0:
-#    #            k = next(it)
-#                illMap = matData.split(" ")
-#                thea_globals.log.debug("Sky data: %s" % illMap )
-#        text = data.decode('utf-8')
-#        thea_globals.log.debug("Sky data: %s" % data[40:2000])
-#        height ,width, = struct.unpack(">LL",  matData[0:8])
-#        thea_globals.log.debug("Sky data: %s - %s" % (height, width))
-#        thea_globals.log.debug("Sky data: %s" % matData)
-#        thea_globals.log.debug("Sky data: %s" % len(matData))
-#        for k in matData:
-#            thea_globals.log.debug("Sky data: %s" % reflection)
         if value == 3:
             i += 4
             value = matData[i]+matData[i+1]+matData[i+2]+matData[i+3]
@@ -215,9 +181,7 @@ class Preview:
                 self.lines = lines
                 self.pixels = pixels
                 thea_globals.log.debug("lines: %s, pixels: %s" % (self.lines, self.pixels))
-#                dataDing = struct.unpack('11B',matData[0:16])
-#                thea_globals.log.debug("Sky data: %s" % dataDing)
-#                thea_globals.log.debug("Sky data len: %s" % len(matData))
+
                 d = {
                 'mn1':66,
                 'mn2':77,
@@ -3789,7 +3753,7 @@ def getLocMenu():
 #            thea_globals.log.debug("Locations Cities: %s + %s - %s" % (i,EnvLocCity, EnvLocCapitals ))
 #            thea_globals.log.debug("Locations Cities: %s" % locCit)
 #            thea_globals.log.debug("*** Cities: %s" % k)
-#            thea_globals.log.debug("Locations: %s" % EnvLocationsMenuItems)
+            thea_globals.log.debug("Locations: %s" % EnvLocationsMenuItems)
             if line.isupper() and l>0:
                 continue
 #                thea_globals.log.debug("Locations Cities: %s" % k)
@@ -4587,7 +4551,6 @@ def updateActiveMaterialColor():
     import tempfile
     material = bpy.context.scene.objects.active.active_material
     extMatFile = False
-    extIBLFile = True
     scene = bpy.context.scene
     #print("material name: ", material.name)
     if material:
@@ -4643,14 +4606,6 @@ def updateActiveMaterialColor():
         prevImageOb.outFile = outputImage
         prevImageOb.read(extMatFile)
         setattr(material, 'diffuse_color', prevImageOb.centerColor)
-    if extIBLFile:
-        prevImageOb = Preview()
-        tempDir = tempfile.gettempdir()
-        outputImage = os.path.join(tempDir, "matIBLPreview.bmp")
-        thea_globals.log.debug("TempDIr Preview: %s" % tempDir)
-        prevImageOb.outFile = outputImage
-        prevImageOb.read("/Users/romboutversluijs/Library/Application Support/Thea Render/Skies/HDR Haven/Skies/Rustig Koppie_8k_0deg_Toned-v1.sky.thea")
-#        setattr(material, 'diffuse_color', prevImageOb.centerColor)
     return
 
 
