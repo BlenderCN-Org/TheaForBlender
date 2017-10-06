@@ -103,6 +103,13 @@ class Transform:
             :param identifier: Parameter name, default: Frame
             :type identifier: string
         '''
+        if thea_globals.sectionFrame:
+#            translist = (self.r11, self.r12, self.r13, self.tx, self.r21, self.r22, self.r23, self.ty, self.r31, self.r32, self.r33, self.tz)
+            translist = ('<Parameter Name=\"./Section #0/Frame\" Type=\"Transform\" Value="%s %s %s %s %s %s %s %s %s %s %s %s"/>\n' % (self.r11, self.r12, self.r13, self.tx, self.r21, self.r22, self.r23, self.ty, self.r31, self.r32, self.r33, self.tz))
+            thea_globals.sectionFrameTrans = translist
+#            thea_globals.log.debug("Translist: %s" % thea_globals.sectionFrameTrans)
+#            for i in translist:
+#                thea_globals.log.debug("Translist: %s" % i)
         file.write('<Parameter Name="%s" Type="Transform" Value="%s %s %s %s %s %s %s %s %s %s %s %s"/>\n' %\
         (identifier,
          self.r11, self.r12, self.r13, self.tx,
@@ -1810,6 +1817,8 @@ class ThCamera:
         self.zClippingFar = False
         self.zClippingNearDistance = 1
         self.zClippingFarDistance = 1000
+        self.sectionFrame = False
+        self.sectionFrameTrans = thea_globals.sectionFrameTrans
 
     def write(self, file):
         '''Write camera object
@@ -1844,6 +1853,21 @@ class ThCamera:
         file.write('<Parameter Name=\"Z-Clipping Far Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.zClippingFarDistance)
         self.interpolatedMotion.write(file)
         self.frame.write(file)
+#        thea_globals.log.debug("Zclip Camera: %s - Exported Camera: %s" % (bpy.context.scene.camera.name, self.name))
+        try:
+
+            if self.name == bpy.context.scene.camera.name:
+
+                if thea_globals.sectionFrameEnabled:
+                    file.write(thea_globals.sectionFrameTrans)
+#                    thea_globals.log.debug("Section Frame Trans: %s" % thea_globals.sectionFrameTrans)
+                    thea_globals.sectionFrameEnabled = False
+#            file.write('<Parameter Name=\"./Section #0/Frame\" Type=\"Transform\" Value=\"%s %s %s %s %s %s %s %s %s %s %s %s\"/>\n' % (thea_globals.sectionFrameTrans[0], thea_globals.sectionFrameTrans[1], thea_globals.sectionFrameTrans[2], thea_globals.sectionFrameTrans[3], thea_globals.sectionFrameTrans[4], thea_globals.sectionFrameTrans[5], thea_globals.sectionFrameTrans[6], thea_globals.sectionFrameTrans[7],thea_globals.sectionFrameTrans[8], thea_globals.sectionFrameTrans[9], thea_globals.sectionFrameTrans[10], thea_globals.sectionFrameTrans[11]))
+
+        #        for i in thea_globals.sectionFrameTrans:
+    #            thea_globals.log.debug("Section Frame Trans: %s" % i)
+        except:
+             pass
         file.write('</Object>\n')
 
 
@@ -2467,17 +2491,17 @@ class RenderOptions:
             if self.ClampLevelEnable:
                 file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.ClampLevelEnable)
                 file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.ClampLevel)
-            if self.AOEnable:
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
-                file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Multiply\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOMultiply else '0'))
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Clamp\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOClamp else '0'))
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Samples\" Type=\"Integer\" Value=\"%s\"/>\n' % self.AOSamples)
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.AODistance)
-                file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.AODistance)
-                file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Intensity\" Type=\"Real\" Value=\"%s\"/>\n' % self.AOIntensity)
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/Low Color\" Type="RGB" Value="%s %s %s"/>\n' % (self.AOLowColor[0], self.AOLowColor[1],self.AOLowColor[2]))
-                file.write('<Parameter Name=\"./Render/Ambient Occlusion/High Color\" Type="RGB" Value="%s %s %s"/>\n' % (self.AOHighColor[0], self.AOHighColor[1],self.AOHighColor[2]))
+#            if self.AOEnable:
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
+            file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/Multiply\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOMultiply else '0'))
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/Clamp\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOClamp else '0'))
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/Samples\" Type=\"Integer\" Value=\"%s\"/>\n' % self.AOSamples)
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.AODistance)
+            file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Distance\" Type=\"Real\" Value=\"%s\"/>\n' % self.AODistance)
+            file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Intensity\" Type=\"Real\" Value=\"%s\"/>\n' % self.AOIntensity)
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/Low Color\" Type="RGB" Value="%s %s %s"/>\n' % (self.AOLowColor[0], self.AOLowColor[1],self.AOLowColor[2]))
+            file.write('<Parameter Name=\"./Render/Ambient Occlusion/High Color\" Type="RGB" Value="%s %s %s"/>\n' % (self.AOHighColor[0], self.AOHighColor[1],self.AOHighColor[2]))
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2745,9 +2769,13 @@ class XMLExporter:
                     ob = bpy.context.scene.objects.get(obName)
                     #if scn.objects.get(obName).thEnabled == 0:
 #                     thea_globals.log.debug("ob.thEnabled: %s" % ob.thEnabled)
-                    self.file.write('<Parameter Name=\"Enabled\" Type=\"Boolean\" Value=\"%s\"/>\n' % ob.thEnabled)
-                    #if scn.objects.get(obName).thVisible == 0:
-                    self.file.write('<Parameter Name=\"Visible\" Type=\"Boolean\" Value=\"%s\"/>\n'% ob.thVisible)
+                    if ob.thSectionFrame == False:
+                        self.file.write('<Parameter Name=\"Enabled\" Type=\"Boolean\" Value=\"%s\"/>\n' % ob.thEnabled)
+                        #if scn.objects.get(obName).thVisible == 0:
+                        self.file.write('<Parameter Name=\"Visible\" Type=\"Boolean\" Value=\"%s\"/>\n'% ob.thVisible)
+                    else:
+                        self.file.write('<Parameter Name=\"Enabled\" Type=\"Boolean\" Value="0"/>\n')
+                        self.file.write('<Parameter Name=\"Visible\" Type=\"Boolean\" Value="0"/>\n')
                     #if scn.objects.get(obName).thShadowCaster == 0:
                     self.file.write('<Parameter Name=\"Shadow Caster\" Type=\"Boolean\" Value=\"%s\"/>\n'% ob.thShadowCaster)
                     #if scn.objects.get(obName).thShadowTight == 0:
@@ -2761,6 +2789,22 @@ class XMLExporter:
 #                    CHANGED> Added Mask ID
                     if ob.thMaskID == True:
                         self.file.write('<Parameter Name=\"Mask Index\" Type=\"Integer\" Value=\"%s\"/>\n'% ob.thMaskIDindex)
+                    if ob.thSectionFrame:
+                        thea_globals.sectionFrame = True
+                        thea_globals.sectionFrameEnabled = True
+                        ob.name = "ZClippingPlane"
+                        zClipPlane = bpy.data.objects['ZClippingPlane'].matrix_world
+#                        obD_mat = obSection
+#                        thea_globals.log.debug("Section Frame matrix: %s" % obSection)
+                        translist = ()
+                        translist = Transform(\
+                                    zClipPlane[0][0], zClipPlane[0][1], zClipPlane[0][2],
+                                    zClipPlane[1][0], zClipPlane[1][1], zClipPlane[1][2],
+                                    zClipPlane[2][0], zClipPlane[2][1], zClipPlane[2][2],
+                                    zClipPlane[0][3], zClipPlane[1][3], zClipPlane[2][3])
+                    else:
+                        thea_globals.sectionFrame = False
+#                    thea_globals.log.debug("Section Frame: %s - %s - %s" % (ob, thea_globals.sectionFrame, thea_globals.sectionFrameTrans))
 
                     if (len(ob.data.materials)<=1) and bpy.context.scene.thea_ExportAnimation == True and (ob.thExportAnimation == True or is_Animated(ob)):
                     #if ob.thExportAnimation == True and bpy.context.scene.thea_ExportAnimation == True:
@@ -5047,7 +5091,6 @@ class XMLExporter:
                         tex.spatialX = (tex.spatialX / tex.spatialX) / tex.spatialX
                         tex.spatialY =  getattr(bpy.data.textures[mtex.name], "thea_TexSpatialYtex")
                         tex.spatialY = (tex.spatialY / tex.spatialY) / tex.spatialY
-                        thea_globals.log.debug("Repeat: %s" % tex.repeat)
 
                         tex.offsetX = mtex.offset[0]
                         tex.offsetY = mtex.offset[1]
@@ -5056,7 +5099,8 @@ class XMLExporter:
                         tex.projection = getattr(bpy.data.textures[mtex.name],"thea_texture_coords")
                         if tex.projection == 'Camera Map':
                             tex.cameraMapName = getattr(bpy.data.textures[mtex.name],"thea_camMapName")
-                        thea_globals.log.debug("*** Texture Coordinates: %s" % tex.projection)
+#                        thea_globals.log.debug("*** Texture Coordinates: %s" % tex.projection)
+#                        thea_globals.log.debug("Repeat: %s" % tex.repeat)
                         if getattr(bpy.data.textures[mtex.name],"thea_texture_coords") == 'UV':
                             tex.projection = "UV"
                             tex.UVChannel = getattr(bpy.data.textures[mtex.name], "thea_TexUVChannel")
