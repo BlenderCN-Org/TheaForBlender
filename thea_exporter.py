@@ -2489,8 +2489,8 @@ class RenderOptions:
             file.write('<Parameter Name=\"./Render/Progressive/Internal Reflection Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.internalReflectionDepth)
             file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.SSSDepth)
             if self.ClampLevelEnable:
-                file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.ClampLevelEnable)
-                file.write('<Parameter Name=\"./Render/Progressive/SSS Depth\" Type=\"Integer\" Value=\"%s\"/>\n' % self.ClampLevel)
+                file.write('<Parameter Name=\"./Render/Clamping/Clamp Radiance\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.ClampLevelEnable)
+                file.write('<Parameter Name=\"./Render/Clamping/Clamp Level\" Type=\"Real\" Value=\"%s\"/>\n' % self.ClampLevel)
 #            if self.AOEnable:
             file.write('<Parameter Name=\"./Render/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))
             file.write('<Parameter Name=\"./Render/Progressive/Ambient Occlusion/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.AOEnable else '0'))

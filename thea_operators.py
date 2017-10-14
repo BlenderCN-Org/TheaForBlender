@@ -1554,7 +1554,7 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                         if line.find('Name="Unit"'):
                             spotUnit = line.split('"')[5]
                             ob.data.thea_EmittanceUnit = spotUnit
-                            thea_globals.log.debug("%s Power: %s" % (name,spotUnit))
+                            thea_globals.log.debug("%s Unit: %s" % (name,spotUnit))
                     if line.find('<Object Identifier="Omni Light')>= 0:
                         line = next(it)
                         foundOb = True
@@ -1616,8 +1616,11 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                             thea_globals.log.debug("%s Efficacy: %s" % (name,omniEfficacy))
                         line = next(it)
                         if line.find('Name="Unit"'):
+#                            thea_globals.log.debug("OMNI type in blender: %s" % ob.data.type)
                             omniUnit = line.split('"')[5]
-                            if ob.type in ('SPOT'):
+                            if ob.data.type in ('POINT'):
+                                ob.data.thea_EmittanceUnit = omniUnit
+                            if ob.data.type in ('AREA'):
                                 ob.data.thea_EmittanceUnit = omniUnit
                             else:
                                 ob.data.thea_SunEmittanceUnit = omniUnit
@@ -1625,7 +1628,9 @@ class RENDER_PT_thea_syncWithThea(bpy.types.Operator):
                         line = next(it)
                         if line.find('Name="Attenuation"'):
                             omniAtte = line.split('"')[5]
-                            if ob.type in ('SPOT'):
+                            if ob.data.type in ('POINT'):
+                                ob.data.thea_EmittanceAttenuation = omniAtte
+                            if ob.data.type in ('AREA'):
                                 ob.data.thea_EmittanceAttenuation = omniAtte
                             else:
                                 ob.data.thea_SunAttenuation = omniAtte

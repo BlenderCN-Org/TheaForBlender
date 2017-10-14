@@ -3497,9 +3497,10 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
 
                 #col.prop(lamp, "use_sphere")
 
-            if lamp.type == 'AREA':
-                col.prop(lamp, "distance")
-                col.prop(lamp, "gamma")
+#            if lamp.type == 'AREA':
+#                setattr(lamp, "thea_EmittancePower", "100")
+#                col.prop(lamp, "distance")
+#                col.prop(lamp, "gamma")
 
 
 

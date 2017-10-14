@@ -1121,7 +1121,7 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
 
 
 
-        if lightData.type == 'SPOT':
+        if lightData.type == 'SPOT' or lightData.type == 'AREA':
             ltextures = lightData.texture_slots
     #        changed > to emittancePower like in studio
             omni.multiplier=lightData.thea_EmittancePower#*10
@@ -1151,6 +1151,14 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
 #                       CHANGED > Added texture for spotlights
                         if lightData.thea_TextureFilename != 'None':
                             omni.type = "Spot"
+                            omni.emitter = BitmapTexture(ltex.texture.image.filepath)
+                            omni.emitter.scaleX = ltex.scale[0]
+                            omni.emitter.scaleY = ltex.scale[1]
+#                           CHANGED > Added wifth and height values for input
+                            omni.width = lightData.thea_ProjectorWidth
+                            omni.height = lightData.thea_ProjectorHeight
+                        if lightData.type == 'AREA':
+                            omni.type = "Omni"
                             omni.emitter = BitmapTexture(ltex.texture.image.filepath)
                             omni.emitter.scaleX = ltex.scale[0]
                             omni.emitter.scaleY = ltex.scale[1]
@@ -1193,11 +1201,32 @@ def exportLights(scene,frame, anim=False, exporter=None, obList=None):
                 omni.iesfile = os.path.abspath(bpy.path.abspath(getattr(lightData, "thea_IESFilename")))
         #        changed > to emittancePower like in studio
                 omni.multiplier=lightData.thea_IESMultiplier#*10
-            omni.falloff = lightData.spot_size * 57.295779 #57.3
-            omni.hotspot = (lightData.spot_size * (1 - lightData.spot_blend)) * 57.295779 #57.3
+            if lightData.type != 'AREA':
+                omni.falloff = lightData.spot_size * 57.295779 #57.3
+                omni.hotspot = (lightData.spot_size * (1 - lightData.spot_blend)) * 57.295779 #57.3
             #print("energy: ", lightData.energy)
 
         if lightData.type == 'AREA':
+#            ltextures = lightData.texture_slots
+#            if len(ltextures) > 0:
+#                omni.type = "Omni"
+#                for ltex in ltextures:
+#                    try:
+#                        texType = ltex.texture.type
+#                    except:
+#                        texType = None
+#                    if (texType == 'IMAGE'):
+#                        (shortname, extension) = os.path.splitext(ltex.texture.image.filepath)
+#                        omni.type = "Omni"
+#                        omni.emitter = BitmapTexture(ltex.texture.image.filepath)
+#                        omni.emitter.scaleX = ltex.scale[0]
+#                        omni.emitter.scaleY = ltex.scale[1]
+##                           CHANGED > Added wifth and height values for input
+#                        omni.width = lightData.thea_ProjectorWidth
+#                        omni.height = lightData.thea_ProjectorHeight
+            omni.type = "Omni"
+            omni.multiplier = lightData.thea_EmittancePower#*10
+            omni.sun = False
             omni.softshadow = True
             omni.softradius = lightData.size
         elif (getattr(lightData, 'shadow_method', 'False') == "RAY_SHADOW") and (getattr(lightData, 'shadow_ray_samples') > 1):
