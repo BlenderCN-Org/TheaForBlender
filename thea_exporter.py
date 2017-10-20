@@ -5249,7 +5249,9 @@ class XMLExporter:
                         layerWeight = 1
                     laySubstrate = LayeredSubstrate(bsdf, layerWeight)
 
-                bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic"))
+#                bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic"))
+                if (((getattr(mat.blenderMat, 'diffuse_color')[0], getattr(mat.blenderMat, 'diffuse_color')[1], getattr(mat.blenderMat, 'diffuse_color')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicDiffuseFilename'))>1:
+                    bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic"))
                 if (((getattr(mat.blenderMat, 'thea_BasicReflectanceCol')[0], getattr(mat.blenderMat, 'thea_BasicReflectanceCol')[1], getattr(mat.blenderMat, 'thea_BasicReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicReflectanceFilename'))>1:
                     bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Basic"))
                 if (((getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[0], getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[1], getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicTranslucentFilename'))>1:
@@ -5311,7 +5313,9 @@ class XMLExporter:
             if hasBasic2:
                 wtex = False
                 bsdf = BasicBSDF()
-                bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic2"))
+#                bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic2"))
+                if (((getattr(mat.blenderMat, 'diffuse_color')[0], getattr(mat.blenderMat, 'diffuse_color')[1], getattr(mat.blenderMat, 'diffuse_color')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicDiffuseFilename'))>1:
+                    bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic2"))
                 if (((getattr(mat.blenderMat, 'thea_Basic2ReflectanceCol')[0], getattr(mat.blenderMat, 'thea_Basic2ReflectanceCol')[1], getattr(mat.blenderMat, 'thea_Basic2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Basic2ReflectanceFilename'))>1:
                     bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Basic2"))
                 if (((getattr(mat.blenderMat, 'thea_Basic2TranslucentCol')[0], getattr(mat.blenderMat, 'thea_Basic2TranslucentCol')[1], getattr(mat.blenderMat, 'thea_Basic2TranslucentCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Basic2TranslucentFilename'))>1:
