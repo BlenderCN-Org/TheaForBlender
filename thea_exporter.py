@@ -199,7 +199,46 @@ class InterpolatedMotion:
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#// Begin of Custom Curve List
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class Reflection90CurveList:
+    '''Reflection 90 Curve List
+
+    '''
+    def __init__(self, CustomCurve, CustomCurveList ):
+        '''
+        :param filename: List of custom curve
+        :type filename: string
+        '''
+
+        self.CustomCurve = CustomCurve
+        self.CustomCurveList = CustomCurveList
+        thea_globals.log.debug("Curve items: %s - %s" % (self.CustomCurve, self.CustomCurveList))
+
+    def write(self, file, CustomCurve, CustomCurveList):
+        '''Write curve list
+
+            :param file: file handler
+            :type file: file
+            :param identifier: string
+            :type identifier: string
+        '''
+        file.write('<Parameter Name=\"Custom Curve\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.CustomCurve else '0'))
+        if self.CustomCurve:
+            file.write('<Parameter Name=\"Reflectance Curve\" Type=\"Fixed 2-Byte List\" Value=\"91\">\n')
+    #        for F in range(0, 91):
+    #        for F in range(0, len(self.CustomCurveList)):
+    #        for F in eval(self.CustomCurveList):
+            for F in self.CustomCurveList.strip('[]').split(','):
+    #            file.write('<F x=\"4694\"/>\n')
+                file.write('<F x=\"%s\"/>\n' % F)
+            file.write('</Parameter>\n')
+
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#// End of Custom Curve List
+#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -400,9 +439,15 @@ class GlossyBSDF:
         self.microRoughnessEnable = False
         self.microRoughnessWidth = 10
         self.microRoughnessHeight = 0.25
+        self.customCurve = Reflection90CurveList(0,0)
+#        self.CustomCurve = False
+#        self.CustomCurveList = []
 
     def setReflectanceTexture(self, texture):
         self.reflectanceTexture = texture
+    def setReflect90Texture(self, texture):
+        self.reflect90Texture = texture
+
     def setTransmittanceTexture(self, texture):
         self.transmittanceTexture = texture
     def setRoughnessTexture(self, texture):
@@ -455,6 +500,8 @@ class GlossyBSDF:
         self.microRoughnessWidth = v
     def setMicroRoughnessHeight(self, v):
         self.microRoughnessHeight = v
+    def setcustomCurve(self, v):
+        self.customCurve = v
 
     def write(self, file, identifier):
         '''Write Glossy material object
@@ -467,7 +514,8 @@ class GlossyBSDF:
         file.write('<Object Identifier=\"./%s/Glossy Material\" Label=\"Glossy Material\" Name=\"\" Type=\"Material\">\n' % identifier)
         if self.reflectanceTexture:
             self.reflectanceTexture.write(file,"Reflectance 0")
-            RgbTexture(1,1,1).write(file,"Reflectance 90")
+#            RgbTexture(1,1,1).write(file,"Reflectance 90")
+            self.reflect90Texture.write(file,"Reflectance 90")
         if self.transmittanceTexture:
             self.transmittanceTexture.write(file,"Transmittance")
         if self.roughnessTexture:
@@ -505,6 +553,7 @@ class GlossyBSDF:
         file.write('<Parameter Name=\"Rough Tr.\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.roughnessTrEnable else '0'))
         file.write('<Parameter Name=\"Trace Reflections\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.traceReflections else '0'))
         file.write('<Parameter Name=\"Trace Refractions\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.traceRefractions else '0'))
+        self.customCurve.write(file, 1, 2)
         file.write('<Parameter Name=\"./Micro Roughness/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n'% ('1' if self.microRoughnessEnable else '0'))
         file.write('<Parameter Name=\"./Micro Roughness/Width (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessWidth)
         file.write('<Parameter Name=\"./Micro Roughness/Height (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessHeight)
@@ -525,6 +574,7 @@ class ThinFilm:
         self.thickness = 500
         self.interference = False
         self.thinThicknessTexture = None
+        self.customCurve = Reflection90CurveList(0,0)
 
     def setTransmittanceTexture(self, texture):
         self.transmittanceTexture = texture
@@ -633,6 +683,7 @@ class BasicBSDF:
         self.diffuseTexture = False
         self.translucentTexture = False
         self.reflectanceTexture = False
+        self.reflect90Texture = False
         self.sigmaTexture = False
         self.roughnessTexture = False
         self.anisotropyTexture = False
@@ -641,6 +692,9 @@ class BasicBSDF:
         self.microRoughnessEnable = False
         self.microRoughnessWidth = 10
         self.microRoughnessHeight = 0.25
+        self.customCurve = Reflection90CurveList(0,0)
+#        self.CustomCurve = False
+#        self.CustomCurveList = []
 
     def setAbsorptionColor(self, texture):
         self.absorptionColor = texture
@@ -652,6 +706,8 @@ class BasicBSDF:
         self.translucentTexture = texture
     def setReflectanceTexture(self, texture):
         self.reflectanceTexture = texture
+    def setReflect90Texture(self, texture):
+        self.reflect90Texture = texture
     def setSigmaTexture(self, texture):
         self.sigmaTexture = texture
     def setRoughnessTexture(self, texture):
@@ -686,6 +742,12 @@ class BasicBSDF:
         self.microRoughnessWidth = v
     def setMicroRoughnessHeight(self, v):
         self.microRoughnessHeight = v
+    def setcustomCurve(self, v):
+        self.customCurve = v
+#    def setCustomCurve(self, v):
+#        self.CustomCurve = v
+#    def setCustomCurveList(self, v):
+#        self.CustomCurveList = v
 
     def write(self, file, identifier):
         '''Write Basic material object
@@ -703,8 +765,9 @@ class BasicBSDF:
         if self.reflectanceTexture:
             self.reflectanceTexture.write(file,"Reflectance 0")
             if (self.reflectanceTexture.red>0 or self.reflectanceTexture.green>0 or self.reflectanceTexture.blue>0):
-                refTex = RgbTexture(1,1,1)
-                refTex.write(file,"Reflectance 90")
+#                refTex = RgbTexture(1,1,1)
+                self.reflect90Texture.write(file,"Reflectance 90")
+#                refTex.write(file,"Reflectance 90")
 #             else:
 #                 refTex = RgbTexture(0,0,0)
 #                 refTex.write(file,"Reflectance 90")
@@ -730,6 +793,15 @@ class BasicBSDF:
         file.write('<Parameter Name=\"Bump Strength\" Type=\"Real\" Value=\"%s\"/>\n' % self.bump)
         file.write('<Parameter Name=\"Normal Mapping\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.normalMapping else '0'))
         file.write('<Parameter Name=\"Trace Reflections\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.traceReflections else '0'))
+
+        self.customCurve.write(file, 1, 2)
+#        file.write('<Parameter Name=\"Custom Curve\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.CustomCurve else '0'))
+#        if self.CustomCurve:
+#            file.write('<Parameter Name=\"Reflectance Curve\" Type=\"Fixed 2-Byte List\" Value=\"91\">\n')
+#            for F in self.CustomCurveList.strip('[]').split(','):
+#                file.write('<F x=\"%s\"/>\n' % F)
+#        file.write('</Parameter>\n')
+
         file.write('<Parameter Name=\"./Micro Roughness/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n'% ('1' if self.microRoughnessEnable else '0'))
         file.write('<Parameter Name=\"./Micro Roughness/Width (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessWidth)
         file.write('<Parameter Name=\"./Micro Roughness/Height (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessHeight)
@@ -787,6 +859,7 @@ class SSS:
     '''
     def __init__(self):
         self.reflectanceTexture = None
+        self.reflect90Texture = None
         self.roughnessTexture = None
         self.roughnesstrTexture = None
         self.anisotropyTexture = None
@@ -807,9 +880,16 @@ class SSS:
         self.normalMapping = False
         self.traceReflections = True
         self.traceRefractions = True
+        self.microRoughnessEnable = False
+        self.microRoughnessWidth = 10
+        self.microRoughnessHeight = 0.25
+
+        self.customCurve = Reflection90CurveList(0,0)
 
     def setReflectanceTexture(self, texture):
         self.reflectanceTexture = texture
+    def setReflect90Texture(self, texture):
+        self.reflect90Texture = texture
     def setRoughnessTexture(self, texture):
         self.roughnessTexture = texture
     def setRoughnessTrTexture(self, texture):
@@ -855,6 +935,15 @@ class SSS:
         self.absorptionDensity = v
     def setScatteringDensity(self, v):
         self.scatteringDensity = v
+    def setMicroRoughnessEnable(self, enable):
+        self.microRoughnessEnable = enable
+    def setMicroRoughnessWidth(self, v):
+        self.microRoughnessWidth = v
+    def setMicroRoughnessHeight(self, v):
+        self.microRoughnessHeight = v
+    def setcustomCurve(self, v):
+        self.customCurve = v
+
 
     def write(self, file, identifier):
         '''Write SSS material object
@@ -868,7 +957,8 @@ class SSS:
         file.write('<Object Identifier=\"./%s/SSS Material\" Label=\"SSS Material\" Name=\"\" Type=\"Material\">\n' % identifier)
         if self.reflectanceTexture:
             self.reflectanceTexture.write(file,"Reflectance")
-            RgbTexture(1,1,1).write(file,"Reflectance 90")
+#            RgbTexture(1,1,1).write(file,"Reflectance 90")
+            self.reflect90Texture.write(file,"Reflectance 90")
         if self.roughnessTexture:
           self.roughnessTexture.write(file,"Roughness Map");
         if self.roughnesstrTexture:
@@ -899,6 +989,10 @@ class SSS:
         file.write('<Parameter Name=\"Normal Mapping\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.normalMapping)
         file.write('<Parameter Name=\"Trace Reflections\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.traceReflections)
         file.write('<Parameter Name=\"Trace Refractions\" Type=\"Boolean\" Value=\"%s\"/>\n' % self.traceRefractions)
+        self.customCurve.write(file, 1, 2)
+        file.write('<Parameter Name=\"./Micro Roughness/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n'% ('1' if self.microRoughnessEnable else '0'))
+        file.write('<Parameter Name=\"./Micro Roughness/Width (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessWidth)
+        file.write('<Parameter Name=\"./Micro Roughness/Height (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessHeight)
         file.write('</Object>\n')
 
 #////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -977,6 +1071,7 @@ class CoatingBSDF:
         self.normalMapping=False
         self.traceReflections=True
         self.reflectanceTexture = None
+        self.reflect90Texture = None
         self.transmittanceTexture = None
         self.roughnessTexture = None
         self.anisotropyTexture = None
@@ -986,9 +1081,14 @@ class CoatingBSDF:
         self.microRoughnessEnable = False
         self.microRoughnessWidth = 10
         self.microRoughnessHeight = 0.25
+        self.customCurve = Reflection90CurveList(0,0)
+#        self.CustomCurve = False
+#        self.CustomCurveList = []
 
     def setReflectanceTexture(self, texture):
         self.reflectanceTexture = texture
+    def setReflect90Texture(self, texture):
+        self.reflect90Texture = texture
     def setWeightTexture(self, texture):
         self.weightTexture = texture
     def setThicknessTexture(self, texture):
@@ -1037,6 +1137,9 @@ class CoatingBSDF:
         self.microRoughnessWidth = v
     def setMicroRoughnessHeight(self, v):
         self.microRoughnessHeight = v
+    def setcustomCurve(self, v):
+        self.customCurve = v
+
 
     def getWeightTexture(self):
         return self.weightTexture
@@ -1054,6 +1157,7 @@ class CoatingBSDF:
 #             self.weightTexture.write(file,"Weight Map #0")
         if self.reflectanceTexture:
             self.reflectanceTexture.write(file,"Reflectance 0")
+            self.reflect90Texture.write(file,"Reflectance 90")
         if self.thicknessTexture:
             self.thicknessTexture.write(file,"Thickness Map")
 #        CHANGED > Added Thickness absorption color
@@ -1079,6 +1183,7 @@ class CoatingBSDF:
         file.write('<Parameter Name=\"Bump Strength\" Type=\"Real\" Value=\"%s\"/>\n' % self.bump)
         file.write('<Parameter Name=\"Normal Mapping\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.normalMapping else '0'))
         file.write('<Parameter Name=\"Trace Reflections\" Type=\"Boolean\" Value=\"%s\"/>\n' % ('1' if self.traceReflections else '0'))
+        self.customCurve.write(file, 1, 2)
         file.write('<Parameter Name=\"./Micro Roughness/Enable\" Type=\"Boolean\" Value=\"%s\"/>\n'% ('1' if self.microRoughnessEnable else '0'))
         file.write('<Parameter Name=\"./Micro Roughness/Width (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessWidth)
         file.write('<Parameter Name=\"./Micro Roughness/Height (um)\" Type=\"Real\" Value=\"%s\"/>\n' % self.microRoughnessHeight)
@@ -4301,322 +4406,322 @@ class XMLExporter:
 ##
 # export Hair
 ##
-    def writeHairParticlesBinary(self, scn, ob, model, frame, anim):
-        '''Old version of hair particle export
-        '''
-
-
-
-        def vector_substract(a, b):
-            return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-
-
-        def vector_cross_product(x, y):
-            v = [0, 0, 0]
-            v[0] = x[1]*y[2] - x[2]*y[1]
-            v[1] = x[2]*y[0] - x[0]*y[2]
-            v[2] = x[0]*y[1] - x[1]*y[0]
-            return v
-
-        def calc_normal(v0, v1, v2):
-            return vector_cross_product(vector_substract(v0, v1),vector_substract(v0, v2))
-
-        from TheaForBlender.thea_render_main import getMatTransTable, setPaths
-
-        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scn)
-        #exportPath = bpy.path.abspath(scn.render.filepath)
-        #currentBlendFile = bpy.data.filepath
-        #currentBlendDir = os.path.dirname(currentBlendFile)
-        matTransTable = getMatTransTable()
-
-        frameS= "0000" + str(frame)
-        tempDir = os.path.join(exportPath, "~thexport")
-        if not os.path.isdir(tempDir):
-            os.mkdir(tempDir)
-
-        if ob[0].library:
-            libObject = True
-            obName = ob.name+"_hair"
-            obFileName = ob[3]
-            modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'_part.xml'))
-        else:
-            obFileName = ob[3   ]
-            modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'_part.xml'))
-            libObject = False
-            obName = ob[3]+"_hair"
-
-        if ob[2]: #if there is parrent matrix
-            obD_mat = ob[2] * ob[1]
-            objectTransform = [[obD_mat[0][0],obD_mat[0][1],obD_mat[0][2]],[obD_mat[1][0],obD_mat[1][1],obD_mat[1][2]],[obD_mat[2][0],obD_mat[2][1],obD_mat[2][2]],[obD_mat[3][0],obD_mat[3][1],obD_mat[3][2]]]
-        else:
-            obD_mat = ob[1]
-            objectTransform = [[obD_mat[0][0],obD_mat[0][1],obD_mat[0][2]],[obD_mat[1][0],obD_mat[1][1],obD_mat[1][2]],[obD_mat[2][0],obD_mat[2][1],obD_mat[2][2]],[obD_mat[3][0],obD_mat[3][1],obD_mat[3][2]]]
-
-
-
-
-
-        model.frame = Transform(\
-        objectTransform[0][0], objectTransform[1][0], objectTransform[2][0],
-        objectTransform[0][1], objectTransform[1][1], objectTransform[2][1],
-        objectTransform[0][2], objectTransform[1][2], objectTransform[2][2],
-        objectTransform[3][0],  objectTransform[3][1],  objectTransform[3][2])
-
-
-        object = ob[0]
-        partSystem = ob[5]
-        partSettings = partSystem.settings
-        partMatIdx = partSettings.material
-        partMat = object.material_slots[partMatIdx-1].material
-        modifierName = ob[6]
-
-        if partMat:
-#             if len(scn.get('thea_Warning'))<2:
-#                 scn['thea_Warning'] = ""
-            # check if we should link this material name
-            matName = partMat.name
-            madeLink = False
-            for trMat in matTransTable:
-                try:
-                    if trMat[0] == matName and (self.findMaterialLink(matName) < 0):
-                        matLink = Link()
-                        matLink.setName(trMat[0])
-                        matLink.setFilename(trMat[1])
-                        self.addMaterialLink(matLink)
-                        madeLink = True
-                except:
-                    emptyMat = True
-            try:
-
-                if os.path.exists(mat['TheaMatLink']) and (self.findMaterialLink(matName) < 0):
-                    matLink = Link()
-                    matLink.setName(matName)
-                    matLink.setFilename(mat['TheaMatLink'])
-                    self.addMaterialLink(matLink)
-                    madeLink = True
-            except: pass
-
-            if partMat and (self.findMaterial(matName) < 0):
-                ma = ThMaterial()
-                ma.setName(matName)
-                if madeLink:
-                    ma.link = True
-                self.addMaterial(ma)
-                self.materialList[self.findMaterial(matName)].blenderMat = partMat
-        else:
-            #print("====Missing material for object %s. Object won't be exported!=====" % obName)
-            scn['thea_Warning'] = ("Missing material for object %s" % obName)
-            return
-
-        if scn.thea_Reuse == 0:
-            exportGeometry = True
-        else:
-            exportGeometry = False
-
-
-        matKey = self.findMaterial(partMat.name)
-
-        #search if mesh is already exported
-        for obFilenameL, obNameL, obFrameL, isInstance in self.modelFilesList:
-            if obFilenameL == os.path.join(tempDir,modelGroupFilename):
-                exportGeometry = False
-
-        self.modelFilesList.append((os.path.join(tempDir,modelGroupFilename),obName,obName,model.frame, False))
-        modelFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+"_part.mesh.thea"))
-        modelGroupFile = open(os.path.join(tempDir,modelGroupFilename), "w")
-        modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
-
-
-
-        modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\">\n' % (os.path.join(tempDir,modelFilename)))
-        # THIS LINE MAKES NO SENSE
-        modelGroupFile.write('<Message Name=\"./Smoothing/Smooth 180\"/>\n</Link>\n')
-        modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialList[matKey].name)
-
-
-        if exportGeometry: #if we should export geometry too
-            # remember list of selected and active objects
-            vertexNum = 0
-            normalNum = 0
-            faceNum = 0
-            uvNum = 0
-            modelP = []
-            modelN = []
-            modelF = []
-            modelU = []
-            modelV = []
-            modelNN = []
-            meshV = []
-#             if self.materialList[matKey].blenderMat.get('thea_StrandRoot'):
-#                 rootSize = self.materialList[matKey].blenderMat.get('thea_StrandRoot')
-#             else:
-#                 rootSize = 0.01
-            rootSize = self.materialList[matKey].blenderMat.thea_StrandRoot
-            tipSize = self.materialList[matKey].blenderMat.thea_StrandTip
-#             if self.materialList[matKey].blenderMat.get('thea_StrandTip'):
-#                 tipSize = self.materialList[matKey].blenderMat.get('thea_StrandTip')
-#             else:
-#                 tipSize = 0.001
-            hairKeysNum = partSystem.settings.hair_step
-            sizeStep = (rootSize - tipSize) / (hairKeysNum)
-            stepV = 1 / (hairKeysNum)
-            vertexNum = 0
-            faceNum = 0
-            rand = 1
-
-            for particle in partSystem.particles:
-                width = rootSize
-                vStart = vertexNum
-                mul = 1
-                #rand = random()
-                rand = -rand
-                if rand > 0.5:
-                    rWidthX = width
-                    sizeStepX = sizeStep
-                else:
-                    rWidthX = width*-1
-                    sizeStepX = sizeStep*-1
-                #rand = random()
-                if rand > 0.5:
-                    rWidthY = width
-                    sizeStepY = sizeStep
-                else:
-                    rWidthY = width*-1
-                    sizeStepY = sizeStep*-1
-
-#                 rWidthX = width
-#                 sizeStepX = sizeStep
-#                 rWidthY = width
-#                 sizeStepY = sizeStep
-
-                for pL in particle.hair_keys:
-                    pX, pY, pZ = pL.co
-                    modelP.append(pX-(rWidthX/2))
-                    modelP.append(pY-(rWidthX/2))
-                    modelP.append(pZ)
-                    modelP.append(pX+(rWidthX/2))
-                    modelP.append(pY+(rWidthY/2))
-                    modelP.append(pZ)
-                    mul *= -1
-                    width -= sizeStep
-                    rWidthX -= sizeStepX
-                    rWidthY -= sizeStepY
-                    vertexNum +=2
-
-
-
-                fStart = faceNum
-                V = 0
-                for v in range(vStart,vertexNum-2,2):
-                    modelF.append(v)
-                    modelF.append(v+1)
-                    modelF.append(v+2)
-                    modelF.append(v+1)
-                    modelF.append(v+2)
-                    modelF.append(v+3)
-                    # calc normals
-                    v1 = v
-                    v2 = v+1
-                    v3 = v+2
-                    v1X = modelP[v1*3]
-                    v1Y = modelP[v1*3+1]
-                    v1Z = modelP[v1*3+2]
-                    v2X = modelP[v2*3]
-                    v2Y = modelP[v2*3+1]
-                    v2Z = modelP[v2*3+2]
-                    v3X = modelP[v3*3]
-                    v3Y = modelP[v3*3+1]
-                    v3Z = modelP[v3*3+2]
-                    v1c = (v1X,v1Y,v1Z)
-                    v2c = (v2X,v2Y,v2Z)
-                    v3c = (v3X,v3Y,v3Z)
-                    normx = (v1Z-v2Z)*(v3Y-v2Y)-(v1Y-v2Y)*(v3Z-v2Z);
-                    normy = (v1X-v2X)*(v3Z-v2Z)-(v1Z-v2Z)*(v3X-v2X);
-                    normz = (v1Y-v2Y)*(v3X  -v2X)-(v1X-v2X)*(v3Y-v2Y);
-                    normlength = sqrt((normx*normx)+(normy*normy)+(normz*normz));
-                    normx /= normlength;
-                    normy /= normlength;
-                    normz /= normlength;
-                    modelN.append(normx)
-                    modelN.append(normy)
-                    modelN.append(normz)
-
-                    v1 = v+1
-                    v2 = v+2
-                    v3 = v+3
-                    v1X = modelP[v1*3]
-                    v1Y = modelP[v1*3+1]
-                    v1Z = modelP[v1*3+2]
-                    v2X = modelP[v2*3]
-                    v2Y = modelP[v2*3+1]
-                    v2Z = modelP[v2*3+2]
-                    v3X = modelP[v3*3]
-                    v3Y = modelP[v3*3+1]
-                    v3Z = modelP[v3*3+2]
-                    v1c = (v1X,v1Y,v1Z)
-                    v2c = (v2X,v2Y,v2Z)
-                    v3c = (v3X,v3Y,v3Z)
-                    normx = (v1Z-v2Z)*(v3Y-v2Y)-(v1Y-v2Y)*(v3Z-v2Z);
-                    normy = (v1X-v2X)*(v3Z-v2Z)-(v1Z-v2Z)*(v3X-v2X);
-                    normz = (v1Y-v2Y)*(v3X  -v2X)-(v1X-v2X)*(v3Y-v2Y);
-                    normlength = sqrt((normx*normx)+(normy*normy)+(normz*normz));
-                    normx /= normlength;
-                    normy /= normlength;
-                    normz /= normlength;
-                    modelN.append(normx)
-                    modelN.append(normy)
-                    modelN.append(normz)
-
-                    modelU.append(0)
-                    modelU.append(1-V)
-                    modelU.append(1)
-                    modelU.append(1-V)
-                    V += stepV
-                    modelU.append(0)
-                    modelU.append(1-V)
-                    V -= stepV
-                    modelU.append(1)
-                    modelU.append(1-V)
-                    V += stepV
-                    modelU.append(0)
-                    modelU.append(1-V)
-                    modelU.append(1)
-                    modelU.append(1-V)
-                    faceNum += 2
-
-
-
-
-            modelFile = open(os.path.join(tempDir,modelFilename), "wb")
-
-            magicHeader = 0x54524d01
-            modelFile.write(struct.pack('<l',magicHeader))
-
-            vertexCount = len(modelP)
-
-            if vertexCount > 0:
-                modelFile.write(struct.pack('<l',int(vertexCount/3)))
-                modelFile.write(struct.pack("<%df" % (vertexCount), *modelP))
-
-            normalCount = len(modelN)
-            if normalCount > 0:
-                modelFile.write(struct.pack('<l',int(normalCount/3)))
-                modelFile.write(struct.pack("<%df" % (normalCount), *modelN))
-
-            triangleCount = len(modelF)
-            if triangleCount > 0:
-                modelFile.write(struct.pack('<l',int(triangleCount/3)))
-                modelFile.write(struct.pack("<%dl" % (triangleCount), *modelF))
-
-            uvCount = len(modelU)
-            if vertexCount > 0:
-                modelFile.write(struct.pack('<l',int(uvCount/2)))
-                modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
-
-            modelFile.close()
-
-        modelGroupFile.write('</Object>\n')
-        modelGroupFile.close()
+#    def writeHairParticlesBinary(self, scn, ob, model, frame, anim):
+#        '''Old version of hair particle export
+#        '''
+#
+#
+#
+#        def vector_substract(a, b):
+#            return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+#
+#
+#        def vector_cross_product(x, y):
+#            v = [0, 0, 0]
+#            v[0] = x[1]*y[2] - x[2]*y[1]
+#            v[1] = x[2]*y[0] - x[0]*y[2]
+#            v[2] = x[0]*y[1] - x[1]*y[0]
+#            return v
+#
+#        def calc_normal(v0, v1, v2):
+#            return vector_cross_product(vector_substract(v0, v1),vector_substract(v0, v2))
+#
+#        from TheaForBlender.thea_render_main import getMatTransTable, setPaths
+#
+#        (exportPath, theaPath, theaDir, dataPath, currentBlendDir, currentBlendFile) = setPaths(scn)
+#        #exportPath = bpy.path.abspath(scn.render.filepath)
+#        #currentBlendFile = bpy.data.filepath
+#        #currentBlendDir = os.path.dirname(currentBlendFile)
+#        matTransTable = getMatTransTable()
+#
+#        frameS= "0000" + str(frame)
+#        tempDir = os.path.join(exportPath, "~thexport")
+#        if not os.path.isdir(tempDir):
+#            os.mkdir(tempDir)
+#
+#        if ob[0].library:
+#            libObject = True
+#            obName = ob.name+"_hair"
+#            obFileName = ob[3]
+#            modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'_part.xml'))
+#        else:
+#            obFileName = ob[3   ]
+#            modelGroupFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+'_part.xml'))
+#            libObject = False
+#            obName = ob[3]+"_hair"
+#
+#        if ob[2]: #if there is parrent matrix
+#            obD_mat = ob[2] * ob[1]
+#            objectTransform = [[obD_mat[0][0],obD_mat[0][1],obD_mat[0][2]],[obD_mat[1][0],obD_mat[1][1],obD_mat[1][2]],[obD_mat[2][0],obD_mat[2][1],obD_mat[2][2]],[obD_mat[3][0],obD_mat[3][1],obD_mat[3][2]]]
+#        else:
+#            obD_mat = ob[1]
+#            objectTransform = [[obD_mat[0][0],obD_mat[0][1],obD_mat[0][2]],[obD_mat[1][0],obD_mat[1][1],obD_mat[1][2]],[obD_mat[2][0],obD_mat[2][1],obD_mat[2][2]],[obD_mat[3][0],obD_mat[3][1],obD_mat[3][2]]]
+#
+#
+#
+#
+#
+#        model.frame = Transform(\
+#        objectTransform[0][0], objectTransform[1][0], objectTransform[2][0],
+#        objectTransform[0][1], objectTransform[1][1], objectTransform[2][1],
+#        objectTransform[0][2], objectTransform[1][2], objectTransform[2][2],
+#        objectTransform[3][0],  objectTransform[3][1],  objectTransform[3][2])
+#
+#
+#        object = ob[0]
+#        partSystem = ob[5]
+#        partSettings = partSystem.settings
+#        partMatIdx = partSettings.material
+#        partMat = object.material_slots[partMatIdx-1].material
+#        modifierName = ob[6]
+#
+#        if partMat:
+##             if len(scn.get('thea_Warning'))<2:
+##                 scn['thea_Warning'] = ""
+#            # check if we should link this material name
+#            matName = partMat.name
+#            madeLink = False
+#            for trMat in matTransTable:
+#                try:
+#                    if trMat[0] == matName and (self.findMaterialLink(matName) < 0):
+#                        matLink = Link()
+#                        matLink.setName(trMat[0])
+#                        matLink.setFilename(trMat[1])
+#                        self.addMaterialLink(matLink)
+#                        madeLink = True
+#                except:
+#                    emptyMat = True
+#            try:
+#
+#                if os.path.exists(mat['TheaMatLink']) and (self.findMaterialLink(matName) < 0):
+#                    matLink = Link()
+#                    matLink.setName(matName)
+#                    matLink.setFilename(mat['TheaMatLink'])
+#                    self.addMaterialLink(matLink)
+#                    madeLink = True
+#            except: pass
+#
+#            if partMat and (self.findMaterial(matName) < 0):
+#                ma = ThMaterial()
+#                ma.setName(matName)
+#                if madeLink:
+#                    ma.link = True
+#                self.addMaterial(ma)
+#                self.materialList[self.findMaterial(matName)].blenderMat = partMat
+#        else:
+#            #print("====Missing material for object %s. Object won't be exported!=====" % obName)
+#            scn['thea_Warning'] = ("Missing material for object %s" % obName)
+#            return
+#
+#        if scn.thea_Reuse == 0:
+#            exportGeometry = True
+#        else:
+#            exportGeometry = False
+#
+#
+#        matKey = self.findMaterial(partMat.name)
+#
+#        #search if mesh is already exported
+#        for obFilenameL, obNameL, obFrameL, isInstance in self.modelFilesList:
+#            if obFilenameL == os.path.join(tempDir,modelGroupFilename):
+#                exportGeometry = False
+#
+#        self.modelFilesList.append((os.path.join(tempDir,modelGroupFilename),obName,obName,model.frame, False))
+#        modelFilename = os.path.basename(currentBlendFile.replace('.blend', '_f'+frameS[-4:]+"."+obFileName+"_part.mesh.thea"))
+#        modelGroupFile = open(os.path.join(tempDir,modelGroupFilename), "w")
+#        modelGroupFile.write('<Object Identifier=\"./Models/%s\" Label=\"Model\" Name=\"%s\" Type=\"Model\">\n' % (obName, obName))
+#
+#
+#
+#        modelGroupFile.write('<Link Identifier=\"Triangular Mesh\" Name=\"\" File=\"%s\">\n' % (os.path.join(tempDir,modelFilename)))
+#        # THIS LINE MAKES NO SENSE
+#        modelGroupFile.write('<Message Name=\"./Smoothing/Smooth 180\"/>\n</Link>\n')
+#        modelGroupFile.write('<Parameter Name=\"Appearance\" Type=\"String\" Value=\"%s\"/>\n' % self.materialList[matKey].name)
+#
+#
+#        if exportGeometry: #if we should export geometry too
+#            # remember list of selected and active objects
+#            vertexNum = 0
+#            normalNum = 0
+#            faceNum = 0
+#            uvNum = 0
+#            modelP = []
+#            modelN = []
+#            modelF = []
+#            modelU = []
+#            modelV = []
+#            modelNN = []
+#            meshV = []
+##             if self.materialList[matKey].blenderMat.get('thea_StrandRoot'):
+##                 rootSize = self.materialList[matKey].blenderMat.get('thea_StrandRoot')
+##             else:
+##                 rootSize = 0.01
+#            rootSize = self.materialList[matKey].blenderMat.thea_StrandRoot
+#            tipSize = self.materialList[matKey].blenderMat.thea_StrandTip
+##             if self.materialList[matKey].blenderMat.get('thea_StrandTip'):
+##                 tipSize = self.materialList[matKey].blenderMat.get('thea_StrandTip')
+##             else:
+##                 tipSize = 0.001
+#            hairKeysNum = partSystem.settings.hair_step
+#            sizeStep = (rootSize - tipSize) / (hairKeysNum)
+#            stepV = 1 / (hairKeysNum)
+#            vertexNum = 0
+#            faceNum = 0
+#            rand = 1
+#
+#            for particle in partSystem.particles:
+#                width = rootSize
+#                vStart = vertexNum
+#                mul = 1
+#                #rand = random()
+#                rand = -rand
+#                if rand > 0.5:
+#                    rWidthX = width
+#                    sizeStepX = sizeStep
+#                else:
+#                    rWidthX = width*-1
+#                    sizeStepX = sizeStep*-1
+#                #rand = random()
+#                if rand > 0.5:
+#                    rWidthY = width
+#                    sizeStepY = sizeStep
+#                else:
+#                    rWidthY = width*-1
+#                    sizeStepY = sizeStep*-1
+#
+##                 rWidthX = width
+##                 sizeStepX = sizeStep
+##                 rWidthY = width
+##                 sizeStepY = sizeStep
+#
+#                for pL in particle.hair_keys:
+#                    pX, pY, pZ = pL.co
+#                    modelP.append(pX-(rWidthX/2))
+#                    modelP.append(pY-(rWidthX/2))
+#                    modelP.append(pZ)
+#                    modelP.append(pX+(rWidthX/2))
+#                    modelP.append(pY+(rWidthY/2))
+#                    modelP.append(pZ)
+#                    mul *= -1
+#                    width -= sizeStep
+#                    rWidthX -= sizeStepX
+#                    rWidthY -= sizeStepY
+#                    vertexNum +=2
+#
+#
+#
+#                fStart = faceNum
+#                V = 0
+#                for v in range(vStart,vertexNum-2,2):
+#                    modelF.append(v)
+#                    modelF.append(v+1)
+#                    modelF.append(v+2)
+#                    modelF.append(v+1)
+#                    modelF.append(v+2)
+#                    modelF.append(v+3)
+#                    # calc normals
+#                    v1 = v
+#                    v2 = v+1
+#                    v3 = v+2
+#                    v1X = modelP[v1*3]
+#                    v1Y = modelP[v1*3+1]
+#                    v1Z = modelP[v1*3+2]
+#                    v2X = modelP[v2*3]
+#                    v2Y = modelP[v2*3+1]
+#                    v2Z = modelP[v2*3+2]
+#                    v3X = modelP[v3*3]
+#                    v3Y = modelP[v3*3+1]
+#                    v3Z = modelP[v3*3+2]
+#                    v1c = (v1X,v1Y,v1Z)
+#                    v2c = (v2X,v2Y,v2Z)
+#                    v3c = (v3X,v3Y,v3Z)
+#                    normx = (v1Z-v2Z)*(v3Y-v2Y)-(v1Y-v2Y)*(v3Z-v2Z);
+#                    normy = (v1X-v2X)*(v3Z-v2Z)-(v1Z-v2Z)*(v3X-v2X);
+#                    normz = (v1Y-v2Y)*(v3X  -v2X)-(v1X-v2X)*(v3Y-v2Y);
+#                    normlength = sqrt((normx*normx)+(normy*normy)+(normz*normz));
+#                    normx /= normlength;
+#                    normy /= normlength;
+#                    normz /= normlength;
+#                    modelN.append(normx)
+#                    modelN.append(normy)
+#                    modelN.append(normz)
+#
+#                    v1 = v+1
+#                    v2 = v+2
+#                    v3 = v+3
+#                    v1X = modelP[v1*3]
+#                    v1Y = modelP[v1*3+1]
+#                    v1Z = modelP[v1*3+2]
+#                    v2X = modelP[v2*3]
+#                    v2Y = modelP[v2*3+1]
+#                    v2Z = modelP[v2*3+2]
+#                    v3X = modelP[v3*3]
+#                    v3Y = modelP[v3*3+1]
+#                    v3Z = modelP[v3*3+2]
+#                    v1c = (v1X,v1Y,v1Z)
+#                    v2c = (v2X,v2Y,v2Z)
+#                    v3c = (v3X,v3Y,v3Z)
+#                    normx = (v1Z-v2Z)*(v3Y-v2Y)-(v1Y-v2Y)*(v3Z-v2Z);
+#                    normy = (v1X-v2X)*(v3Z-v2Z)-(v1Z-v2Z)*(v3X-v2X);
+#                    normz = (v1Y-v2Y)*(v3X  -v2X)-(v1X-v2X)*(v3Y-v2Y);
+#                    normlength = sqrt((normx*normx)+(normy*normy)+(normz*normz));
+#                    normx /= normlength;
+#                    normy /= normlength;
+#                    normz /= normlength;
+#                    modelN.append(normx)
+#                    modelN.append(normy)
+#                    modelN.append(normz)
+#
+#                    modelU.append(0)
+#                    modelU.append(1-V)
+#                    modelU.append(1)
+#                    modelU.append(1-V)
+#                    V += stepV
+#                    modelU.append(0)
+#                    modelU.append(1-V)
+#                    V -= stepV
+#                    modelU.append(1)
+#                    modelU.append(1-V)
+#                    V += stepV
+#                    modelU.append(0)
+#                    modelU.append(1-V)
+#                    modelU.append(1)
+#                    modelU.append(1-V)
+#                    faceNum += 2
+#
+#
+#
+#
+#            modelFile = open(os.path.join(tempDir,modelFilename), "wb")
+#
+#            magicHeader = 0x54524d01
+#            modelFile.write(struct.pack('<l',magicHeader))
+#
+#            vertexCount = len(modelP)
+#
+#            if vertexCount > 0:
+#                modelFile.write(struct.pack('<l',int(vertexCount/3)))
+#                modelFile.write(struct.pack("<%df" % (vertexCount), *modelP))
+#
+#            normalCount = len(modelN)
+#            if normalCount > 0:
+#                modelFile.write(struct.pack('<l',int(normalCount/3)))
+#                modelFile.write(struct.pack("<%df" % (normalCount), *modelN))
+#
+#            triangleCount = len(modelF)
+#            if triangleCount > 0:
+#                modelFile.write(struct.pack('<l',int(triangleCount/3)))
+#                modelFile.write(struct.pack("<%dl" % (triangleCount), *modelF))
+#
+#            uvCount = len(modelU)
+#            if vertexCount > 0:
+#                modelFile.write(struct.pack('<l',int(uvCount/2)))
+#                modelFile.write(struct.pack("<%df" % (uvCount), *modelU))
+#
+#            modelFile.close()
+#
+#        modelGroupFile.write('</Object>\n')
+#        modelGroupFile.close()
 
     def writeHairParticlesBinaryNew(self, scn, ob, model, frame, anim):
         '''write hair particles using binary mesh.thea format
@@ -4794,6 +4899,7 @@ class XMLExporter:
             width = rootSize
             hairKeysNum = partSystem.settings.draw_step
             stepV = 1 / (hairKeysNum)
+            #why double declare variable
             stepV = 0.25
             vertexNum = 0
             faceNum = 0
@@ -5124,6 +5230,10 @@ class XMLExporter:
                             if (mtex.use_map_color_spec == 1):
                                 texture = tex
                                 return texture
+                        if (type == "Reflect90"):
+                            if (mtex.use_map_color_spec == 1):
+                                texture = tex
+                                return texture
                         if (type == "Translucent"):
                             if (mtex.use_map_translucency == 1):
                                 texture = tex
@@ -5254,6 +5364,10 @@ class XMLExporter:
                     bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic"))
                 if (((getattr(mat.blenderMat, 'thea_BasicReflectanceCol')[0], getattr(mat.blenderMat, 'thea_BasicReflectanceCol')[1], getattr(mat.blenderMat, 'thea_BasicReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicReflectanceFilename'))>1:
                     bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Basic"))
+                    if getattr(mat.blenderMat,'thea_BasicReflectionCurve'):
+                        bsdf.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_BasicReflectionCurve'), getattr(mat.blenderMat,'thea_BasicReflectCurveList')))
+                if (((getattr(mat.blenderMat, 'thea_BasicReflect90Col')[0], getattr(mat.blenderMat, 'thea_BasicReflect90Col')[1], getattr(mat.blenderMat, 'thea_BasicReflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicReflect90Filename'))>1:
+                    bsdf.setReflect90Texture(getTexture(type="Reflect90", component="thea_Basic"))
                 if (((getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[0], getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[1], getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicTranslucentFilename'))>1:
                     bsdf.setTranslucentTexture(getTexture(type="Translucent", component="thea_Basic"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_Basic"))
@@ -5306,6 +5420,7 @@ class XMLExporter:
                 bsdf.setMicroRoughnessEnable(getattr(mat.blenderMat,'thea_BasicMicroRoughness'))
                 bsdf.setMicroRoughnessWidth(getattr(mat.blenderMat,'thea_BasicMicroRoughnessWidth'))
                 bsdf.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_BasicMicroRoughnessHeight'))
+
                 #except:
                 #    bsdf.setTraceReflections(True)
                 laySubstrate.order = getattr(mat.blenderMat, 'thea_BasicOrder', 0)
@@ -5314,10 +5429,14 @@ class XMLExporter:
                 wtex = False
                 bsdf = BasicBSDF()
 #                bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic2"))
-                if (((getattr(mat.blenderMat, 'diffuse_color')[0], getattr(mat.blenderMat, 'diffuse_color')[1], getattr(mat.blenderMat, 'diffuse_color')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicDiffuseFilename'))>1:
+                if (((getattr(mat.blenderMat, 'diffuse_color')[0], getattr(mat.blenderMat, 'diffuse_color')[1], getattr(mat.blenderMat, 'diffuse_color')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Basic2DiffuseFilename'))>1:
                     bsdf.setDiffuseTexture(getTexture(type="Diffuse", component="thea_Basic2"))
                 if (((getattr(mat.blenderMat, 'thea_Basic2ReflectanceCol')[0], getattr(mat.blenderMat, 'thea_Basic2ReflectanceCol')[1], getattr(mat.blenderMat, 'thea_Basic2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Basic2ReflectanceFilename'))>1:
                     bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Basic2"))
+                    if getattr(mat.blenderMat,'thea_Basic2ReflectionCurve'):
+                        bsdf.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_Basic2ReflectionCurve'), getattr(mat.blenderMat,'thea_Basic2ReflectCurveList')))
+                if (((getattr(mat.blenderMat, 'thea_Basic2Reflect90Col')[0], getattr(mat.blenderMat, 'thea_Basic2Reflect90Col')[1], getattr(mat.blenderMat, 'thea_Basic2Reflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Basic2Reflect90Filename'))>1:
+                    bsdf.setReflect90Texture(getTexture(type="Reflect90", component="thea_Basic"))
                 if (((getattr(mat.blenderMat, 'thea_Basic2TranslucentCol')[0], getattr(mat.blenderMat, 'thea_Basic2TranslucentCol')[1], getattr(mat.blenderMat, 'thea_Basic2TranslucentCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Basic2TranslucentFilename'))>1:
                     bsdf.setTranslucentTexture(getTexture(type="Translucent", component="thea_Basic2"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_Basic2"))
@@ -5369,6 +5488,8 @@ class XMLExporter:
                 bsdf.setMicroRoughnessEnable(getattr(mat.blenderMat,'thea_Basic2MicroRoughness'))
                 bsdf.setMicroRoughnessWidth(getattr(mat.blenderMat,'thea_Basic2MicroRoughnessWidth'))
                 bsdf.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_Basic2MicroRoughnessHeight'))
+#                bsdf.setCustomCurve(getattr(mat.blenderMat,'thea_2ReflectionCurve'))
+#                bsdf.setCustomCurveList(getattr(mat.blenderMat,'thea_BasicReflectCurveList'))
 
                 wtex = getTexture(type="Stencil", component="thea_Basic2")
                 thea_globals.log.debug("wtex: %s" % (wtex))
@@ -5395,7 +5516,13 @@ class XMLExporter:
             if hasGlossy:
                 wtex = False
                 bsdf = GlossyBSDF()
-                bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy"))
+#                bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy"))
+                if (((getattr(mat.blenderMat, 'thea_GlossyReflectanceCol')[0], getattr(mat.blenderMat, 'thea_GlossyReflectanceCol')[1], getattr(mat.blenderMat, 'thea_GlossyReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Glossy2ReflectanceFilename'))>1:
+                    bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy"))
+                    if getattr(mat.blenderMat,'thea_GlossyReflectionCurve'):
+                        bsdf.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_GlossyReflectionCurve'), getattr(mat.blenderMat,'thea_GlossyReflectCurveList')))
+                if (((getattr(mat.blenderMat, 'thea_GlossyReflect90Col')[0], getattr(mat.blenderMat, 'thea_GlossyReflect90Col')[1], getattr(mat.blenderMat, 'thea_GlossyReflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_GlossyReflect90Filename'))>1:
+                    bsdf.setReflect90Texture(getTexture(type="Reflect90", component="thea_Glossy"))
                 bsdf.setTransmittanceTexture(getTexture(type="Transmittance", component="thea_Glossy"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_Glossy"))
                 bsdf.setRoughnessTrTexture(getTexture(type="RoughnessTr", component="thea_Glossy"))
@@ -5475,6 +5602,8 @@ class XMLExporter:
                 bsdf.setMicroRoughnessEnable(getattr(mat.blenderMat,'thea_GlossyMicroRoughness'))
                 bsdf.setMicroRoughnessWidth(getattr(mat.blenderMat,'thea_GlossyMicroRoughnessWidth'))
                 bsdf.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_GlossyMicroRoughnessHeight'))
+#                bsdf.setCustomCurve(getattr(mat.blenderMat,'thea_BasicReflectionCurve'))
+#                bsdf.setCustomCurveList(getattr(mat.blenderMat,'thea_BasicReflectCurveList'))
                 wtex = getTexture(type="Stencil", component="thea_Glossy")
                 #print("wtex glossy: ", wtex)
 #                 if layerAdded: #if already have layer
@@ -5492,7 +5621,14 @@ class XMLExporter:
             if hasGlossy2:
                 wtex = False
                 bsdf = GlossyBSDF()
-                bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy2"))
+#                bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy2"))
+                if (((getattr(mat.blenderMat, 'thea_Glossy2ReflectanceCol')[0], getattr(mat.blenderMat, 'thea_Glossy2ReflectanceCol')[1], getattr(mat.blenderMat, 'thea_Glossy2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Glossy2ReflectanceFilename'))>1:
+                    bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Glossy2"))
+                    if getattr(mat.blenderMat,'thea_Glossy2ReflectionCurve'):
+                        bsdf.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_Glossy2ReflectionCurve'), getattr(mat.blenderMat,'thea_Glossy2ReflectCurveList')))
+                if (((getattr(mat.blenderMat, 'thea_Glossy2Reflect90Col')[0], getattr(mat.blenderMat, 'thea_Glossy2Reflect90Col')[1], getattr(mat.blenderMat, 'thea_Glossy2Reflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_Glossy2Reflect90Filename'))>1:
+                    bsdf.setReflect90Texture(getTexture(type="Reflect90", component="thea_Glossy2"))
+
                 bsdf.setTransmittanceTexture(getTexture(type="Transmittance", component="thea_Glossy2"))
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_Glossy2"))
                 bsdf.setRoughnessTrTexture(getTexture(type="RoughnessTr", component="thea_Glossy2"))
@@ -5571,6 +5707,8 @@ class XMLExporter:
                 bsdf.setMicroRoughnessEnable(getattr(mat.blenderMat,'thea_Glossy2MicroRoughness'))
                 bsdf.setMicroRoughnessWidth(getattr(mat.blenderMat,'thea_Glossy2MicroRoughnessWidth'))
                 bsdf.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_Glossy2MicroRoughnessHeight'))
+#                bsdf.setCustomCurve(getattr(mat.blenderMat,'thea_2ReflectionCurve'))
+#                bsdf.setCustomCurveList(getattr(mat.blenderMat,'thea_BasicReflectCurveList'))
                 wtex = getTexture(type="Stencil", component="thea_Glossy2")
 #                 if layerAdded: #if already have layer
                 if wtex:
@@ -5587,7 +5725,14 @@ class XMLExporter:
             if hasSSS:
                 wtex = False
                 bsdf = SSS()
-                bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_SSS"))
+#                bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_SSS"))
+                if (((getattr(mat.blenderMat, 'thea_SSSReflectanceCol')[0], getattr(mat.blenderMat, 'thea_SSSReflectanceCol')[1], getattr(mat.blenderMat, 'thea_SSSReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_SSSReflectanceFilename'))>1:
+                    bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_SSS"))
+                    if getattr(mat.blenderMat,'thea_SSSReflectionCurve'):
+                        bsdf.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_SSSReflectionCurve'), getattr(mat.blenderMat,'thea_SSSReflectCurveList')))
+                if (((getattr(mat.blenderMat, 'thea_SSSReflect90Col')[0], getattr(mat.blenderMat, 'thea_SSSReflect90Col')[1], getattr(mat.blenderMat, 'thea_SSSReflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_SSSReflect90Filename'))>1:
+                    bsdf.setReflect90Texture(getTexture(type="Reflect90", component="thea_SSS"))
+
                 bsdf.setRoughnessTexture(getTexture(type="Roughness", component="thea_SSS"))
                 bsdf.setRoughnessTrTexture(getTexture(type="RoughnessTr", component="thea_SSS"))
                 bsdf.setBumpTexture(getTexture(type="Bump", component="thea_SSS"))
@@ -5659,6 +5804,9 @@ class XMLExporter:
                         bsdf.setTraceRefractions(True)
                 except:
                     bsdf.setTraceRefractions(True)
+                bsdf.setMicroRoughnessEnable(getattr(mat.blenderMat,'thea_SSSMicroRoughness'))
+                bsdf.setMicroRoughnessWidth(getattr(mat.blenderMat,'thea_SSSMicroRoughnessWidth'))
+                bsdf.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_SSSMicroRoughnessHeight'))
                 wtex = getTexture(type="Stencil", component="thea_SSS")
 #                 if layerAdded: #if already have layer
                 if wtex:
@@ -5739,7 +5887,14 @@ class XMLExporter:
             if hasCoating:
                 wtex = False
                 coating = CoatingBSDF()
-                coating.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Coating"))
+#                coating.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Coating"))
+                if (((getattr(mat.blenderMat, 'thea_CoatingReflectanceCol')[0], getattr(mat.blenderMat, 'thea_CoatingReflectanceCol')[1], getattr(mat.blenderMat, 'thea_CoatingReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_CoatingReflectanceFilename'))>1:
+                    coating.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Coating"))
+                    if getattr(mat.blenderMat,'thea_CoatingReflectionCurve'):
+                        coating.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_CoatingReflectionCurve'), getattr(mat.blenderMat,'thea_CoatingReflectCurveList')))
+                if (((getattr(mat.blenderMat, 'thea_CoatingReflect90Col')[0], getattr(mat.blenderMat, 'thea_CoatingReflect90Col')[1], getattr(mat.blenderMat, 'thea_CoatingReflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_CoatingReflect90Filename'))>1:
+                    coating.setReflect90Texture(getTexture(type="Reflect90", component="thea_Coating"))
+
                 coating.setRoughnessTexture(getTexture(type="Roughness", component="thea_Coating"))
 #                CHANGED> ADDED anis and rotation
                 coating.setAnisotropyTexture(getTexture(type="Anisotropy", component="thea_Coating"))
@@ -5803,6 +5958,9 @@ class XMLExporter:
                 coating.setMicroRoughnessEnable(getattr(mat.blenderMat,'thea_CoatingMicroRoughness'))
                 coating.setMicroRoughnessWidth(getattr(mat.blenderMat,'thea_CoatingMicroRoughnessWidth'))
                 coating.setMicroRoughnessHeight(getattr(mat.blenderMat,'thea_CoatingMicroRoughnessHeight'))
+#                coating.setCustomCurve(getattr(mat.blenderMat,'thea_ReflectionCurve'))
+#                coating.setCustomCurveList(getattr(mat.blenderMat,'thea_BasicReflectCurveList'))
+
                 wtex = getTexture(type="Stencil", component="thea_Coating")
                 thea_globals.log.debug("wtex: %s" % (wtex))
 #                 if layerAdded: #if already have layer

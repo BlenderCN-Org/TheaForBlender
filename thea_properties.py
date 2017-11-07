@@ -2171,6 +2171,9 @@ def materialFilenameUpdated(self, context, origin=""):
         if 'Reflectance' in tex.name:
             slot.use_map_color_spec=True
             slot.use_map_color_diffuse=False
+        if 'Reflect90' in tex.name:
+            slot.use_map_color_spec=True
+            slot.use_map_color_diffuse=False
         if 'Translucent' in tex.name:
             slot.use_map_translucency=True
             slot.use_map_color_diffuse=False
@@ -2407,6 +2410,22 @@ Mat.thea_BasicReflectanceFilename = bpy.props.StringProperty(
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicReflectanceFilename")
                   )
 
+Mat.thea_BasicReflect90Col = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                name="Reflect 90",
+                default=(1, 1, 1),
+                description="Reflectance 90 Color",
+                subtype="COLOR",
+                update=materialUpdated)
+
+Mat.thea_BasicReflect90Filename = bpy.props.StringProperty(
+                name = "Reflect 90",
+                default = "",
+                description = "Reflect 90 texture file path",
+                subtype = 'FILE_PATH',
+                update=lambda a,b: materialFilenameUpdated(a,b,"thea_BasicReflect90Filename"))
+
+
 Mat.thea_BasicTranslucentCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 name="Translucent",
@@ -2581,6 +2600,63 @@ Mat.thea_BasicMicroRoughnessHeight = bpy.props.FloatProperty(
                 description="Height (um)",
                 update=materialUpdated)
 
+
+def CustomCurveUpdate(self, context, origin=""):
+    mat = context.material
+    mat.use_nodes = True
+    mat.use_nodes = False
+    curveName = mat.name
+    nodes = mat.node_tree.nodes
+
+#    for mat_node in nodes:
+#        if mat_node.name != curveName+"_"+origin:
+#            nodes.remove(mat_node)
+    if curveName+"_"+origin not in mat.node_tree.nodes:
+        cn = nodes.new('ShaderNodeRGBCurve')
+        nodes['RGB Curves'].name = curveName+"_"+origin
+    c = nodes[curveName+"_"+origin].mapping.curves[3]
+    d = nodes[curveName+"_"+origin].mapping
+    d.initialize()
+    curve = c
+    # curve is the curve map, it has an evaluate function, that returns the y value of the curve at point x
+    point = curve.evaluate(0) #gives the value of the curve at x=0
+    points = str([round((curve.evaluate(i/91)*255)*257) for i in range(91)]) # gives what you want.
+    if origin == "thea_BasicReflectCurve":
+        setattr(mat,"thea_BasicReflectCurveList", points)
+        setattr(mat,"thea_BasicReflectCurve", curveName+"_"+origin)
+    if origin == "thea_Basic2ReflectCurve":
+        setattr(mat,"thea_Basic2ReflectCurveList", points)
+        setattr(mat,"thea_Basic2ReflectCurve", curveName+"_"+origin)
+    if origin == "thea_GlossyReflectCurve":
+        setattr(mat,"thea_GlossyReflectCurveList", points)
+        setattr(mat,"thea_GlossyReflectCurve", curveName+"_"+origin)
+    if origin == "thea_Glossy2ReflectCurve":
+        setattr(mat,"thea_Glossy2ReflectCurveList", points)
+        setattr(mat,"thea_Glossy2ReflectCurve", curveName+"_"+origin)
+    if origin == "thea_SSSReflectCurve":
+        setattr(mat,"thea_SSSReflectCurveList", points)
+        setattr(mat,"thea_SSSReflectCurve", curveName+"_"+origin)
+    if origin == "thea_CoatingReflectCurve":
+        setattr(mat,"thea_CoatingReflectCurveList", points)
+        setattr(mat,"thea_CoatingReflectCurve", curveName+"_"+origin)
+#    thea_globals.log.debug("Curve points mat: %s" % points)
+
+Mat.thea_BasicReflectionCurve = bpy.props.BoolProperty(
+                name="Custom Reflection Curve",
+                description="Enable custom reflecion curve",
+                default= False,
+                update=lambda a,b: CustomCurveUpdate(a,b,"thea_BasicReflectCurve"))
+
+Mat.thea_BasicReflectCurve = bpy.props.StringProperty(
+                name = "Custom Curve",
+                default = "",
+                description = "Custom Curve")
+
+Mat.thea_BasicReflectCurveList = bpy.props.StringProperty(
+                name = "Custom Curve List",
+                default = "",
+                description = "Custom Curve List")
+
 Mat.thea_Basic2 = bpy.props.BoolProperty(
                 name="Basic2",
                 description="Enable second Basic material component",
@@ -2643,6 +2719,21 @@ Mat.thea_Basic2ReflectanceFilename = bpy.props.StringProperty(
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2ReflectanceFilename")
                   )
+
+Mat.thea_Basic2Reflect90Col = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                name="Reflect 90",
+                default=(1, 1, 1),
+                description="Reflectance 90 Color",
+                subtype="COLOR",
+                update=materialUpdated)
+
+Mat.thea_Basic2Reflect90Filename = bpy.props.StringProperty(
+                name = "Reflect 90",
+                default = "",
+                description = "Reflect 90 texture file path",
+                subtype = 'FILE_PATH',
+                update=lambda a,b: materialFilenameUpdated(a,b,"thea_Basic2Reflect90Filename"))
 
 
 Mat.thea_Basic2TranslucentCol = bpy.props.FloatVectorProperty(
@@ -2818,6 +2909,24 @@ Mat.thea_Basic2MicroRoughnessHeight = bpy.props.FloatProperty(
                 description="Height (um)",
                 update=materialUpdated)
 
+Mat.thea_Basic2ReflectionCurve = bpy.props.BoolProperty(
+                name="Custom Reflection Curve",
+                description="Enable custom reflecion curve",
+                default= False,
+                update=lambda a,b: CustomCurveUpdate(a,b,"thea_Basic2ReflectCurve"))
+
+Mat.thea_Basic2ReflectCurve = bpy.props.StringProperty(
+                name = "Custom Curve",
+                default = "",
+                description = "Custom Curve")
+
+Mat.thea_Basic2ReflectCurveList = bpy.props.StringProperty(
+                name = "Custom Curve List",
+                default = "",
+                description = "Custom Curve List")
+
+
+
 Mat.thea_Glossy = bpy.props.BoolProperty(
                 name="Glossy",
                 description="Enable Glossy material component",
@@ -2863,6 +2972,22 @@ Mat.thea_GlossyReflectanceFilename = bpy.props.StringProperty(
                   description = "Reflectance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyReflectanceFilename")
+                  )
+
+Mat.thea_GlossyReflect90Col = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                default=(1, 1, 1),
+                name="Reflectance 90",
+                description="Reflectance 90 Color",
+                subtype="COLOR",
+                update=materialUpdated)
+
+Mat.thea_GlossyReflect90Filename = bpy.props.StringProperty(
+                  name = "Reflectance 90 texture",
+                  default = "",
+                  description = "Reflectance 90 texture file path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: materialFilenameUpdated(a,b,"thea_GlossyReflect90Filename")
                   )
 
 Mat.thea_GlossyTransmittanceCol = bpy.props.FloatVectorProperty(
@@ -3087,6 +3212,24 @@ Mat.thea_GlossyMicroRoughnessHeight = bpy.props.FloatProperty(
                 description="Height (um)",
                 update=materialUpdated)
 
+Mat.thea_GlossyReflectionCurve = bpy.props.BoolProperty(
+                name="Custom Reflection Curve",
+                description="Enable custom reflecion curve",
+                default= False,
+                update=lambda a,b: CustomCurveUpdate(a,b,"thea_GlossyReflectCurve"))
+
+Mat.thea_GlossyReflectCurve = bpy.props.StringProperty(
+                name = "Custom Curve",
+                default = "",
+                description = "Custom Curve")
+
+Mat.thea_GlossyReflectCurveList = bpy.props.StringProperty(
+                name = "Custom Curve List",
+                default = "",
+                description = "Custom Curve List")
+
+
+
 Mat.thea_Glossy2 = bpy.props.BoolProperty(
                 name="Glossy2",
                 description="Enable Glossy2 material component",
@@ -3132,6 +3275,22 @@ Mat.thea_Glossy2ReflectanceFilename = bpy.props.StringProperty(
                   description = "Reflectance texture file path",
                   subtype = 'FILE_PATH',
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2ReflectanceFilename")
+                  )
+
+Mat.thea_Glossy2Reflect90Col = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                default=(1, 1, 1),
+                name="Reflectance 90",
+                description="Reflectance 90 Color",
+                subtype="COLOR",
+                update=materialUpdated)
+
+Mat.thea_Glossy2Reflect90Filename = bpy.props.StringProperty(
+                  name = "Reflectance 90 texture",
+                  default = "",
+                  description = "Reflectance 90 texture file path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: materialFilenameUpdated(a,b,"thea_Glossy2Reflect90Filename")
                   )
 
 Mat.thea_Glossy2TransmittanceCol = bpy.props.FloatVectorProperty(
@@ -3355,6 +3514,22 @@ Mat.thea_Glossy2MicroRoughnessHeight = bpy.props.FloatProperty(
                 name="Height (um)",
                 description="Height (um)",
                 update=materialUpdated)
+
+Mat.thea_Glossy2ReflectionCurve = bpy.props.BoolProperty(
+                name="Custom Reflection Curve",
+                description="Enable custom reflecion curve",
+                default= False,
+                update=lambda a,b: CustomCurveUpdate(a,b,"thea_Glossy2ReflectCurve"))
+
+Mat.thea_Glossy2ReflectCurve = bpy.props.StringProperty(
+                name = "Custom Curve",
+                default = "",
+                description = "Custom Curve")
+
+Mat.thea_Glossy2ReflectCurveList = bpy.props.StringProperty(
+                name = "Custom Curve List",
+                default = "",
+                description = "Custom Curve List")
 
 
 Mat.thea_Displacement = bpy.props.BoolProperty(
@@ -3955,6 +4130,22 @@ Mat.thea_CoatingReflectanceFilename = bpy.props.StringProperty(
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingReflectanceFilename")
                   )
 
+Mat.thea_CoatingReflect90Col = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                default=(1, 1, 1),
+                name="Reflectance 90",
+                description="Reflectance 90 Color",
+                subtype="COLOR",
+                update=materialUpdated)
+
+Mat.thea_CoatingReflect90Filename = bpy.props.StringProperty(
+                  name = "Reflectance 90 texture",
+                  default = "",
+                  description = "Reflectance 90 texture file path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: materialFilenameUpdated(a,b,"thea_CoatingReflect90Filename")
+                  )
+
 Mat.thea_CoatingIOR = bpy.props.FloatProperty(
                 min=0,
                 max=1000,
@@ -4137,6 +4328,24 @@ Mat.thea_CoatingMicroRoughnessHeight = bpy.props.FloatProperty(
                 description="Height (um)",
                 update=materialUpdated)
 
+Mat.thea_CoatingReflectionCurve = bpy.props.BoolProperty(
+                name="Custom Reflection Curve",
+                description="Enable custom reflecion curve",
+                default= False,
+                update=lambda a,b: CustomCurveUpdate(a,b,"thea_CoatingReflectCurve"))
+
+Mat.thea_CoatingReflectCurve = bpy.props.StringProperty(
+                name = "Custom Curve",
+                default = "",
+                description = "Custom Curve")
+
+Mat.thea_CoatingReflectCurveList = bpy.props.StringProperty(
+                name = "Custom Curve List",
+                default = "",
+                description = "Custom Curve List")
+
+
+
 Mat.thea_SSS = bpy.props.BoolProperty(
                 name="SSS",
                 description="Enable SSS material component",
@@ -4170,6 +4379,7 @@ Mat.thea_SSSWeightFilename = bpy.props.StringProperty(
 
 Mat.thea_SSSReflectanceCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
+                default=(1, 1, 1),
                 name="Reflectance",
                 description="Reflectance Color",
                 subtype="COLOR",
@@ -4183,6 +4393,22 @@ Mat.thea_SSSReflectanceFilename = bpy.props.StringProperty(
                   update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSReflectanceFilename")
                   )
 
+Mat.thea_SSSReflect90Col = bpy.props.FloatVectorProperty(
+                min=0, max=1,
+                default=(1, 1, 1),
+                name="Reflectance 90",
+                description="Reflectance 90 Color",
+                subtype="COLOR",
+                update=materialUpdated)
+
+Mat.thea_SSSReflect90Filename = bpy.props.StringProperty(
+                  name = "Reflectance 90 texture",
+                  default = "",
+                  description = "Reflectance 90 texture file path",
+                  subtype = 'FILE_PATH',
+                  update=lambda a,b: materialFilenameUpdated(a,b,"thea_SSSReflect90Filename")
+                  )
+
 Mat.thea_SSSAbsorptionCol = bpy.props.FloatVectorProperty(
                 min=0, max=1,
                 name="Absorption",
@@ -4194,7 +4420,7 @@ Mat.thea_SSSAbsorption = bpy.props.FloatProperty(
                 min=0,
                 max=10000,
                 precision=2,
-                default=0.0,
+                default=100,
                 name="Absorption",
                 description="Absorption",
                 update=materialUpdated)
@@ -4210,7 +4436,7 @@ Mat.thea_SSSScattering = bpy.props.FloatProperty(
                 min=0,
                 max=100000,
                 precision=2,
-                default=1000.0,
+                default=100.0,
                 name="Scattering",
                 description="Scattering",
                 update=materialUpdated)
@@ -4218,7 +4444,7 @@ Mat.thea_SSSScattering = bpy.props.FloatProperty(
 Mat.thea_SSSAsymetry = bpy.props.FloatProperty(
                 min=0,
                 max=1,
-                precision=2,
+                precision=3,
                 default=0.0,
                 name="Asymetry",
                 description="Asymetry",
@@ -4228,7 +4454,7 @@ Mat.thea_SSSIOR = bpy.props.FloatProperty(
                 min=0,
                 max=1000,
                 precision=3,
-                default=1.5,
+                default=1.3,
                 name="Index of Refraction (n)",
                 description="Index of Refraction (n)",
                 update=materialUpdated)
@@ -4347,6 +4573,48 @@ Mat.thea_SSSStructureNormal = bpy.props.BoolProperty(
                 description="Enable normal mapping",
                 default= False,
                 update=materialUpdated)
+
+Mat.thea_SSSMicroRoughness = bpy.props.BoolProperty(
+                name="Micro Roughness",
+                description="Enable MicroRoughness",
+                default= False,
+                update=materialUpdated)
+
+Mat.thea_SSSMicroRoughnessWidth = bpy.props.FloatProperty(
+                min=0,
+                max=1000,
+                precision=2,
+                default=10.0,
+                name="Width (um)",
+                description="Width (um)",
+                update=materialUpdated)
+
+Mat.thea_SSSMicroRoughnessHeight = bpy.props.FloatProperty(
+                min=0,
+                max=100,
+                precision=3,
+                default=0.25,
+                name="Height (um)",
+                description="Height (um)",
+                update=materialUpdated)
+
+Mat.thea_SSSReflectionCurve = bpy.props.BoolProperty(
+                name="Custom Reflection Curve",
+                description="Enable custom reflecion curve",
+                default= False,
+                update=lambda a,b: CustomCurveUpdate(a,b,"thea_SSSReflectCurve"))
+
+Mat.thea_SSSReflectCurve = bpy.props.StringProperty(
+                name = "Custom Curve",
+                default = "",
+                description = "Custom Curve")
+
+Mat.thea_SSSReflectCurveList = bpy.props.StringProperty(
+                name = "Custom Curve List",
+                default = "",
+                description = "Custom Curve List")
+
+
 
 Mat.thea_ThinFilm = bpy.props.BoolProperty(
                 name="ThinFilm Component",

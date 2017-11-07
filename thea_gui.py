@@ -557,6 +557,19 @@ class MATERIAL_PT_Coating(MaterialButtonsPanel, bpy.types.Panel):
            if(getattr(mat, "thea_CoatingMicroRoughness", False)):
                row.prop(mat, "thea_CoatingMicroRoughnessWidth")
                row.prop(mat, "thea_CoatingMicroRoughnessHeight")
+           if (((getattr(mat, 'thea_CoatingReflectanceCol')[0], getattr(mat, 'thea_CoatingReflectanceCol')[1], getattr(mat, 'thea_CoatingReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_CoatingReflectanceFilename'))>1:
+               layout.separator();
+               layout.label(text="Fresnel")
+               row = layout.row()
+               if(mat.thea_CoatingReflect90Filename==""):
+                   row.prop(mat, "thea_CoatingReflect90Col")
+               row.prop(mat, "thea_CoatingReflect90Filename")
+               layout.prop(mat, "thea_CoatingReflectionCurve")
+               if mat.thea_CoatingReflectionCurve:
+                   layout.prop(mat, "thea_CoatingReflectCurve", text="Curve Name")
+                   layout.template_curve_mapping(myCurveData(getattr(mat, "thea_CoatingReflectCurve"), "thea_CoatingReflectCurve"), "mapping")
+                   layout.prop(mat, "thea_CoatingReflectCurveList", text="CurveList")
+
 
 class MATERIAL_PT_Components(MaterialButtonsPanel, bpy.types.Panel):
     bl_label = "Layer Weight"
@@ -590,6 +603,72 @@ class MATERIAL_PT_Components(MaterialButtonsPanel, bpy.types.Panel):
                 row.prop(mat, orderProp)
                 row.prop(mat, weithProp, text="Weight")
                 row.prop(mat, 'thea_'+label+"WeightFilename")
+
+
+def myCurveData(curve_name, origin=""):
+#    myNodeTree(curve_name)
+#    mat = bpy.context.material
+    mat = bpy.context.active_object.active_material
+    nodes = mat.node_tree.nodes
+#    thea_globals.log.debug("Mat: %s - Nodes: %s" % (mat, nodes))
+#    if 'ShaderNodeRGBCurve' not in mat.node_tree.nodes.type:
+    for mat_node in mat.node_tree.nodes:
+        if mat_node == 'CURVE_RGB':
+            cn = nodes.new('ShaderNodeRGBCurve')
+
+
+#        cn = nodes.new('ShaderNodeRGBCurve')
+#    c = nodes['RGB Curves'].mapping.curves[3]
+#    d = nodes['RGB Curves'].mapping
+#    d.initialize()
+#    curve = c
+#    # curve is the curve map, it has an evaluate function, that returns the y value of the curve at point x
+#    point = curve.evaluate(0) #gives the value of the curve at x=0
+#    points = str([round((curve.evaluate(i/91)*255)*257) for i in range(91)]) # gives what you want.
+##    setattr(mat,"thea_BasicReflectCurveList", points)
+#    thea_globals.log.debug("Curve points mat: %s" % points)
+#
+#    curve_node_mapping = bpy.data.node_groups[curve_name].nodes
+#    thea_globals.log.debug("Curve group: %s" % curve_node_mapping)
+
+#    try:
+#    thea_globals.log.debug("Curve group: %s" % bpy.data.node_groups[curve_name].nodes[curve_node_mapping[0].name].mapping.curves[3])
+#    ng = bpy.data.node_groups[curve_name]
+#    c = ng.nodes[curve_node_mapping[0].name].mapping.curves[3]
+#    d = ng.nodes[curve_node_mapping[0].name].mapping
+#    d.initialize()
+#    curve = c
+#    # curve is the curve map, it has an evaluate function, that returns the y value of the curve at point x
+#    point = curve.evaluate(0) #gives the value of the curve at x=0
+#    points = str([round((curve.evaluate(i/91)*255)*257) for i in range(91)]) # gives what you want.
+##    setattr(mat,"thea_BasicReflectCurveList", points)
+##    thea_globals.log.debug("Curve points gui: %s" % getattr(mat, "thea_BasicReflectCurveList"))
+#    thea_globals.log.debug("Curve points gui: %s" % points)
+#    except:
+#        pass
+
+#    if not curve_node_mapping:
+#        cn = myNodeTree(curve_name).new('ShaderNodeRGBCurve')
+#    for mat_node in bpy.data.node_groups[curve_name].nodes:
+#        if mat_node.name != curve_name:
+#            thea_globals.log.debug("Nodes not same: %s" % mat_node.name)
+#        if mat_node.name == curve_name:
+#            thea_globals.log.debug("Nodes same: %s" % curve_name)
+#    return myNodeTree(curve_name)[curve_node_mapping[0].name]
+    if origin == "thea_BasicReflectCurve":
+        return nodes[getattr(mat, "thea_BasicReflectCurve")]
+    if origin == "thea_Basic2ReflectCurve":
+        return nodes[getattr(mat, "thea_Basic2ReflectCurve")]
+    if origin == "thea_GlossyReflectCurve":
+        return nodes[getattr(mat, "thea_GlossyReflectCurve")]
+    if origin == "thea_Glossy2ReflectCurve":
+        return nodes[getattr(mat, "thea_Glossy2ReflectCurve")]
+    if origin == "thea_CoatingReflectCurve":
+        return nodes[getattr(mat, "thea_CoatingReflectCurve")]
+    if origin == "thea_SSSReflectCurve":
+        return nodes[getattr(mat, "thea_SSSReflectCurve")]
+
+
 
 class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
     bl_label = "Material"
@@ -667,6 +746,19 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             if(getattr(mat, "thea_BasicMicroRoughness", False)):
                row.prop(mat, "thea_BasicMicroRoughnessWidth")
                row.prop(mat, "thea_BasicMicroRoughnessHeight")
+            if (((getattr(mat, 'thea_BasicReflectanceCol')[0], getattr(mat, 'thea_BasicReflectanceCol')[1], getattr(mat, 'thea_BasicReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_BasicReflectanceFilename'))>1:
+                layout.separator();
+                layout.label(text="Fresnel")
+                row = layout.row()
+                if(mat.thea_BasicReflect90Filename==""):
+                    row.prop(mat, "thea_BasicReflect90Col")
+                row.prop(mat, "thea_BasicReflect90Filename")
+                layout.prop(mat, "thea_BasicReflectionCurve")
+                if mat.thea_BasicReflectionCurve:
+                    layout.prop(mat, "thea_BasicReflectCurve", text="Curve Name")
+                    layout.template_curve_mapping(myCurveData(getattr(mat, "thea_BasicReflectCurve"), "thea_BasicReflectCurve"), "mapping")
+                    layout.prop(mat, "thea_BasicReflectCurveList", text="CurveList")
+
 #------ Basic2
         if mat.thea_MaterialComponent == "Basic2":
             row.prop(mat, "thea_Basic2", text="Enabled")
@@ -720,6 +812,19 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             if(getattr(mat, "thea_Basic2MicroRoughness", False)):
                row.prop(mat, "thea_Basic2MicroRoughnessWidth")
                row.prop(mat, "thea_Basic2MicroRoughnessHeight")
+            if (((getattr(mat, 'thea_Basic2ReflectanceCol')[0], getattr(mat, 'thea_Basic2ReflectanceCol')[1], getattr(mat, 'thea_Basic2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_Basic2ReflectanceFilename'))>1:
+                layout.separator();
+                layout.label(text="Fresnel")
+                row = layout.row()
+                if(mat.thea_Basic2Reflect90Filename==""):
+                    row.prop(mat, "thea_Basic2Reflect90Col")
+                row.prop(mat, "thea_Basic2Reflect90Filename")
+                layout.prop(mat, "thea_Basic2ReflectionCurve")
+                if mat.thea_Basic2ReflectionCurve:
+                    layout.prop(mat, "thea_Basic2ReflectCurve", text="Curve Name")
+                    layout.template_curve_mapping(myCurveData(getattr(mat, "thea_Basic2ReflectCurve"), "thea_Basic2ReflectCurve"), "mapping")
+                    layout.prop(mat, "thea_Basic2ReflectCurveList", text="CurveList")
+
 #------ Glossy
         if mat.thea_MaterialComponent == "Glossy":
             row.prop(mat, "thea_Glossy", text="Enabled")
@@ -817,6 +922,19 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             if(getattr(mat, "thea_GlossyMicroRoughness", False)):
                row.prop(mat, "thea_GlossyMicroRoughnessWidth")
                row.prop(mat, "thea_GlossyMicroRoughnessHeight")
+            if (((getattr(mat, 'thea_GlossyReflectanceCol')[0], getattr(mat, 'thea_GlossyReflectanceCol')[1], getattr(mat, 'thea_GlossyReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_GlossyReflectanceFilename'))>1:
+                layout.separator();
+                layout.label(text="Fresnel")
+                row = layout.row()
+                if(mat.thea_GlossyReflect90Filename==""):
+                    row.prop(mat, "thea_GlossyReflect90Col")
+                row.prop(mat, "thea_GlossyReflect90Filename")
+                layout.prop(mat, "thea_GlossyReflectionCurve")
+                if mat.thea_GlossyReflectionCurve:
+                    layout.prop(mat, "thea_GlossyReflectCurve", text="Curve Name")
+                    layout.template_curve_mapping(myCurveData(getattr(mat, "thea_GlossyReflectCurve"), "thea_GlossyReflectCurve"), "mapping")
+                    layout.prop(mat, "thea_GlossyReflectCurveList", text="CurveList")
+
 #------ Glossy2
         if mat.thea_MaterialComponent == "Glossy2":
             row.prop(mat, "thea_Glossy2", text="Enabled")
@@ -906,6 +1024,20 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             if(getattr(mat, "thea_Glossy2MicroRoughness", False)):
                row.prop(mat, "thea_Glossy2MicroRoughnessWidth")
                row.prop(mat, "thea_Glossy2MicroRoughnessHeight")
+            if (((getattr(mat, 'thea_Glossy2ReflectanceCol')[0], getattr(mat, 'thea_Glossy2ReflectanceCol')[1], getattr(mat, 'thea_Glossy2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_Glossy2ReflectanceFilename'))>1:
+                layout.separator();
+                layout.label(text="Fresnel")
+                row = layout.row()
+                if(mat.thea_Glossy2Reflect90Filename==""):
+                    row.prop(mat, "thea_Glossy2Reflect90Col")
+                row.prop(mat, "thea_Glossy2Reflect90Filename")
+                layout.prop(mat, "thea_Glossy2ReflectionCurve")
+                if mat.thea_Glossy2ReflectionCurve:
+                    layout.prop(mat, "thea_Glossy2ReflectCurve", text="Curve Name")
+                    layout.template_curve_mapping(myCurveData(getattr(mat, "thea_Glossy2ReflectCurve"), "thea_Glossy2ReflectCurve"), "mapping")
+                    layout.prop(mat, "thea_Glossy2ReflectCurveList", text="CurveList")
+
+
 #------ SSS
         if mat.thea_MaterialComponent == "SSS":
             row.prop(mat, "thea_SSS", text="Enabled")
@@ -950,6 +1082,24 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             row.prop(mat, "thea_SSSBumpFilename")
             row = layout.row()
             layout.prop(mat, "thea_SSSStructureNormal")
+            row = layout.row()
+            row.prop(mat, "thea_SSSMicroRoughness")
+            if(getattr(mat, "thea_SSSMicroRoughness", False)):
+                row.prop(mat, "thea_SSSMicroRoughnessWidth")
+                row.prop(mat, "thea_SSSMicroRoughnessHeight")
+            if (((getattr(mat, 'thea_SSSReflectanceCol')[0], getattr(mat, 'thea_SSSReflectanceCol')[1], getattr(mat, 'thea_SSSReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_SSSReflectanceFilename'))>1:
+                layout.separator();
+                layout.label(text="Fresnel")
+                row = layout.row()
+                if(mat.thea_SSSReflect90Filename==""):
+                    row.prop(mat, "thea_SSSReflect90Col")
+                row.prop(mat, "thea_SSSReflect90Filename")
+                layout.prop(mat, "thea_SSSReflectionCurve")
+                if mat.thea_SSSReflectionCurve:
+                    layout.prop(mat, "thea_SSSReflectCurve", text="Curve Name")
+                    layout.template_curve_mapping(myCurveData(getattr(mat, "thea_SSSReflectCurve"), "thea_SSSReflectCurve"), "mapping")
+                    layout.prop(mat, "thea_SSSReflectCurveList", text="CurveList")
+
         if mat.thea_MaterialComponent == "ThinFilm":
             row.prop(mat, "thea_ThinFilm", text="Enabled")
             row = layout.row()
@@ -1152,6 +1302,12 @@ class MATERIAL_PT_Thea_Strand(MaterialButtonsPanel, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
+        if hasattr(bpy.context, 'active_object'):
+            try:
+#               CHANGED > ADDED BETTER FILE CHECK
+                extMat = os.path.isfile(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat'))))
+            except:
+                extMat = False
         try:
             return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
         except:
