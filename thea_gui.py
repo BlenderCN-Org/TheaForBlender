@@ -1537,6 +1537,8 @@ class TEXTURE_PT_Thea_ToneMap(TextureButtonsPanel, bpy.types.Panel):
         colL.prop(tex,"thea_TexContrast")
         colL.prop(tex,"thea_TexClampMin")
         colL.prop(tex,"thea_TexClampMax")
+        colL.separator()
+        colL.operator("edit.externally", text="Edit externally")
 
 
 # class TEXTURE_PT_Thea_Component(TextureButtonsPanel, bpy.types.Panel):

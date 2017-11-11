@@ -2595,6 +2595,7 @@ def saveDisplayPreset():
 class IMAGE_PT_LoadDisplayPreset(bpy.types.Operator):
     bl_idname = "load.displaypreset"
     bl_label = "Load Display Preset"
+    bl_description = "Load Display settings from studio"
 
     def invoke(self, context, event):
         scene = bpy.context.scene
@@ -2767,6 +2768,7 @@ class IMAGE_PT_LoadDisplayPreset(bpy.types.Operator):
 class IMAGE_PT_UnloadDisplayPreset(bpy.types.Operator):
     bl_idname = "unload.displaypreset"
     bl_label = "Unload Display Preset"
+    bl_description = "Reset display settings to prior settings"
 
     def execute(self, context):
         scene = context.scene
@@ -2801,3 +2803,121 @@ class IMAGE_PT_UnloadDisplayPreset(bpy.types.Operator):
         return{'FINISHED'}
 
 
+class IMAGE_PT_EditExternally(bpy.types.Operator):
+    bl_idname = "edit.externally"
+    bl_label = "Edit Externally"
+    bl_description = "Edit texture in external editor"
+#
+#    filepath = StringProperty(
+#            subtype='FILE_PATH',
+#            )
+#
+#    def execute (self, context):
+##        path = base_dir + strip_elem.filename
+#        tex = context.material
+#        try:
+#            bpy.ops.image.external_edit(filepath=path)
+#        except:
+#            self.report({'ERROR_INVALID_INPUT'},
+#            'Please specify an Image Editor in Preferences > File')
+#            return {'CANCELLED'}
+#
+#        return {'FINISHED'}
+#    filepath = StringProperty(subtype='FILE_PATH')
+
+    @staticmethod
+    def _editor_guess(context):
+        import sys
+
+        image_editor = context.user_preferences.filepaths.image_editor
+
+        # use image editor in the preferences when available.
+        if not image_editor:
+            if sys.platform[:3] == "win":
+                image_editor = ["start"]  # not tested!
+            elif sys.platform == "darwin":
+                image_editor = ["open"]
+            else:
+                image_editor = ["gimp"]
+        else:
+            if sys.platform == "darwin":
+                # blender file selector treats .app as a folder
+                # and will include a trailing backslash, so we strip it.
+                image_editor.rstrip('\\')
+                image_editor = ["open", "-a", image_editor]
+            else:
+                image_editor = [image_editor]
+
+        return image_editor
+
+    def execute(self, context):
+#        import os
+#        import subprocess
+
+        filepath = self.filepath
+
+        if not filepath:
+            self.report({'ERROR'}, "Image path not set")
+            return {'CANCELLED'}
+
+        if not os.path.exists(filepath) or not os.path.isfile(filepath):
+            self.report({'ERROR'},
+                        "Image path %r not found, image may be packed or "
+                        "unsaved" % filepath)
+            return {'CANCELLED'}
+
+        cmd = self._editor_guess(context) + [filepath]
+
+        try:
+            subprocess.Popen(cmd)
+        except:
+            import traceback
+            traceback.print_exc()
+            self.report({'ERROR'},
+                        "Image editor not found, "
+                        "please specify in User Preferences > File")
+
+            return {'CANCELLED'}
+
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        import os
+        sd = context.space_data
+        mat = bpy.context.material
+        imgName = bpy.context.object.active_material.active_texture.name #.context.material
+        texName = imgName
+        exists = False
+#        img = bpy.data.images.load(imgName)
+        try:
+            if mat.texture_slots[texName]:
+                exists = True
+                slot = mat.texture_slots[texName]
+                tex = slot.texture
+        except:
+            pass
+
+        if exists:
+            try:
+                if imgName:
+                    img = bpy.data.images.load(imgName)
+                    tex.image = img
+                else:
+                    print("removing texture: ", slot, tex)
+                    mat.texture_slots[texName].texture = None
+            except:
+                pass
+        try:
+            image = tex.image
+        except AttributeError:
+            self.report({'ERROR'}, "Context incorrect, image not found")
+            return {'CANCELLED'}
+
+        filepath = image.filepath
+
+        filepath = bpy.path.abspath(filepath, library=image.library)
+
+        self.filepath = os.path.normpath(filepath)
+        self.execute(context)
+
+        return {'FINISHED'}
