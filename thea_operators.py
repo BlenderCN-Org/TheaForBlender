@@ -2921,3 +2921,91 @@ class IMAGE_PT_EditExternally(bpy.types.Operator):
         self.execute(context)
 
         return {'FINISHED'}
+
+
+class callToneMenu(bpy.types.Operator):
+    bl_idname = "wm.call_tonemenu"
+    bl_label = "Quick Edit Texture"
+    bl_description = "Quick edit texture tone settings. IE Updating coordinates menu, close and reopen quick edit menu"
+
+    origin = bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        mat = bpy.context.material
+        text = mat.name+"_"+self.origin
+        try:
+            tex = mat.texture_slots[text].texture
+        except:
+            self.report({'ERROR'}, "No image loaded")
+            return {'CANCELLED'}
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=600, height=800)
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+    def draw(self, context):
+        layout = self.layout
+        mat = bpy.context.material
+        text = mat.name+"_"+self.origin
+        try:
+            tex = mat.texture_slots[text].texture
+            texMap = mat.texture_slots[0]
+        except:
+            self.report({'ERROR'}, "Image not found: %s" % text)
+            return {'CANCELLED'}
+#        tex = texName.texture
+#        thea_globals.log.debug("Context Tex panel 3: %s" % texName)
+#        thea_globals.log.debug("Context Tex origin: %s" % self.origin)
+        layout.separator()
+#        layout.prop(tex, "thea_mappingtoneMenu", expand=True)
+        layout.label("Mapping")
+#        if getattr(tex, "thea_mappingtoneMenu") in ("Mapping"):
+        split = layout.split(percentage=0.3)
+        split.label(text="Coordinates:")
+        split.prop(tex, "thea_texture_coords")
+        if getattr(tex,"thea_texture_coords") == 'UV':
+            split = layout.split(percentage=0.3)
+            split.label(text="UV Channel:")
+            split.prop(tex, 'thea_TexUVChannel', text="")
+        if getattr(tex, "thea_texture_coords") == 'Camera Map':
+            split = layout.split(percentage=0.3)
+            split.label(text="Camera:")
+            split.prop(tex.texture, "thea_camMapName", text="")
+        split = layout.split(percentage=0.3)
+        split.label(text="Channel:")
+        split.prop(tex, "thea_TexChannel", text="")
+        row = layout.row()
+        row.prop(tex,"thea_TexRepeat")
+        if not getattr(tex, "thea_texture_coords") == 'UV':
+            row = layout.row()
+#           CHANGED> Added spatial
+            row.label(text="Spatial:")
+            row.prop(tex, "thea_TexSpatialXtex", text="X:")
+            row.prop(tex, "thea_TexSpatialYtex", text="Y:")
+
+        layout.separator()
+        row = layout.row()
+        row.column().prop(texMap, "offset")
+        row.column().prop(texMap, "scale")
+        row = layout.row()
+        row.prop(tex,"thea_TexRotation")
+#        if getattr(tex, "thea_mappingtoneMenu") in ("Tone"):
+        layout.separator()
+        split = layout.split()
+        row = layout.row()
+        colL = split.column()
+        colL.label("Tone")
+        colL.prop(tex,"thea_TexInvert")
+        colL.prop(tex,"thea_TexGamma")
+        colL.prop(tex,"thea_TexRed")
+        colL.prop(tex,"thea_TexGreen")
+        colL.prop(tex,"thea_TexBlue")
+        colL.prop(tex,"thea_TexSaturation")
+        colL.prop(tex,"thea_TexBrightness")
+        colL.prop(tex,"thea_TexContrast")
+        colL.prop(tex,"thea_TexClampMin")
+        colL.prop(tex,"thea_TexClampMax")
+
+        colL.separator()
+        colL.operator("edit.externally", text="Edit externally")

@@ -67,8 +67,10 @@ from bl_ui import properties_material
 #for member in ('MATERIAL_PT_context_material', 'MATERIAL_PT_preview', 'MATERIAL_PT_custom_props', 'MaterialButtonsPanel', 'PropertyPanel', 'bpy', 'check_material', 'simple_material'):
 for member in ('MATERIAL_PT_context_material', 'MATERIAL_PT_custom_props', 'MaterialButtonsPanel', 'PropertyPanel', 'bpy', 'check_material', 'simple_material'):
     subclass = getattr(properties_material, member)
-    try:        subclass.COMPAT_ENGINES.add('THEA_RENDER')
-    except: pass
+    try:
+        subclass.COMPAT_ENGINES.add('THEA_RENDER')
+    except:
+        pass
 del properties_material
 from bl_ui import properties_data_mesh
 for member in dir(properties_data_mesh):
@@ -210,8 +212,10 @@ del properties_physics_softbody
 from bl_ui import properties_scene
 for member in dir(properties_scene):
     subclass = getattr(properties_scene, member)
-    try:        subclass.COMPAT_ENGINES.add('THEA_RENDER')
-    except: pass
+    try:
+        subclass.COMPAT_ENGINES.add('THEA_RENDER')
+    except:
+        pass
 del properties_scene
 
 
@@ -301,7 +305,7 @@ class DisplayButtonsPanel():
     @classmethod
     def poll(cls, context):
         sima = context.space_data
-        return (sima.image and context.scene.render.engine in cls.COMPAT_ENGINES)
+        return sima.image and context.scene.render.engine in cls.COMPAT_ENGINES
 
 class View3DPanel():
     bl_space_type = 'VIEW_3D'
@@ -327,9 +331,9 @@ class RENDER_PT_InstallThea(RenderButtonsPanel, bpy.types.Panel):
         return (thea_globals.theaPath is False) and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       layout.operator("thea.install_thea_studio", "Install Thea Studio")
+        layout = self.layout
+        scene = context.scene
+        layout.operator("thea.install_thea_studio", "Install Thea Studio")
 
 
 class MATERIAL_PT_LUT(MaterialButtonsPanel, bpy.types.Panel):
@@ -342,17 +346,17 @@ class MATERIAL_PT_LUT(MaterialButtonsPanel, bpy.types.Panel):
         return getattr(context.scene, 'thea_useLUT') and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-       split = layout.split()
-       col = split.column()
-       colL = col
-       colL.label("Thea Materials:")
-#       colR = col.row(align=True)
-       colR = split.column(align=True)
-       colR.prop(mat,"thea_LUT", text="")
-       colR.operator("thea.lutmenu", text="Search", icon="VIEWZOOM")
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+        split = layout.split()
+        col = split.column()
+        colL = col
+        colL.label("Thea Materials:")
+        #       colR = col.row(align=True)
+        colR = split.column(align=True)
+        colR.prop(mat, "thea_LUT", text="")
+        colR.operator("thea.lutmenu", text="Search", icon="VIEWZOOM")
 #       thea_globals.log.debug("*** LUT current index: %s" % mat.get('thea_LUT'))
        #col.operator("thea.set_library_material", text="Set library material")
 
@@ -372,11 +376,11 @@ class TheaMaterialPreview(MaterialButtonsPanel, bpy.types.Panel):
     panelMatPreview = True
 
     @classmethod
-    def poll( cls, context):
+    def poll(cls, context):
         engine = context.scene.render.engine
         return (engine in cls.COMPAT_ENGINES) and context.object is not None and context.object.active_material is not None and (thea_globals.panelMatPreview is True)
 
-    def draw( self, context):
+    def draw(self, context):
         layout = self.layout
         scene = context.scene
         row = layout.row()
@@ -385,7 +389,7 @@ class TheaMaterialPreview(MaterialButtonsPanel, bpy.types.Panel):
         colL.operator("thea.big_preview")
         colR = split.column()
         colR.label("")
-        layout.template_preview( context.material, show_buttons=True, preview_id="MATERIAL_PT_MatPreview")
+        layout.template_preview(context.material, show_buttons = True, preview_id = "MATERIAL_PT_MatPreview")
 
 
 
@@ -403,18 +407,18 @@ class MATERIAL_PT_Color(MaterialButtonsPanel, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        mat  = context.material
+        mat = context.material
         split = layout.split(percentage=0.8)
         row = layout.row()
         colL = split.column()
         colR = split.column()
         try:
-           colL.prop(mat, "diffuse_color", text="")
-           colR.operator("thea.refresh_diffuse_color", text="", icon="FILE_REFRESH")
-           if (getattr(mat,"diffuse_color") == mat.diffuse_color/255):
-              row.label(text="Preview to dark (hit E colorpicker)", icon="ERROR")(percentage=1)
-           else:
-              pass
+            colL.prop(mat, "diffuse_color", text="")
+            colR.operator("thea.refresh_diffuse_color", text="", icon="FILE_REFRESH")
+            if (getattr(mat, "diffuse_color") == mat.diffuse_color/255):
+                row.label(text="Preview to dark (hit E colorpicker)", icon="ERROR")(percentage=1)
+            else:
+                pass
         except:
             pass
 
@@ -451,124 +455,421 @@ class MATERIAL_PT_Header(MaterialButtonsPanel, bpy.types.Panel):
         return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-#    CHANGED > Added new layout for general mat panel
-       layout.label(text="Scene Preview")
-       split = layout.split(percentage=0.4)
-       colL = split.column()
-       colR = split.column()
-       colL.prop(mat, "thea_EnableUnbiasedPreview")
-       colR.prop(mat, "thea_PreviewScenesMenu")
-       split = layout.split()
-       layout.label(text="General Options")
-       split = layout.split()
-       colL = split.column()
-       colR = split.column()
-       colL.prop(mat, "thea_ShadowCatcher")
-#    CHANGED > added more material options
-       colR.prop(mat, "thea_twoSided")
-       colL.prop(mat, "thea_repaintable")
-       colR.prop(mat, "thea_dirt")
-       layout.prop(mat, "thea_description")
-#        layout.operator("thea.sync_cycles_to_thea", text="Convert Cycles material")
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+        #    CHANGED > Added new layout for general mat panel
+        layout.label(text="Scene Preview")
+        split = layout.split(percentage=0.4)
+        colL = split.column()
+        colR = split.column()
+        colL.prop(mat, "thea_EnableUnbiasedPreview")
+        colR.prop(mat, "thea_PreviewScenesMenu")
+
+        split = layout.split()
+        layout.label(text="General Options")
+        split = layout.split()
+        colL = split.column()
+        colR = split.column()
+        colL.prop(mat, "thea_ShadowCatcher")
+        #    CHANGED > added more material options
+        colR.prop(mat, "thea_twoSided")
+        colL.prop(mat, "thea_repaintable")
+        colR.prop(mat, "thea_dirt")
+        layout.prop(mat, "thea_description")
+        colL.prop(mat, "thea_ClippingAuto")
+        #        layout.operator("thea.sync_cycles_to_thea", text="Convert Cycles material")
+
+
+#
+#class MATERIAL_PT_Coating(MaterialButtonsPanel, bpy.types.Panel):
+#    bl_label = "Coating Component"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#
+#        if (not (len(bpy.context.active_object.data.materials)>0)):
+#            return False
+#
+#        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
+#
+#    def draw_header(self, context):
+#        scene = context.scene
+#        mat = context.material
+#        self.layout.prop(mat, "thea_Coating", text="")
+#
+#    def draw(self, context):
+#        layout = self.layout
+#        scene = context.scene
+#        mat = context.material
+#        split = layout.split()
+#        row = layout.row()
+#
+#        if mat.get('thea_Coating'):
+#            split = layout.split()
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingWeight")
+#            row.prop(mat, "thea_CoatingWeightFilename", text="", icon='TEXTURE_DATA')
+##           CHANGED>Added split to set layer weight more to top
+#            split = layout.split()
+#            row = layout.row()
+#            if mat.thea_CoatingReflectanceFilename == "":
+#                row.prop(mat, "thea_CoatingReflectanceCol")
+#            row.prop(mat, "thea_CoatingReflectanceFilename", text="", icon='TEXTURE_DATA')
+#            row = layout.row()
+#            layout.prop(mat, "thea_CoatingIOR")
+#            layout.prop(mat, "thea_CoatingEC")
+#            split = layout.split()
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingThicknessEnable")
+#            if(getattr(mat, "thea_CoatingThicknessEnable", False)):
+#               row.prop(mat, "thea_CoatingThickness")
+#               row.prop(mat, "thea_CoatingThicknessFilename", text="", icon='TEXTURE_DATA')
+#            #             CHANGED > Added absorption color coatin thickness
+#            split = layout.split()
+#            row = layout.row()
+#            col = split.column()
+#            col.prop(mat, "thea_CoatingAbsorptionEnable")
+#            if(getattr(mat, "thea_CoatingAbsorptionEnable", False)):
+#                if(mat.thea_CoatingAbsorptionFilename==""):
+#                    row.prop(mat, "thea_CoatingThicknessAbsorptionCol")
+#                row.prop(mat, "thea_CoatingAbsorptionFilename", text="", icon='TEXTURE_DATA')
+#            split = layout.split()
+#            row = layout.row()
+#            col = split.column()
+#            col.prop(mat, "thea_CoatingTraceReflections")
+#            split = layout.split()
+#            layout.label(text="Structure")
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingStructureRoughness")
+#            row.prop(mat, "thea_CoatingRoughnessFilename", text="", icon='TEXTURE_DATA')
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingStructureAnisotropy")
+#            row.prop(mat, "thea_CoatingAnisotropyFilename", text="", icon='TEXTURE_DATA')
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingStructureRotation")
+#            row.prop(mat, "thea_CoatingRotationFilename", text="", icon='TEXTURE_DATA')
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingStructureBump")
+#            row.prop(mat, "thea_CoatingBumpFilename", text="", icon='TEXTURE_DATA')
+#            row = layout.row()
+#            layout.prop(mat, "thea_CoatingStructureNormal")
+#            row = layout.row()
+#            row.prop(mat, "thea_CoatingMicroRoughness")
+#            if (getattr(mat, "thea_CoatingMicroRoughness", False)):
+#                row.prop(mat, "thea_CoatingMicroRoughnessWidth")
+#                row.prop(mat, "thea_CoatingMicroRoughnessHeight")
+#            if (((getattr(mat, 'thea_CoatingReflectanceCol')[0], getattr(mat, 'thea_CoatingReflectanceCol')[1], getattr(mat, 'thea_CoatingReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_CoatingReflectanceFilename'))>1:
+#                layout.separator()
+#                layout.label(text = "Fresnel")
+#                row = layout.row()
+#                if(mat.thea_CoatingReflect90Filename == ""):
+#                    row.prop(mat, "thea_CoatingReflect90Col")
+#                row.prop(mat, "thea_CoatingReflect90Filename", text="", icon='TEXTURE_DATA')
+#                layout.prop(mat, "thea_CoatingReflectionCurve")
+#                if mat.thea_CoatingReflectionCurve:
+#                    layout.prop(mat, "thea_CoatingReflectCurve", text="Curve Name")
+#                    layout.template_curve_mapping(myCurveData(getattr(mat, "thea_CoatingReflectCurve"), "thea_CoatingReflectCurve"), "mapping")
+#                    layout.prop(mat, "thea_CoatingReflectCurveList", text="CurveList")
+#
 
 
 
-class MATERIAL_PT_Coating(MaterialButtonsPanel, bpy.types.Panel):
-    bl_label = "Coating Component"
+class MATERIAL_PT_Extras(MaterialButtonsPanel, bpy.types.Panel):
+    bl_label = "Material Extra's"
     COMPAT_ENGINES = set(['THEA_RENDER'])
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
+
+        if (not (len(bpy.context.active_object.data.materials)>0)):
+            return False
+
         return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
 
-    def draw_header(self, context):
-       scene = context.scene
-       mat  = context.material
-       self.layout.prop(mat, "thea_Coating", text="")
-
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-       split = layout.split()
-       row = layout.row()
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+        tex = context.texture
 
-       if mat.get('thea_Coating'):
-           split = layout.split()
-           row = layout.row()
-#           colL = split.column()
-#           colR = split.column()
-#           colL.operator("thea.sync_glossy_to_blender", text="T>B")
-#           colR.operator("thea.sync_blender_to_glossy", text="B>T")
-#CHANGED > Delete double split and row here
-#           if(mat.thea_CoatingWeightFilename==""):
-           row.prop(mat, "thea_CoatingWeight")
-           row.prop(mat, "thea_CoatingWeightFilename")
-#CHANGED > Added split to set layer weight more to top
-           split = layout.split()
-           row = layout.row()
-           if(mat.thea_CoatingReflectanceFilename==""):
-                row.prop(mat, "thea_CoatingReflectanceCol")
-           row.prop(mat, "thea_CoatingReflectanceFilename")
-           row = layout.row()
-           layout.prop(mat, "thea_CoatingIOR")
-           layout.prop(mat, "thea_CoatingEC")
-           split = layout.split()
-           row = layout.row()
-           row.prop(mat, "thea_CoatingThicknessEnable")
-           if(getattr(mat, "thea_CoatingThicknessEnable", False)):
-               row.prop(mat, "thea_CoatingThickness")
-               row.prop(mat, "thea_CoatingThicknessFilename")
-#             CHANGED > Added absorption color coatin thickness
-           split = layout.split()
-           row = layout.row()
-           col = split.column()
-           col.prop(mat, "thea_CoatingAbsorptionEnable")
-           if(getattr(mat, "thea_CoatingAbsorptionEnable", False)):
-               if(mat.thea_CoatingAbsorptionFilename==""):
-                    row.prop(mat, "thea_CoatingThicknessAbsorptionCol")
-               row.prop(mat, "thea_CoatingAbsorptionFilename")
-           split = layout.split()
-           row = layout.row()
-           col = split.column()
-           col.prop(mat, "thea_CoatingTraceReflections")
-           split = layout.split()
-           layout.label(text="Structure")
-           row = layout.row()
-           row.prop(mat, "thea_CoatingStructureRoughness")
-           row.prop(mat, "thea_CoatingRoughnessFilename")
-           row = layout.row()
-           row.prop(mat, "thea_CoatingStructureAnisotropy")
-           row.prop(mat, "thea_CoatingAnisotropyFilename")
-           row = layout.row()
-           row.prop(mat, "thea_CoatingStructureRotation")
-           row.prop(mat, "thea_CoatingRotationFilename")
-           row = layout.row()
-           row.prop(mat, "thea_CoatingStructureBump")
-           row.prop(mat, "thea_CoatingBumpFilename")
-           row = layout.row()
-           layout.prop(mat, "thea_CoatingStructureNormal")
-           row = layout.row()
-           row.prop(mat, "thea_CoatingMicroRoughness")
-           if(getattr(mat, "thea_CoatingMicroRoughness", False)):
-               row.prop(mat, "thea_CoatingMicroRoughnessWidth")
-               row.prop(mat, "thea_CoatingMicroRoughnessHeight")
-           if (((getattr(mat, 'thea_CoatingReflectanceCol')[0], getattr(mat, 'thea_CoatingReflectanceCol')[1], getattr(mat, 'thea_CoatingReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_CoatingReflectanceFilename'))>1:
-               layout.separator();
-               layout.label(text="Fresnel")
-               row = layout.row()
-               if(mat.thea_CoatingReflect90Filename==""):
-                   row.prop(mat, "thea_CoatingReflect90Col")
-               row.prop(mat, "thea_CoatingReflect90Filename")
-               layout.prop(mat, "thea_CoatingReflectionCurve")
-               if mat.thea_CoatingReflectionCurve:
-                   layout.prop(mat, "thea_CoatingReflectCurve", text="Curve Name")
-                   layout.template_curve_mapping(myCurveData(getattr(mat, "thea_CoatingReflectCurve"), "thea_CoatingReflectCurve"), "mapping")
-                   layout.prop(mat, "thea_CoatingReflectCurveList", text="CurveList")
+        layout.prop(mat, "thea_materialExtras", expand=True)
+
+
+#------ Coating Component
+        if getattr(mat, "thea_materialExtras") in ("Coating"):
+            box = layout.box()
+            row = box.row()
+#            row.label(text="Coating")
+            row.prop(mat, "thea_Coating", text="Coating enable")
+
+            layout.separator()
+            if mat.get('thea_Coating'):
+#                split = layout.split()
+#                row = layout.row()
+#                row.label("Weight")
+                row = layout.row()
+                row.prop(mat, "thea_CoatingWeight")
+                row.prop(mat, "thea_CoatingWeightFilename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_CoatingWeightFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingWeightFilename"
+                layout.separator()
+
+                layout.label("Scattering")
+                split = layout.split()
+                row = layout.row()
+                if mat.thea_CoatingReflectanceFilename == "":
+                    row.prop(mat, "thea_CoatingReflectanceCol")
+                    row.prop(mat, "thea_CoatingReflectanceFilename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_CoatingReflectanceFilename", text="Reflectance", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_CoatingReflectanceFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingReflectanceFilename"
+
+                row = layout.row()
+                layout.prop(mat, "thea_CoatingIOR")
+                layout.prop(mat, "thea_CoatingEC")
+                split = layout.split()
+                row = layout.row()
+                row.prop(mat, "thea_CoatingThicknessEnable")
+                if(getattr(mat, "thea_CoatingThicknessEnable", False)):
+                    row.prop(mat, "thea_CoatingThickness")
+                    row.prop(mat, "thea_CoatingThicknessFilename", text="", icon='TEXTURE_DATA')
+                    sub = row.row()
+                    sub.active = (len(mat.thea_CoatingThicknessFilename) > 1) == True
+                    sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingThicknessFilename"
+
+                #             CHANGED > Added absorption color coatin thickness
+                split = layout.split()
+                row = layout.row()
+                col = split.column()
+                col.prop(mat, "thea_CoatingAbsorptionEnable")
+                if(getattr(mat, "thea_CoatingAbsorptionEnable", False)):
+                    if(mat.thea_CoatingAbsorptionFilename==""):
+                        row.prop(mat, "thea_CoatingThicknessAbsorptionCol")
+                    row.prop(mat, "thea_CoatingAbsorptionFilename", text="", icon='TEXTURE_DATA')
+                    sub = row.row()
+                    sub.active = (len(mat.thea_CoatingAbsorptionFilename) > 1) == True
+                    sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingAbsorptionFilename"
+
+                split = layout.split()
+                row = layout.row()
+                col = split.column()
+                col.prop(mat, "thea_CoatingTraceReflections")
+                split = layout.split()
+
+                row = layout.row()
+                row.label(text="Structure")
+                row = layout.row()
+                row.prop(mat, "thea_CoatingStructureRoughness")
+                row.prop(mat, "thea_CoatingRoughnessFilename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_CoatingRoughnessFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingRoughnessFilename"
+
+                row = layout.row()
+                row.prop(mat, "thea_CoatingStructureAnisotropy")
+                row.prop(mat, "thea_CoatingAnisotropyFilename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_CoatingAnisotropyFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingAnisotropyFilename"
+
+                row = layout.row()
+                row.prop(mat, "thea_CoatingStructureRotation")
+                row.prop(mat, "thea_CoatingRotationFilename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_CoatingRotationFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingRotationFilename"
+
+                row = layout.row()
+                row.prop(mat, "thea_CoatingStructureBump")
+                row.prop(mat, "thea_CoatingBumpFilename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_CoatingBumpFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingBumpFilename"
+
+                row = layout.row()
+                layout.prop(mat, "thea_CoatingStructureNormal")
+                row = layout.row()
+                row.prop(mat, "thea_CoatingMicroRoughness")
+                if (getattr(mat, "thea_CoatingMicroRoughness", False)):
+                    row.prop(mat, "thea_CoatingMicroRoughnessWidth")
+                    row.prop(mat, "thea_CoatingMicroRoughnessHeight")
+                if (((getattr(mat, 'thea_CoatingReflectanceCol')[0], getattr(mat, 'thea_CoatingReflectanceCol')[1], getattr(mat, 'thea_CoatingReflectanceCol')[2])) != (0, 0, 0)) or len(getattr(mat, 'thea_CoatingReflectanceFilename')) > 1:
+                    layout.separator()
+                    layout.label(text="Fresnel")
+                    row = layout.row()
+                    if(mat.thea_CoatingReflect90Filename == ""):
+                        row.prop(mat, "thea_CoatingReflect90Col")
+                        row.prop(mat, "thea_CoatingReflect90Filename", text="", icon='TEXTURE_DATA')
+                    else:
+                        row.prop(mat, "thea_CoatingReflect90Filename", text="Reflectance 90", icon='TEXTURE_DATA')
+                    sub = row.row()
+                    sub.active = (len(mat.thea_CoatingReflect90Filename) > 1) == True
+                    sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_CoatingReflect90Filename"
+
+                    layout.prop(mat, "thea_CoatingReflectionCurve")
+                    if mat.thea_CoatingReflectionCurve:
+                        layout.prop(mat, "thea_CoatingReflectCurve", text="Curve Name")
+                        layout.template_curve_mapping(myCurveData(getattr(mat, "thea_CoatingReflectCurve"), "thea_CoatingReflectCurve"), "mapping")
+                        layout.prop(mat, "thea_CoatingReflectCurveList", text="CurveList")
+
+
+#------ Clipping
+        if getattr(mat, "thea_materialExtras") in ("Clipping"):
+            box = layout.box()
+            row = box.row()
+#            row.label(text="Clipping")
+            row.prop(mat, "thea_Clipping", text="Clipping enable")
+
+            layout.separator()
+            if mat.get('thea_Clipping'):
+                row = layout.row()
+                row.prop(mat, "thea_ClippingFilename", text="Clipping", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_ClippingFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ClippingFilename"
+
+                col = layout.column()
+                col.prop(mat, "thea_ClippingThreshold", text="Threshold (%):")
+                row = layout.row()
+                row.prop(mat, "thea_ClippingSoft")
+
+#------ Displacement
+        if getattr(mat, "thea_materialExtras") in ("Displacement"):
+            box = layout.box()
+            row = box.row()
+#            row.label(text="Displacement")
+            row.prop(mat, "thea_Displacement", text="Displacement enable")
+
+            layout.separator()
+            if mat.get('thea_Displacement'):
+                row = layout.row()
+                row.prop(mat, "thea_DisplacementFilename", text="Displacement", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_DisplacementFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_DisplacementFilename"
+
+                split = layout.split()
+                col = split.column()
+                col.prop(mat, "thea_DispSub")
+                #            col.prop(mat, "thea_DispBump")
+                col.prop(mat, "thea_DisplacementHeight")
+                col.prop(mat, "thea_DisplacementCenter")
+                col.separator()
+                col.prop(mat, "thea_DisplacementNormalSmooth")
+                col.prop(mat, "thea_DisplacementTightBounds")
+
+
+#------ Emittance
+        if getattr(mat, "thea_materialExtras") in ("Emittance"):
+            box = layout.box()
+            row = box.row()
+#            row.label(text="Emittance")
+            row.prop(mat, "thea_Emittance", text="Emittance enable")
+
+            layout.separator()
+            if mat.get('thea_Emittance'):
+                row = layout.row()
+                if (mat.thea_EmittanceFilename == ""):
+                    row.prop(mat, "thea_EmittanceCol")
+                    row.prop(mat, "thea_EmittanceFilename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_EmittanceFilename", text="Color", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_EmittanceFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_EmittanceFilename"
+
+                row = layout.row()
+                row.prop(mat, "thea_EmittancePower")
+                #      CHANGED > Added this to hide with other light units
+                if getattr(context.material, "thea_EmittanceUnit") in ("Watts", "W/m2", "W/sr", "W/sr/m2"):
+                   row.prop(mat, "thea_EmittanceEfficacy")
+                #           row.prop(mat, "thea_EmittanceEfficacy")
+                layout.prop(mat, "thea_EmittanceUnit")
+                row = layout.row()
+                row.prop(mat, "thea_EmittanceIES")
+                if(getattr(mat, "thea_EmittanceIES")):
+                   row.prop(mat, "thea_EmittanceIESFilename", text="", icon='LAMP_DATA')
+                   row = layout.row()
+                   layout.prop(mat, "thea_EmittanceIESMultiplier")
+
+                split = layout.split()
+                col = split.column()
+                col.prop(mat, "thea_EmittancePassiveEmitter")
+                row = layout.row()
+                row.prop(mat, "thea_EmittanceAmbientEmitter")
+                if(getattr(mat, "thea_EmittanceAmbientEmitter")):
+                   row.prop(mat, "thea_EmittanceAmbientLevel")
+
+#------ Medium
+        if getattr(mat, "thea_materialExtras") in ("Medium"):
+            box = layout.box()
+            row = box.row()
+#            row.label(text="Medium")
+            row.prop(mat, "thea_Medium", text="Medium enable")
+
+            layout.separator()
+            if mat.get('thea_Medium'):
+                row = layout.row()
+                if(mat.thea_MediumAbsorptionFilename==""):
+                    row.prop(mat, "thea_MediumAbsorptionCol")
+                    row.prop(mat, "thea_MediumAbsorptionFilename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_MediumAbsorptionFilename", text="Absorption Color", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_MediumAbsorptionFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_MediumAbsorptionFilename"
+
+                row = layout.row()
+                if(mat.thea_MediumScatterFilename==""):
+                    row.prop(mat, "thea_MediumScatterCol")
+                    row.prop(mat, "thea_MediumScatterFilename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_MediumScatterFilename", text="Scatter Color", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_MediumScatterFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_MediumScatterFilename"
+
+                row = layout.row()
+                if(mat.thea_MediumAbsorptionDensityFilename==""):
+                    row.prop(mat, "thea_MediumAbsorptionDensity")
+                    row.prop(mat, "thea_MediumAbsorptionDensityFilename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_MediumAbsorptionDensityFilename", text="Absorption Density", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_MediumAbsorptionDensityFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_MediumAbsorptionDensityFilename"
+
+                row = layout.row()
+                if(mat.thea_MediumScatterDensityFilename==""):
+                    row.prop(mat, "thea_MediumScatterDensity")
+                    row.prop(mat, "thea_MediumScatterDensityFilename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_MediumScatterDensityFilename", text="Scatter Density", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_MediumScatterDensityFilename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_MediumScatterDensityFilename"
+
+                split = layout.split()
+                split.separator()
+                row = layout.row()
+                row.prop(mat, "thea_MediumCoefficient")
+                if(mat.thea_MediumCoefficient):
+                   row.prop(mat, "thea_MediumMenu")
+                row = layout.row()
+                row.prop(mat, "thea_MediumPhaseFunction")
+                row = layout.row()
+                if (getattr(mat, "thea_MediumPhaseFunction") in ("Henyey Greenstein")):
+                   row.prop(mat, "thea_Asymetry")
+
+
+
 
 
 class MATERIAL_PT_Components(MaterialButtonsPanel, bpy.types.Panel):
@@ -582,8 +883,7 @@ class MATERIAL_PT_Components(MaterialButtonsPanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
-        mat  = context.material
+        mat = context.material
 
         matTuples = [(mat.thea_BasicOrder, "Basic", "thea_BasicOrder", "thea_BasicWeight"),
                      (mat.thea_Basic2Order, "Basic2", "thea_Basic2Order", "thea_Basic2Weight"),
@@ -591,18 +891,19 @@ class MATERIAL_PT_Components(MaterialButtonsPanel, bpy.types.Panel):
                      (mat.thea_Glossy2Order, "Glossy2", "thea_Glossy2Order", "thea_Glossy2Weight"),
                      (mat.thea_SSSOrder, "SSS", "thea_SSSOrder", "thea_SSSWeight"),
                      (mat.thea_ThinFilmOrder, "ThinFilm", "thea_ThinFilmOrder", "thea_ThinFilmWeight"),
-
-
-                     ]
+                    ]
         sortedMats = sorted(matTuples, key=lambda mat: mat[0])
-        for order, label, orderProp, weithProp  in sortedMats:
+        for order, label, orderProp, weithProp in sortedMats:
             if getattr(mat, 'thea_'+label, 0):
                 row = layout.row()
                 row.label(label)
                 row.prop(mat, 'thea_'+label, text="")
                 row.prop(mat, orderProp)
                 row.prop(mat, weithProp, text="Weight")
-                row.prop(mat, 'thea_'+label+"WeightFilename")
+                row.prop(mat, 'thea_'+label+"WeightFilename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(getattr(mat,'thea_'+label+"WeightFilename")) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = 'thea_' + label + "WeightFilename"
 
 
 def myCurveData(curve_name, origin=""):
@@ -616,45 +917,6 @@ def myCurveData(curve_name, origin=""):
         if mat_node == 'CURVE_RGB':
             cn = nodes.new('ShaderNodeRGBCurve')
 
-
-#        cn = nodes.new('ShaderNodeRGBCurve')
-#    c = nodes['RGB Curves'].mapping.curves[3]
-#    d = nodes['RGB Curves'].mapping
-#    d.initialize()
-#    curve = c
-#    # curve is the curve map, it has an evaluate function, that returns the y value of the curve at point x
-#    point = curve.evaluate(0) #gives the value of the curve at x=0
-#    points = str([round((curve.evaluate(i/91)*255)*257) for i in range(91)]) # gives what you want.
-##    setattr(mat,"thea_BasicReflectCurveList", points)
-#    thea_globals.log.debug("Curve points mat: %s" % points)
-#
-#    curve_node_mapping = bpy.data.node_groups[curve_name].nodes
-#    thea_globals.log.debug("Curve group: %s" % curve_node_mapping)
-
-#    try:
-#    thea_globals.log.debug("Curve group: %s" % bpy.data.node_groups[curve_name].nodes[curve_node_mapping[0].name].mapping.curves[3])
-#    ng = bpy.data.node_groups[curve_name]
-#    c = ng.nodes[curve_node_mapping[0].name].mapping.curves[3]
-#    d = ng.nodes[curve_node_mapping[0].name].mapping
-#    d.initialize()
-#    curve = c
-#    # curve is the curve map, it has an evaluate function, that returns the y value of the curve at point x
-#    point = curve.evaluate(0) #gives the value of the curve at x=0
-#    points = str([round((curve.evaluate(i/91)*255)*257) for i in range(91)]) # gives what you want.
-##    setattr(mat,"thea_BasicReflectCurveList", points)
-##    thea_globals.log.debug("Curve points gui: %s" % getattr(mat, "thea_BasicReflectCurveList"))
-#    thea_globals.log.debug("Curve points gui: %s" % points)
-#    except:
-#        pass
-
-#    if not curve_node_mapping:
-#        cn = myNodeTree(curve_name).new('ShaderNodeRGBCurve')
-#    for mat_node in bpy.data.node_groups[curve_name].nodes:
-#        if mat_node.name != curve_name:
-#            thea_globals.log.debug("Nodes not same: %s" % mat_node.name)
-#        if mat_node.name == curve_name:
-#            thea_globals.log.debug("Nodes same: %s" % curve_name)
-#    return myNodeTree(curve_name)[curve_node_mapping[0].name]
     if origin == "thea_BasicReflectCurve":
         return nodes[getattr(mat, "thea_BasicReflectCurve")]
     if origin == "thea_Basic2ReflectCurve":
@@ -667,6 +929,54 @@ def myCurveData(curve_name, origin=""):
         return nodes[getattr(mat, "thea_CoatingReflectCurve")]
     if origin == "thea_SSSReflectCurve":
         return nodes[getattr(mat, "thea_SSSReflectCurve")]
+
+
+class toneMenu(TextureButtonsPanel, bpy.types.Menu):
+    bl_label = "Tone Menu"
+    bl_idname = "view3d.myMenu"
+    COMPAT_ENGINES = {'THEA_RENDER'}
+    origin = ""
+    @classmethod
+    def poll(cls, context):
+        context = bpy.context.material
+        thea_globals.log.debug("Context Tex panel 1: %s" % context)
+        thea_globals.log.debug("Context Tex origin: %s" % origin)
+#        context = bpy.data.textures
+
+        thea_globals.log.debug("Context Tex panel 2: %s" % cls)
+#        if (not getattr(context, "texture_slot", None)) or (context.texture_slot.name == ''):
+#            return False
+        engine = bpy.context.scene.render.engine
+        return (engine in cls.COMPAT_ENGINES)
+
+    def draw(self, context):
+        thea_globals.log.debug("Context Tex panel CLS: %s - Context: %s" % (self, context))
+        layout = self.layout
+#        obj = bpy.context.object
+        mat = bpy.context.material
+        texName = bpy.context.object.active_material.active_texture.name
+#        texName = Mat.name+ "_"
+        tex = mat.texture_slots[texName].texture
+#        tex = texName.texture
+        thea_globals.log.debug("Context Tex panel 3: %s" % texName)
+#        thea_globals.log.debug("Context Tex panel 3: %s" % tex)
+#        layout.template_texture_user()
+#        layout.template_image()
+        split = layout.split()
+        row = layout.row()
+        colL = split.column()
+        colL.prop(tex,"thea_TexInvert")
+        colL.prop(tex,"thea_TexGamma")
+        colL.prop(tex,"thea_TexRed")
+        colL.prop(tex,"thea_TexGreen")
+        colL.prop(tex,"thea_TexBlue")
+        colL.prop(tex,"thea_TexSaturation")
+        colL.prop(tex,"thea_TexBrightness")
+        colL.prop(tex,"thea_TexContrast")
+        colL.prop(tex,"thea_TexClampMin")
+        colL.prop(tex,"thea_TexClampMax")
+        colL.separator()
+        colL.operator("edit.externally", text="Edit externally")
 
 
 
@@ -682,77 +992,127 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        mat  = context.material
+        mat = context.material
         tex = context.texture
-        split = layout.split()
-        row = layout.row()
-        #col = split.column()
-        #mat.thea_MaterialComponent.items=thea_properties.getMaterialComponents()
-        row.prop(mat, "thea_MaterialComponent")
 
+#------ Scattering
+#        layout.separator()
+#        layout.separator()
+#        box = layout.box()
+#        row = box.row()
+#        row.label(text="Material Components")
+        layout.label(text="Scattering")
+        split = layout.split(percentage=0.3)
+        split.label(text="Material:")
+        row = split.row(align=True)
+        row.prop(mat, "thea_MaterialComponent", text="")
 #------ Basic
         if mat.thea_MaterialComponent == "Basic":
             row.prop(mat, "thea_Basic", text="Enabled")
-            row = layout.row()
             #row.operator("thea.sync_basic_to_blender", text="T>B")
-            row.operator("thea.sync_blender_to_basic", text="B>T")
-            row.label("     ")
-            row.label("     ")
-            #layout.prop(mat, "thea_BasicWeight")
+            layout.operator("thea.sync_blender_to_basic", text="B>T")
+            layout.separator()
+#            split = layout.split()
+#            row = layout.row()
+#            row.label("     ")
+#            row.label("     ")
             row = layout.row()
             if(mat.thea_BasicDiffuseFilename==""):
                 row.prop(mat, "diffuse_color", text="Diffuse")
-                #row.prop(mat, "thea_BasicDiffuseCol")
-            row.prop(mat, "thea_BasicDiffuseFilename")
+                row.prop(mat, "thea_BasicDiffuseFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_BasicDiffuseFilename", text="Diffuse", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicDiffuseFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicDiffuseFilename"
 
             row = layout.row()
             if(mat.thea_BasicReflectanceFilename==""):
                 row.prop(mat, "thea_BasicReflectanceCol")
-            row.prop(mat, "thea_BasicReflectanceFilename")
+                row.prop(mat, "thea_BasicReflectanceFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_BasicReflectanceFilename", text= "Reflecance", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicReflectanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicReflectanceFilename"
 
             row = layout.row()
             if(mat.thea_BasicTranslucentFilename==""):
                 row.prop(mat, "thea_BasicTranslucentCol")
-            row.prop(mat, "thea_BasicTranslucentFilename")
+                row.prop(mat, "thea_BasicTranslucentFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_BasicTranslucentFilename", text= "Translucency", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicTranslucentFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicTranslucentFilename"
 
             row = layout.row()
             row.prop(mat, "thea_BasicAbsorptionCol")
             row.prop(mat, "thea_BasicAbsorption")
+
             row = layout.row()
             layout.prop(mat, "thea_BasicIOR")
             layout.prop(mat, "thea_BasicEC")
             layout.prop(mat, "thea_BasicTrace")
+
             split = layout.split()
             layout.label(text="Structure")
             row = layout.row()
             row.prop(mat, "thea_BasicStructureSigma")
-            row.prop(mat, "thea_BasicSigmaFilename")
+            row.prop(mat, "thea_BasicSigmaFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicSigmaFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicSigmaFilename"
+
             row = layout.row()
             row.prop(mat, "thea_BasicStructureRoughness")
-            row.prop(mat, "thea_BasicRoughnessFilename")
+            row.prop(mat, "thea_BasicRoughnessFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicRoughnessFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicRoughnessFilename"
+
             row = layout.row()
             row.prop(mat, "thea_BasicStructureAnisotropy")
-            row.prop(mat, "thea_BasicAnisotropyFilename")
+            row.prop(mat, "thea_BasicAnisotropyFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicAnisotropyFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicAnisotropyFilename"
+
             row = layout.row()
             row.prop(mat, "thea_BasicStructureRotation")
-            row.prop(mat, "thea_BasicRotationFilename")
+            row.prop(mat, "thea_BasicRotationFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicRotationFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicRotationFilename"
+
             row = layout.row()
             row.prop(mat, "thea_BasicStructureBump")
-            row.prop(mat, "thea_BasicBumpFilename")
+            row.prop(mat, "thea_BasicBumpFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicBumpFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicBumpFilename"
+
             row = layout.row()
             layout.prop(mat, "thea_BasicStructureNormal")
+
             row = layout.row()
             row.prop(mat, "thea_BasicMicroRoughness")
             if(getattr(mat, "thea_BasicMicroRoughness", False)):
-               row.prop(mat, "thea_BasicMicroRoughnessWidth")
-               row.prop(mat, "thea_BasicMicroRoughnessHeight")
-            if (((getattr(mat, 'thea_BasicReflectanceCol')[0], getattr(mat, 'thea_BasicReflectanceCol')[1], getattr(mat, 'thea_BasicReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_BasicReflectanceFilename'))>1:
-                layout.separator();
+                row.prop(mat, "thea_BasicMicroRoughnessWidth")
+                row.prop(mat, "thea_BasicMicroRoughnessHeight")
+            if (((getattr(mat, 'thea_BasicReflectanceCol')[0], getattr(mat, 'thea_BasicReflectanceCol')[1], getattr(mat, 'thea_BasicReflectanceCol')[2])) != (0, 0, 0)) or len(getattr(mat, 'thea_BasicReflectanceFilename')) > 1:
+                layout.separator()
                 layout.label(text="Fresnel")
                 row = layout.row()
                 if(mat.thea_BasicReflect90Filename==""):
                     row.prop(mat, "thea_BasicReflect90Col")
-                row.prop(mat, "thea_BasicReflect90Filename")
+                    row.prop(mat, "thea_BasicReflect90Filename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_BasicReflect90Filename", text="Reflectance 90", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_BasicReflect90Filename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicReflect90Filename"
+
                 layout.prop(mat, "thea_BasicReflectionCurve")
                 if mat.thea_BasicReflectionCurve:
                     layout.prop(mat, "thea_BasicReflectCurve", text="Curve Name")
@@ -765,60 +1125,102 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 #             row = layout.row()
 #             row.operator("thea.sync_basic_to_blender", text="T>B")
 #             row.operator("thea.sync_blender_to_basic", text="B>T")
+            layout.separator()
             #layout.prop(mat, "thea_BasicWeight")
             row = layout.row()
             if(mat.thea_Basic2DiffuseFilename==""):
                 row.prop(mat, "thea_Basic2DiffuseCol")
-            row.prop(mat, "thea_Basic2DiffuseFilename")
+                row.prop(mat, "thea_Basic2DiffuseFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_Basic2DiffuseFilename", text="Diffuse", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2DiffuseFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2DiffuseFilename"
 
             row = layout.row()
             if(mat.thea_Basic2ReflectanceFilename==""):
                 row.prop(mat, "thea_Basic2ReflectanceCol")
-            row.prop(mat, "thea_Basic2ReflectanceFilename")
+                row.prop(mat, "thea_Basic2ReflectanceFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_BasicReflectanceFilename", text= "Reflecance", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_BasicReflectanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_BasicReflectanceFilename"
 
             row = layout.row()
             if(mat.thea_Basic2TranslucentFilename==""):
                 row.prop(mat, "thea_Basic2TranslucentCol")
-            row.prop(mat, "thea_Basic2TranslucentFilename")
+                row.prop(mat, "thea_Basic2TranslucentFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_Basic2TranslucentFilename", text= "Translucency", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2TranslucentFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2TranslucentFilename"
 
             row = layout.row()
             row.prop(mat, "thea_Basic2AbsorptionCol")
             row.prop(mat, "thea_Basic2Absorption")
+
             row = layout.row()
             layout.prop(mat, "thea_Basic2IOR")
             layout.prop(mat, "thea_Basic2EC")
             layout.prop(mat, "thea_Basic2Trace")
+
             split = layout.split()
             layout.label(text="Structure")
             row = layout.row()
             row.prop(mat, "thea_Basic2StructureSigma")
-            row.prop(mat, "thea_Basic2SigmaFilename")
+            row.prop(mat, "thea_Basic2SigmaFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2SigmaFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2SigmaFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Basic2StructureRoughness")
-            row.prop(mat, "thea_Basic2RoughnessFilename")
+            row.prop(mat, "thea_Basic2RoughnessFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2RoughnessFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2RoughnessFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Basic2StructureAnisotropy")
-            row.prop(mat, "thea_Basic2AnisotropyFilename")
+            row.prop(mat, "thea_Basic2AnisotropyFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2AnisotropyFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2AnisotropyFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Basic2StructureRotation")
-            row.prop(mat, "thea_Basic2RotationFilename")
+            row.prop(mat, "thea_Basic2RotationFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2RotationFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2RotationFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Basic2StructureBump")
-            row.prop(mat, "thea_Basic2BumpFilename")
+            row.prop(mat, "thea_Basic2BumpFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Basic2BumpFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2BumpFilename"
+
             row = layout.row()
             layout.prop(mat, "thea_Basic2StructureNormal")
             row = layout.row()
             row.prop(mat, "thea_Basic2MicroRoughness")
             if(getattr(mat, "thea_Basic2MicroRoughness", False)):
-               row.prop(mat, "thea_Basic2MicroRoughnessWidth")
-               row.prop(mat, "thea_Basic2MicroRoughnessHeight")
+                row.prop(mat, "thea_Basic2MicroRoughnessWidth")
+                row.prop(mat, "thea_Basic2MicroRoughnessHeight")
             if (((getattr(mat, 'thea_Basic2ReflectanceCol')[0], getattr(mat, 'thea_Basic2ReflectanceCol')[1], getattr(mat, 'thea_Basic2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_Basic2ReflectanceFilename'))>1:
-                layout.separator();
+                layout.separator()
                 layout.label(text="Fresnel")
                 row = layout.row()
                 if(mat.thea_Basic2Reflect90Filename==""):
                     row.prop(mat, "thea_Basic2Reflect90Col")
-                row.prop(mat, "thea_Basic2Reflect90Filename")
+                row.prop(mat, "thea_Basic2Reflect90Filename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_Basic2Reflect90Filename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Basic2Reflect90Filename"
+
                 layout.prop(mat, "thea_Basic2ReflectionCurve")
                 if mat.thea_Basic2ReflectionCurve:
                     layout.prop(mat, "thea_Basic2ReflectCurve", text="Curve Name")
@@ -828,27 +1230,30 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 #------ Glossy
         if mat.thea_MaterialComponent == "Glossy":
             row.prop(mat, "thea_Glossy", text="Enabled")
-            row = layout.row()
-            split = layout.split()
-            row = layout.row()
             #colL.operator("thea.sync_glossy_to_blender", text="T>B")
-            row.operator("thea.sync_blender_to_glossy", text="B>T")
-            row.label("     ")
-            row.label("     ")
+            layout.operator("thea.sync_blender_to_glossy", text="B>T")
+            layout.separator()
+
             row = layout.row()
             sub = row
             sub.active = mat.thea_GlossyIORFileEnable == False
             if(mat.thea_GlossyReflectanceFilename==""):
                 sub.prop(mat, "thea_GlossyReflectanceCol")
-            sub.prop(mat, "thea_GlossyReflectanceFilename")
+            sub.prop(mat, "thea_GlossyReflectanceFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_GlossyReflectanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyReflectanceFilename"
 
             #col.prop(mat, "thea_GlossyReflectanceCol")
             row = layout.row()
             sub = row
             sub.active = mat.thea_GlossyIORFileEnable == False
-            if(mat.thea_GlossyTransmittanceFilename==""):
+            if (mat.thea_GlossyTransmittanceFilename == ""):
                 sub.prop(mat, "thea_GlossyTransmittanceCol")
-            sub.prop(mat, "thea_GlossyTransmittanceFilename")
+            sub.prop(mat, "thea_GlossyTransmittanceFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_GlossyTransmittanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyTransmittanceFilename"
             #col.prop(mat, "thea_GlossyTransmittanceCol")
 #            split = layout.split()
             row = layout.row()
@@ -856,6 +1261,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub.active = mat.thea_GlossyIORFileEnable == False
             sub.prop(mat, "thea_GlossyAbsorptionCol")
             sub.prop(mat, "thea_GlossyAbsorption")
+
             split = layout.split()
             row = layout.row()
             col = split.column()
@@ -863,6 +1269,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub.active = mat.thea_GlossyIORFileEnable == False
             sub.prop(mat, "thea_GlossyIOR")
             sub.prop(mat, "thea_GlossyEC")
+
             split = layout.split()
             row = layout.row()
             colL = split.column()
@@ -874,6 +1281,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub = colR
             sub.active = mat.thea_GlossyIORFileEnable == False
             sub.prop(mat, "thea_GlossyAbbeNumber")
+
             row = layout.row()
             split = layout.split()
             colL = split.column()
@@ -881,86 +1289,112 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub.enabled = mat.thea_GlossyAbbeNumberEnable == False
             sub.active = mat.thea_GlossyAbbeNumberEnable == False
             sub.prop(mat, "thea_GlossyIORFileEnable")
-#            row = layout.row()
-#            sub = row
             colR = split.column(align=True)
             sub = colR
             sub.active = mat.thea_GlossyIORFileEnable == True
             sub.prop(mat, "thea_GlossyIORMenu", text="")
             sub.operator("glossy.iormenu", text="Search", icon="VIEWZOOM")
+
             split = layout.split()
             col = split.column()
             col.prop(mat, "thea_GlossyTraceReflections")
             col.prop(mat, "thea_GlossyTraceRefractions")
+
             split = layout.split()
             layout.label(text="Structure")
             row = layout.row()
             row.prop(mat, "thea_GlossyStructureRoughness")
-            row.prop(mat, "thea_GlossyRoughnessFilename")
+            row.prop(mat, "thea_GlossyRoughnessFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_GlossyRoughnessFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyRoughnessFilename"
 
-            sub = layout.row()
-            sub.prop(mat, "thea_GlossyStructureRoughTrEn")
+            row = layout.row()
+            row.prop(mat, "thea_GlossyStructureRoughTrEn")
             sub = layout.row()
             sub.active = mat.thea_GlossyStructureRoughTrEn == True
             sub.prop(mat, "thea_GlossyStructureRoughnessTr")
-            sub.prop(mat, "thea_GlossyRoughnessTrFilename")
-#            if getattr(mat, "thea_GlossyStructureRoughTrEn"):
-#                sub.prop(mat, "thea_GlossyRoughnessTrFilename", text="")
+            sub.prop(mat, "thea_GlossyRoughnessTrFilename", text="", icon='TEXTURE_DATA')
+            sub = sub.row()
+            sub.active = (len(mat.thea_GlossyRoughnessTrFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyRoughnessTrFilename"
+
             row = layout.row()
             row.prop(mat, "thea_GlossyStructureAnisotropy")
-            row.prop(mat, "thea_GlossyAnisotropyFilename")
+            row.prop(mat, "thea_GlossyAnisotropyFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_GlossyAnisotropyFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyAnisotropyFilename"
+
             row = layout.row()
             row.prop(mat, "thea_GlossyStructureRotation")
-            row.prop(mat, "thea_GlossyRotationFilename")
+            row.prop(mat, "thea_GlossyRotationFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_GlossyRotationFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyRotationFilename"
+
             row = layout.row()
             row.prop(mat, "thea_GlossyStructureBump")
-            row.prop(mat, "thea_GlossyBumpFilename")
+            row.prop(mat, "thea_GlossyBumpFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_GlossyBumpFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyBumpFilename"
+
             row = layout.row()
             layout.prop(mat, "thea_GlossyStructureNormal")
             row = layout.row()
             row.prop(mat, "thea_GlossyMicroRoughness")
             if(getattr(mat, "thea_GlossyMicroRoughness", False)):
-               row.prop(mat, "thea_GlossyMicroRoughnessWidth")
-               row.prop(mat, "thea_GlossyMicroRoughnessHeight")
+                row.prop(mat, "thea_GlossyMicroRoughnessWidth")
+                row.prop(mat, "thea_GlossyMicroRoughnessHeight")
             if (((getattr(mat, 'thea_GlossyReflectanceCol')[0], getattr(mat, 'thea_GlossyReflectanceCol')[1], getattr(mat, 'thea_GlossyReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_GlossyReflectanceFilename'))>1:
-                layout.separator();
+                layout.separator()
                 layout.label(text="Fresnel")
                 row = layout.row()
                 if(mat.thea_GlossyReflect90Filename==""):
                     row.prop(mat, "thea_GlossyReflect90Col")
-                row.prop(mat, "thea_GlossyReflect90Filename")
+                row.prop(mat, "thea_GlossyReflect90Filename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_GlossyReflect90Filename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyReflect90Filename"
                 layout.prop(mat, "thea_GlossyReflectionCurve")
                 if mat.thea_GlossyReflectionCurve:
                     layout.prop(mat, "thea_GlossyReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_GlossyReflectCurve"), "thea_GlossyReflectCurve"), "mapping")
                     layout.prop(mat, "thea_GlossyReflectCurveList", text="CurveList")
 
+
 #------ Glossy2
         if mat.thea_MaterialComponent == "Glossy2":
             row.prop(mat, "thea_Glossy2", text="Enabled")
-            row = layout.row()
-            split = layout.split()
+            layout.separator()
+
             row = layout.row()
             sub = row
             sub.active = mat.thea_Glossy2IORFileEnable == False
             if(mat.thea_Glossy2ReflectanceFilename==""):
                 sub.prop(mat, "thea_Glossy2ReflectanceCol")
-            sub.prop(mat, "thea_Glossy2ReflectanceFilename")
+            sub.prop(mat, "thea_Glossy2ReflectanceFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Glossy2ReflectanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2ReflectanceFilename"
 
-            #col.prop(mat, "thea_GlossyReflectanceCol")
             row = layout.row()
             sub = row
             sub.active = mat.thea_Glossy2IORFileEnable == False
             if(mat.thea_Glossy2TransmittanceFilename==""):
                 sub.prop(mat, "thea_Glossy2TransmittanceCol")
-            sub.prop(mat, "thea_Glossy2TransmittanceFilename")
-            #col.prop(mat, "thea_GlossyTransmittanceCol")
-#            split = layout.split()
+            sub.prop(mat, "thea_Glossy2TransmittanceFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Glossy2TransmittanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2TransmittanceFilename"
+
             row = layout.row()
             sub = row
             sub.active = mat.thea_Glossy2IORFileEnable == False
             sub.prop(mat, "thea_Glossy2AbsorptionCol")
             sub.prop(mat, "thea_Glossy2Absorption")
+
             split = layout.split()
             row = layout.row()
             col = split.column()
@@ -968,6 +1402,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub.active = mat.thea_Glossy2IORFileEnable == False
             sub.prop(mat, "thea_Glossy2IOR")
             sub.prop(mat, "thea_Glossy2EC")
+
             split = layout.split()
             row = layout.row()
             colL = split.column()
@@ -979,6 +1414,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub = colR
             sub.active = mat.thea_Glossy2IORFileEnable == False
             sub.prop(mat, "thea_Glossy2AbbeNumber")
+
             row = layout.row()
             split = layout.split()
             colL = split.column()
@@ -986,37 +1422,57 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub.enabled = mat.thea_Glossy2AbbeNumberEnable == False
             sub.active = mat.thea_Glossy2AbbeNumberEnable == False
             sub.prop(mat, "thea_Glossy2IORFileEnable")
-#            row = layout.row()
-#            sub = row
             colR = split.column(align=True)
             sub = colR
             sub.active = mat.thea_Glossy2IORFileEnable == True
             sub.prop(mat, "thea_Glossy2IORMenu", text="")
             sub.operator("glossy2.iormenu", text="Search", icon="VIEWZOOM")
+
             split = layout.split()
             col = split.column()
             col.prop(mat, "thea_Glossy2TraceReflections")
             col.prop(mat, "thea_Glossy2TraceRefractions")
+
             split = layout.split()
             layout.label(text="Structure")
             row = layout.row()
             row.prop(mat, "thea_Glossy2StructureRoughness")
-            row.prop(mat, "thea_Glossy2RoughnessFilename")
-            sub = layout.row()
-            sub.prop(mat, "thea_Glossy2StructureRoughTrEn")
+            row.prop(mat, "thea_Glossy2RoughnessFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Glossy2RoughnessFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2RoughnessFilename"
+
+            row = layout.row()
+            row.prop(mat, "thea_Glossy2StructureRoughTrEn")
             sub = layout.row()
             sub.active = mat.thea_Glossy2StructureRoughTrEn == True
             sub.prop(mat, "thea_Glossy2StructureRoughnessTr")
-            sub.prop(mat, "thea_Glossy2RoughnessTrFilename")
+            sub.prop(mat, "thea_Glossy2RoughnessTrFilename", text="", icon='TEXTURE_DATA')
+            sub = sub.row()
+            sub.active = (len(mat.thea_Glossy2RoughnessTrFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2RoughnessTrFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Glossy2StructureAnisotropy")
-            row.prop(mat, "thea_Glossy2AnisotropyFilename")
+            row.prop(mat, "thea_Glossy2AnisotropyFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Glossy2AnisotropyFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2AnisotropyFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Glossy2StructureRotation")
-            row.prop(mat, "thea_Glossy2RotationFilename")
+            row.prop(mat, "thea_Glossy2RotationFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Glossy2RotationFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2RotationFilename"
+
             row = layout.row()
             row.prop(mat, "thea_Glossy2StructureBump")
-            row.prop(mat, "thea_Glossy2BumpFilename")
+            row.prop(mat, "thea_Glossy2BumpFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_Glossy2BumpFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2BumpFilename"
+
             row = layout.row()
             layout.prop(mat, "thea_Glossy2StructureNormal")
             row = layout.row()
@@ -1025,12 +1481,18 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
                row.prop(mat, "thea_Glossy2MicroRoughnessWidth")
                row.prop(mat, "thea_Glossy2MicroRoughnessHeight")
             if (((getattr(mat, 'thea_Glossy2ReflectanceCol')[0], getattr(mat, 'thea_Glossy2ReflectanceCol')[1], getattr(mat, 'thea_Glossy2ReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_Glossy2ReflectanceFilename'))>1:
-                layout.separator();
+                layout.separator()
                 layout.label(text="Fresnel")
                 row = layout.row()
                 if(mat.thea_Glossy2Reflect90Filename==""):
                     row.prop(mat, "thea_Glossy2Reflect90Col")
-                row.prop(mat, "thea_Glossy2Reflect90Filename")
+                    row.prop(mat, "thea_Glossy2Reflect90Filename", text="", icon='TEXTURE_DATA')
+                else:
+                    row.prop(mat, "thea_Glossy2Reflect90Filename", text="Reflectance 90", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_Glossy2Reflect90Filename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_Glossy2Reflect90Filename"
+
                 layout.prop(mat, "thea_Glossy2ReflectionCurve")
                 if mat.thea_Glossy2ReflectionCurve:
                     layout.prop(mat, "thea_Glossy2ReflectCurve", text="Curve Name")
@@ -1041,12 +1503,18 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 #------ SSS
         if mat.thea_MaterialComponent == "SSS":
             row.prop(mat, "thea_SSS", text="Enabled")
-            row = layout.row()
-            split = layout.split()
+            layout.separator()
+
             row = layout.row()
             if(mat.thea_SSSReflectanceFilename==""):
                 row.prop(mat, "thea_SSSReflectanceCol")
-            row.prop(mat, "thea_SSSReflectanceFilename")
+                row.prop(mat, "thea_SSSReflectanceFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_SSSReflectanceFilename", text="Reflectance", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_SSSReflectanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSReflectanceFilename"
+
             row = layout.row()
             row.prop(mat, "thea_SSSAbsorptionCol")
             row.prop(mat, "thea_SSSAbsorption")
@@ -1060,26 +1528,47 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             col.prop(mat, "thea_SSSIOR")
             col.prop(mat, "thea_SSSTraceReflections")
             col.prop(mat, "thea_SSSTraceRefractions")
+
             split = layout.split()
             layout.label(text="Structure")
             row = layout.row()
             row.prop(mat, "thea_SSSStructureRoughness")
-            row.prop(mat, "thea_SSSRoughnessFilename")
-            sub = layout.row()
-            sub.prop(mat, "thea_SSSStructureRoughTrEn")
+            row.prop(mat, "thea_SSSRoughnessFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_SSSRoughnessFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSRoughnessFilename"
+
+            row = layout.row()
+            row.prop(mat, "thea_SSSStructureRoughTrEn")
             sub = layout.row()
             sub.active = mat.thea_SSSStructureRoughTrEn == True
             sub.prop(mat, "thea_SSSStructureRoughnessTr")
-            sub.prop(mat, "thea_SSSRoughnessTrFilename")
+            sub.prop(mat, "thea_SSSRoughnessTrFilename", text="", icon='TEXTURE_DATA')
+            sub = sub.row()
+            sub.active = (len(mat.thea_SSSRoughnessTrFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSRoughnessTrFilename"
+
             row = layout.row()
             row.prop(mat, "thea_SSSStructureAnisotropy")
-            row.prop(mat, "thea_SSSAnisotropyFilename")
+            row.prop(mat, "thea_SSSAnisotropyFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_SSSAnisotropyFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSAnisotropyFilename"
+
             row = layout.row()
             row.prop(mat, "thea_SSSStructureRotation")
-            row.prop(mat, "thea_SSSRotationFilename")
+            row.prop(mat, "thea_SSSRotationFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_SSSRotationFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSRotationFilename"
+
             row = layout.row()
             row.prop(mat, "thea_SSSStructureBump")
-            row.prop(mat, "thea_SSSBumpFilename")
+            row.prop(mat, "thea_SSSBumpFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_SSSBumpFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSBumpFilename"
+
             row = layout.row()
             layout.prop(mat, "thea_SSSStructureNormal")
             row = layout.row()
@@ -1088,27 +1577,40 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
                 row.prop(mat, "thea_SSSMicroRoughnessWidth")
                 row.prop(mat, "thea_SSSMicroRoughnessHeight")
             if (((getattr(mat, 'thea_SSSReflectanceCol')[0], getattr(mat, 'thea_SSSReflectanceCol')[1], getattr(mat, 'thea_SSSReflectanceCol')[2])) != (0,0,0)) or len(getattr(mat, 'thea_SSSReflectanceFilename'))>1:
-                layout.separator();
+                layout.separator()
                 layout.label(text="Fresnel")
                 row = layout.row()
                 if(mat.thea_SSSReflect90Filename==""):
                     row.prop(mat, "thea_SSSReflect90Col")
-                row.prop(mat, "thea_SSSReflect90Filename")
+                row.prop(mat, "thea_SSSReflect90Filename", text="", icon='TEXTURE_DATA')
+                sub = row.row()
+                sub.active = (len(mat.thea_SSSReflect90Filename) > 1) == True
+                sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSReflect90Filename"
+
                 layout.prop(mat, "thea_SSSReflectionCurve")
                 if mat.thea_SSSReflectionCurve:
                     layout.prop(mat, "thea_SSSReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_SSSReflectCurve"), "thea_SSSReflectCurve"), "mapping")
                     layout.prop(mat, "thea_SSSReflectCurveList", text="CurveList")
 
+#------ Thinfilm
         if mat.thea_MaterialComponent == "ThinFilm":
             row.prop(mat, "thea_ThinFilm", text="Enabled")
+            layout.separator()
+
             row = layout.row()
             split = layout.split()
             row = layout.row()
             #col.prop(mat, "thea_ThinFilmWeight")
             if(mat.thea_ThinFilmTransmittanceFilename==""):
                 row.prop(mat, "thea_ThinFilmTransmittanceCol")
-            row.prop(mat, "thea_ThinFilmTransmittanceFilename")
+                row.prop(mat, "thea_ThinFilmTransmittanceFilename", text="", icon='TEXTURE_DATA')
+            else:
+                row.prop(mat, "thea_ThinFilmTransmittanceFilename", text="Transmittance", icon='TEXTURE_DATA')
+                sub = row.row()
+            sub.active = (len(mat.thea_ThinFilmTransmittanceFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ThinFilmTransmittanceFilename"
+
 #            col.prop(mat, "thea_ThinFilmTransmittanceCol")
             split = layout.split()
             row = layout.row()
@@ -1121,178 +1623,207 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub = col.row(align=False)
             sub.active = mat.thea_ThinFilmInterference == True
             sub.prop(mat, "thea_ThinFilmThickness")
-            sub.prop(mat, "thea_ThinFilmThicknessFilename")
+            sub.prop(mat, "thea_ThinFilmThicknessFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_ThinFilmThicknessFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ThinFilmThicknessFilename"
+
 #            col.prop(mat, "thea_ThinFilmThickness")
             row = layout.row()
-
 
             row.label(text="Structure")
 #           CHANGED > Was given the name of glossy
             col = layout.column()
             row = col.row(align=False)
             row.prop(mat, "thea_ThinFilmStructureBump")
-            row.prop(mat, "thea_ThinFilmBumpFilename")
+            row.prop(mat, "thea_ThinFilmBumpFilename", text="", icon='TEXTURE_DATA')
+            sub = row.row()
+            sub.active = (len(mat.thea_ThinFilmBumpFilename) > 1) == True
+            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ThinFilmBumpFilename"
+
             row = layout.row()
             row.prop(mat, "thea_ThinFilmStructureNormal")
 
 
+#class MATERIAL_PT_Clipping(MaterialButtonsPanel, bpy.types.Panel):
+#    bl_label = "Clipping"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#
+#        if (not (len(bpy.context.active_object.data.materials)>0)):
+#            return False
+#
+#        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
+#
+#    def draw_header(self, context):
+#        scene = context.scene
+#        mat = context.material
+#        self.layout.prop(mat, "thea_Clipping", text="")
+#
+#    def draw(self, context):
+#        layout = self.layout
+#        scene = context.scene
+#        mat = context.material
+#        split = layout.split()
+#        row = layout.row()
+#
+#        if mat.get('thea_Clipping'):
+##            col = layout.column()
+#            row = layout.row()
+#            row.prop(mat, "thea_ClippingFilename", text="Clipping", icon='TEXTURE_DATA')
+#            sub = row.row()
+#            sub.active = (len(mat.thea_SSSBumpFilename) > 1) == True
+#            sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_SSSBumpFilename"
+#
+#            col = layout.column()
+#            col.prop(mat, "thea_ClippingThreshold")
+#            row = layout.row()
+#            row.prop(mat, "thea_ClippingSoft")
+
+#
+#class MATERIAL_PT_Emittance(MaterialButtonsPanel, bpy.types.Panel):
+#    bl_label = "Emittance"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#
+#        if (not (len(bpy.context.active_object.data.materials)>0)):
+#            return False
+#
+#        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
+#
+#    def draw_header(self, context):
+#       scene = context.scene
+#       mat = context.material
+#       self.layout.prop(mat, "thea_Emittance", text="")
+#
+#    def draw(self, context):
+#       layout = self.layout
+#       scene = context.scene
+#       mat = context.material
+#       split = layout.split()
+#       row = layout.row()
+#
+#       if mat.get('thea_Emittance'):
+#           row = layout.row()
+#           if(mat.thea_EmittanceFilename==""):
+#                row.prop(mat, "thea_EmittanceCol")
+#           row.prop(mat, "thea_EmittanceFilename", text="", icon='TEXTURE_DATA')
+#           row = layout.row()
+#           row.prop(mat, "thea_EmittancePower")
+##      CHANGED > Added this to hide with other light units
+#           if getattr(context.material, "thea_EmittanceUnit") in ("Watts", "W/m2", "W/sr", "W/sr/m2"):
+#               row.prop(mat, "thea_EmittanceEfficacy")
+##           row.prop(mat, "thea_EmittanceEfficacy")
+#           layout.prop(mat, "thea_EmittanceUnit")
+#           row = layout.row()
+#           row.prop(mat, "thea_EmittanceIES")
+#           if(getattr(mat, "thea_EmittanceIES")):
+#               row.prop(mat, "thea_EmittanceIESFilename", text="", icon='LAMP_DATA')
+#               row = layout.row()
+#               layout.prop(mat, "thea_EmittanceIESMultiplier")
+#           row = layout.row()
+#           layout.prop(mat, "thea_EmittancePassiveEmitter")
+#           row = layout.row()
+#           row.prop(mat, "thea_EmittanceAmbientEmitter")
+#           if(getattr(mat, "thea_EmittanceAmbientEmitter")):
+#               row.prop(mat, "thea_EmittanceAmbientLevel")
+#           col = split.column()
 
 
-class MATERIAL_PT_Clipping(MaterialButtonsPanel, bpy.types.Panel):
-    bl_label = "Clipping"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
+#class MATERIAL_PT_Medium(MaterialButtonsPanel, bpy.types.Panel):
+#    bl_label = "Medium"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#
+#        if (not (len(bpy.context.active_object.data.materials)>0)):
+#            return False
+#
+#        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
+#
+#    def draw_header(self, context):
+#       scene = context.scene
+#       mat = context.material
+#       self.layout.prop(mat, "thea_Medium", text="")
+#
+#    def draw(self, context):
+#       layout = self.layout
+#       scene = context.scene
+#       mat = context.material
+#       split = layout.split()
+#       row = layout.row()
+#
+#       if mat.get('thea_Medium'):
+#           row = layout.row()
+#           if(mat.thea_MediumAbsorptionFilename==""):
+#                row.prop(mat, "thea_MediumAbsorptionCol")
+#           row.prop(mat, "thea_MediumAbsorptionFilename", text="", icon='TEXTURE_DATA')
+#           row = layout.row()
+#           if(mat.thea_MediumScatterFilename==""):
+#                row.prop(mat, "thea_MediumScatterCol")
+#           row.prop(mat, "thea_MediumScatterFilename", text="", icon='TEXTURE_DATA')
+#           row = layout.row()
+#           if(mat.thea_MediumAbsorptionDensityFilename==""):
+#               row.prop(mat, "thea_MediumAbsorptionDensity")
+#           row.prop(mat, "thea_MediumAbsorptionDensityFilename", text="", icon='TEXTURE_DATA')
+#           row = layout.row()
+#           if(mat.thea_MediumScatterDensityFilename==""):
+#               row.prop(mat, "thea_MediumScatterDensity")
+#           row.prop(mat, "thea_MediumScatterDensityFilename", text="", icon='TEXTURE_DATA')
+#           row = layout.row()
+#           row.prop(mat, "thea_MediumCoefficient")
+#           if(mat.thea_MediumCoefficient):
+#               row.prop(mat, "thea_MediumMenu")
+#           row = layout.row()
+#           row.prop(mat, "thea_MediumPhaseFunction")
+#           row = layout.row()
+#           if (getattr(mat, "thea_MediumPhaseFunction") in ("Henyey Greenstein")):
+#               row.prop(mat, "thea_Asymetry")
 
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
-
-    def draw_header(self, context):
-       scene = context.scene
-       mat  = context.material
-       self.layout.prop(mat, "thea_Clipping", text="")
-
-    def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-       split = layout.split()
-       row = layout.row()
-
-       if mat.get('thea_Clipping'):
-           col = layout.column()
-           col.prop(mat, "thea_ClippingFilename", text="Texture")
-           col.prop(mat, "thea_ClippingThreshold")
-           row = layout.row()
-           row.prop(mat, "thea_ClippingSoft")
-
-class MATERIAL_PT_Emittance(MaterialButtonsPanel, bpy.types.Panel):
-    bl_label = "Emittance"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
-
-    def draw_header(self, context):
-       scene = context.scene
-       mat  = context.material
-       self.layout.prop(mat, "thea_Emittance", text="")
-
-    def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-       split = layout.split()
-       row = layout.row()
-
-       if mat.get('thea_Emittance'):
-           row = layout.row()
-           if(mat.thea_EmittanceFilename==""):
-                row.prop(mat, "thea_EmittanceCol")
-           row.prop(mat, "thea_EmittanceFilename")
-           row = layout.row()
-           row.prop(mat, "thea_EmittancePower")
-#      CHANGED > Added this to hide with other light units
-           if getattr(context.material, "thea_EmittanceUnit") in ("Watts", "W/m2", "W/sr", "W/sr/m2"):
-               row.prop(mat, "thea_EmittanceEfficacy")
-#           row.prop(mat, "thea_EmittanceEfficacy")
-           layout.prop(mat, "thea_EmittanceUnit")
-           row = layout.row()
-           row.prop(mat, "thea_EmittanceIES")
-           if(getattr(mat, "thea_EmittanceIES")):
-               row.prop(mat, "thea_EmittanceIESFilename")
-               row = layout.row()
-               layout.prop(mat, "thea_EmittanceIESMultiplier")
-           row = layout.row()
-           layout.prop(mat, "thea_EmittancePassiveEmitter")
-           row = layout.row()
-           row.prop(mat, "thea_EmittanceAmbientEmitter")
-           if(getattr(mat, "thea_EmittanceAmbientEmitter")):
-               row.prop(mat, "thea_EmittanceAmbientLevel")
-           col = split.column()
-
-class MATERIAL_PT_Medium(MaterialButtonsPanel, bpy.types.Panel):
-    bl_label = "Medium"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
-
-    def draw_header(self, context):
-       scene = context.scene
-       mat  = context.material
-       self.layout.prop(mat, "thea_Medium", text="")
-
-    def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-       split = layout.split()
-       row = layout.row()
-
-       if mat.get('thea_Medium'):
-           row = layout.row()
-           if(mat.thea_MediumAbsorptionFilename==""):
-                row.prop(mat, "thea_MediumAbsorptionCol")
-           row.prop(mat, "thea_MediumAbsorptionFilename")
-           row = layout.row()
-           if(mat.thea_MediumScatterFilename==""):
-                row.prop(mat, "thea_MediumScatterCol")
-           row.prop(mat, "thea_MediumScatterFilename")
-           row = layout.row()
-           if(mat.thea_MediumAbsorptionDensityFilename==""):
-               row.prop(mat, "thea_MediumAbsorptionDensity")
-           row.prop(mat, "thea_MediumAbsorptionDensityFilename")
-           row = layout.row()
-           if(mat.thea_MediumScatterDensityFilename==""):
-               row.prop(mat, "thea_MediumScatterDensity")
-           row.prop(mat, "thea_MediumScatterDensityFilename")
-           row = layout.row()
-           row.prop(mat, "thea_MediumCoefficient")
-           if(mat.thea_MediumCoefficient):
-               row.prop(mat, "thea_MediumMenu")
-           row = layout.row()
-           row.prop(mat, "thea_MediumPhaseFunction")
-           row = layout.row()
-           if (getattr(mat, "thea_MediumPhaseFunction") in ("Henyey Greenstein")):
-               row.prop(mat, "thea_Asymetry")
-
-
-class MATERIAL_PT_Displacement(MaterialButtonsPanel, bpy.types.Panel):
-    bl_label = "Displacement"
-    COMPAT_ENGINES = set(['THEA_RENDER'])
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
-
-    def draw_header(self, context):
-       scene = context.scene
-       mat  = context.material
-       self.layout.prop(mat, "thea_Displacement", text="")
-
-    def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       mat  = context.material
-       split = layout.split()
-       row = layout.row()
-
-       if mat.get('thea_Displacement'):
-           row = layout.row()
-           col = split.column()
-           col.prop(mat, "thea_DisplacementFilename")
-           col.prop(mat, "thea_DispSub")
-#            col.prop(mat, "thea_DispBump")
-           col.prop(mat, "thea_DisplacementHeight")
-           col.prop(mat, "thea_DisplacementCenter")
-           col.prop(mat, "thea_DisplacementNormalSmooth")
-           col.prop(mat, "thea_DisplacementTightBounds")
+#
+#class MATERIAL_PT_Displacement(MaterialButtonsPanel, bpy.types.Panel):
+#    bl_label = "Displacement"
+#    COMPAT_ENGINES = set(['THEA_RENDER'])
+#
+#    @classmethod
+#    def poll(cls, context):
+#        engine = context.scene.render.engine
+#
+#        if (not (len(bpy.context.active_object.data.materials)>0)):
+#            return False
+#
+#        return (thea_globals.showMatGui) and (engine in cls.COMPAT_ENGINES)
+#
+#    def draw_header(self, context):
+#       scene = context.scene
+#       mat = context.material
+#       self.layout.prop(mat, "thea_Displacement", text="")
+#
+#    def draw(self, context):
+#       layout = self.layout
+#       scene = context.scene
+#       mat = context.material
+#       split = layout.split()
+#       row = layout.row()
+#
+#       if mat.get('thea_Displacement'):
+#           row = layout.row()
+#           col = split.column()
+#           col.prop(mat, "thea_DisplacementFilename", text="", icon='TEXTURE_DATA')
+#           col.prop(mat, "thea_DispSub")
+##            col.prop(mat, "thea_DispBump")
+#           col.prop(mat, "thea_DisplacementHeight")
+#           col.prop(mat, "thea_DisplacementCenter")
+#           col.prop(mat, "thea_DisplacementNormalSmooth")
+#           col.prop(mat, "thea_DisplacementTightBounds")
 
 
 class MATERIAL_PT_Thea_Strand(MaterialButtonsPanel, bpy.types.Panel):
@@ -1316,7 +1847,7 @@ class MATERIAL_PT_Thea_Strand(MaterialButtonsPanel, bpy.types.Panel):
     def draw(self, context):
        layout = self.layout
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        tan = mat.strand
        split = layout.split()
        row = layout.row()
@@ -1345,7 +1876,7 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
        missing_Materials = []
        layout = self.layout
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        split = layout.split()
        row = layout.row()
        colL = split.column()
@@ -1575,7 +2106,7 @@ class RENDER_PT_theaTools(RenderButtonsPanel, bpy.types.Panel):
 
     def draw_header(self, context):
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        self.layout.prop(scene, "thea_showTools", text="")
 
     def draw(self, context):
@@ -1614,7 +2145,7 @@ class RENDER_PT_theaLUTTools(RenderButtonsPanel, bpy.types.Panel):
 
     def draw_header(self, context):
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        self.layout.prop(scene, "thea_useLUT", text="")
 
     def draw(self, context):
@@ -1745,7 +2276,7 @@ class VIEW3D_PT_theaIR(bpy.types.Panel):
                 layout.operator("thea.start_ir", text="Start IR: FULL", icon='PLAY')
                 layout.prop(scene,"thea_Selected", text="Export only selected objects")
 
-                layout.separator();
+                layout.separator()
                 if not getattr(scene, "thea_Selected"):
                         if getattr(context.scene, 'thea_WasExported'):
 
@@ -1975,7 +2506,7 @@ class RENDER_PT_theaPresets(RenderButtonsPanel, bpy.types.Panel):
 
     def draw_header(self, context):
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        self.layout.prop(scene, "thea_enablePresets", text="")
 
     def draw(self, context):
@@ -2675,7 +3206,7 @@ class RENDER_PT_theaSetup(RenderButtonsPanel, bpy.types.Panel):
 
     def draw_header(self, context):
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        self.layout.prop(scene, "thea_showSetup", text="")
 
     def draw(self, context):
@@ -2708,7 +3239,7 @@ class RENDER_PT_theaSDKSetup(RenderButtonsPanel, bpy.types.Panel):
 
     def draw_header(self, context):
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        self.layout.prop(scene, "thea_showRemoteSetup", text="")
 
     def draw(self, context):
@@ -2735,7 +3266,7 @@ class RENDER_PT_theaMergeScene(RenderButtonsPanel, bpy.types.Panel):
 
     def draw_header(self, context):
        scene = context.scene
-       mat  = context.material
+       mat = context.material
        self.layout.prop(scene, "thea_showMerge", text="")
 
     def draw(self, context):
@@ -2770,7 +3301,7 @@ class RENDER_PT_theaMergeScene(RenderButtonsPanel, bpy.types.Panel):
 #
 #    def draw_header(self, context):
 #       scene = context.scene
-#       mat  = context.material
+#       mat = context.material
 #       self.layout.prop(scene, "thea_showChannels", text="")
 #
 #    def draw(self, context):
@@ -2847,7 +3378,7 @@ class RENDER_PT_theaGlobMedium(WorldButtonsPanel, bpy.types.Panel):
     def draw(self, context):
        layout = self.layout
        scene = context.scene
-#       mat  = context.material
+#       mat = context.material
        split = layout.split()
        row = layout.row()
 
@@ -2858,19 +3389,19 @@ class RENDER_PT_theaGlobMedium(WorldButtonsPanel, bpy.types.Panel):
 #           split = layout.split()
            if(scene.thea_MediumAbsorptionFilename==""):
                 row.prop(scene, "thea_MediumAbsorptionCol")
-           row.prop(scene, "thea_MediumAbsorptionFilename")
+           row.prop(scene, "thea_MediumAbsorptionFilename", text="", icon='TEXTURE_DATA')
            row = layout.row()
            if(scene.thea_MediumScatterFilename==""):
                 row.prop(scene, "thea_MediumScatterCol")
-           row.prop(scene, "thea_MediumScatterFilename")
+           row.prop(scene, "thea_MediumScatterFilename", text="", icon='TEXTURE_DATA')
            row = layout.row()
            if(scene.thea_MediumAbsorptionDensityFilename==""):
                row.prop(scene, "thea_MediumAbsorptionDensity")
-           row.prop(scene, "thea_MediumAbsorptionDensityFilename")
+           row.prop(scene, "thea_MediumAbsorptionDensityFilename", text="", icon='TEXTURE_DATA')
            row = layout.row()
            if(scene.thea_MediumScatterDensityFilename==""):
                row.prop(scene, "thea_MediumScatterDensity")
-           row.prop(scene, "thea_MediumScatterDensityFilename")
+           row.prop(scene, "thea_MediumScatterDensityFilename", text="", icon='TEXTURE_DATA')
            row = layout.row()
            row.prop(scene, "thea_MediumCoefficient")
            if(scene.thea_MediumCoefficient):
@@ -2902,7 +3433,7 @@ class RENDER_PT_theaIBL(WorldButtonsPanel, bpy.types.Panel):
         if scene.thea_IBLEnable:
            layout.prop(scene,"thea_IBLTypeMenu")
            layout.prop(scene,"thea_IBLWrappingMenu")
-           layout.prop(scene,"thea_IBLFilename")
+           layout.prop(scene,"thea_IBLFilename", icon='TEXTURE_DATA')
            layout.prop(scene,"thea_IBLRotation")
            layout.prop(scene,"thea_IBLIntensity")
            split = layout.split()
@@ -2910,7 +3441,7 @@ class RENDER_PT_theaIBL(WorldButtonsPanel, bpy.types.Panel):
            col.prop(scene,"thea_IBLEnableColor")
            sub = split.column()
            sub.active = scene.thea_IBLEnableColor == True
-           sub.prop(scene, "thea_IBLColorFilename")
+           sub.prop(scene, "thea_IBLColorFilename", icon='TEXTURE_DATA')
 
 
 class RENDER_PT_theaBackgroundMapping(WorldButtonsPanel, bpy.types.Panel):
@@ -2934,7 +3465,7 @@ class RENDER_PT_theaBackgroundMapping(WorldButtonsPanel, bpy.types.Panel):
         col = split.column()
         if scene.thea_BackgroundMappingEnable:
           col.prop(scene,"thea_BackgroundMappingWrappingMenu")
-          col.prop(scene,"thea_BackgroundMappingFilename")
+          col.prop(scene,"thea_BackgroundMappingFilename", icon='TEXTURE_DATA')
           #col.operator("thea.backgroundmapping_file", text="Select file")
           col.prop(scene,"thea_BackgroundMappingRotation")
           col.prop(scene,"thea_BackgroundMappingIntensity")
@@ -2960,7 +3491,7 @@ class RENDER_PT_theaReflectionMapping(WorldButtonsPanel, bpy.types.Panel):
         col = split.column()
         if scene.thea_ReflectionMappingEnable:
           col.prop(scene,"thea_ReflectionMappingWrappingMenu")
-          col.prop(scene,"thea_ReflectionMappingFilename")
+          col.prop(scene,"thea_ReflectionMappingFilename", icon='TEXTURE_DATA')
           #col.operator("thea.reflectionmapping_file", text="Select file")
           col.prop(scene,"thea_ReflectionMappingRotation")
           col.prop(scene,"thea_ReflectionMappingIntensity")
@@ -2986,7 +3517,7 @@ class RENDER_PT_theaRefractionMapipng(WorldButtonsPanel, bpy.types.Panel):
         col = split.column()
         if scene.thea_RefractionMappingEnable:
            col.prop(scene,"thea_RefractionMappingWrappingMenu")
-           col.prop(scene,"thea_RefractionMappingFilename")
+           col.prop(scene,"thea_RefractionMappingFilename", icon='TEXTURE_DATA')
            #col.operator("thea.refractionmapping_file", text="Select file")
            col.prop(scene,"thea_RefractionMappingRotation")
            col.prop(scene,"thea_RefractionMappingIntensity")
@@ -3352,124 +3883,138 @@ class OBJECT_OT_setCamProjection(bpy.types.Operator):
             camera.shift_y = 0
         return{'FINISHED'}
 
+def checkCamera():
+    bl_idname = "check_camera"
+    bl_label = "Check camera name and data name"
+
+    if not bpy.context.active_object.name == bpy.data.objects[bpy.context.active_object.name]:
+        thea_globals.log.debug("No cam")
+        bpy.data.objects[bpy.context.active_object.name].errorCam = "Change name"
+
 
 class DATA_PT_theaCamera(CameraButtonsPanel, bpy.types.Panel):
     bl_label = "Thea Camera"
     COMPAT_ENGINES = set(['THEA_RENDER'])
+    errorCam = ""
 
     @classmethod
     def poll(cls, context):
         engine = context.scene.render.engine
+#        checkCamera()
         return (engine in cls.COMPAT_ENGINES) and context.active_object.type=='CAMERA'
 
     def draw_header(self, context):
-       scene = context.scene
-       cam  = context.active_object
+        scene = context.scene
+        cam = context.active_object
 
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       cam = context.object
-       object = bpy.context.active_object
-       camera = context.camera
-       layout.label(text="Film:")
-       if bpy.data.objects[bpy.context.active_object.name].thea_projection == "Perspective":
-           if camera.sensor_fit in {'VERTICAL'} :
-               layout.prop(bpy.data.cameras[bpy.context.active_object.name], "sensor_height", text="Film Height (mm)")
-           if camera.sensor_fit in {'HORIZONTAL' and 'AUTO'} :
-               layout.prop(bpy.data.cameras[bpy.context.active_object.name], "sensor_width", text="Film Height (mm)")
-           layout.prop(bpy.data.cameras[bpy.context.active_object.name], "lens", text="Focal Lenght (mm)")
-           layout.operator("set.cam", text="Preview Perspective", icon='CAMERA_DATA')
-       if bpy.data.objects[bpy.context.active_object.name].thea_projection == "Parallel":
-           layout.prop(bpy.data.cameras[bpy.context.active_object.name], "ortho_scale", text="View Area")
-           layout.operator("set.cam", text="Preview Parallel", icon='CAMERA_DATA')
+        layout = self.layout
+        scene = context.scene
+        cam = context.object
+        object = bpy.context.active_object
+        camera = context.camera
+        if (bpy.context.active_object.name != camera.name):
+            layout.label(text="Camera Data & Object name must be same", icon="ERROR")
+            layout.separator()
+        else:
+            layout.label(text="Film:")
+            if bpy.data.objects[bpy.context.active_object.name].thea_projection == "Perspective":
+               if camera.sensor_fit in {'VERTICAL'} :
+                   layout.prop(bpy.data.cameras[bpy.context.active_object.name], "sensor_height", text="Film Height (mm)")
+               if camera.sensor_fit in {'HORIZONTAL' and 'AUTO'} :
+                   layout.prop(bpy.data.cameras[bpy.context.active_object.name], "sensor_width", text="Film Height (mm)")
+               layout.prop(bpy.data.cameras[bpy.context.active_object.name], "lens", text="Focal Lenght (mm)")
+               layout.operator("set.cam", text="Preview Perspective", icon='CAMERA_DATA')
+            if bpy.data.objects[bpy.context.active_object.name].thea_projection == "Parallel":
+               layout.prop(bpy.data.cameras[bpy.context.active_object.name], "ortho_scale", text="View Area")
+               layout.operator("set.cam", text="Preview Parallel", icon='CAMERA_DATA')
 
 
-       split = layout.split()
-       layout.label(text="Lens:")
-       layout.prop(bpy.context.active_object, "thea_projection")
-       layout.prop(bpy.context.active_object, "shutter_speed")
-       row = layout.row()
+            split = layout.split()
+            layout.label(text="Lens:")
+            layout.prop(bpy.context.active_object, "thea_projection")
+            layout.prop(bpy.context.active_object, "shutter_speed")
+            row = layout.row()
 
-       split = layout.split()
-       colL = split.column()
-       colR = split.column()
-       colL.label(text="Diaphragm:")
-       colR.prop(bpy.context.active_object, "thea_diaphragma")
-       if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
-           colR.prop(bpy.context.active_object, "thea_diapBlades")
+            split = layout.split()
+            colL = split.column()
+            colR = split.column()
+            colL.label(text="Diaphragm:")
+            colR.prop(bpy.context.active_object, "thea_diaphragma")
+            if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
+               colR.prop(bpy.context.active_object, "thea_diapBlades")
 
-       row = layout.row()
-#       colL.label(text="")
-       # ADD spcer to align Shift again when blades is ON
-       if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
-           colL.label(text="")
-       colL.label(text="Shift:")
-       colR.prop(camera, "shift_x", text="X")
-       colR.prop(camera, "shift_y", text="Y")
+            row = layout.row()
+            #       colL.label(text="")
+            # ADD spcer to align Shift again when blades is ON
+            if bpy.data.objects[bpy.context.active_object.name].thea_diaphragma == "Polygonal":
+               colL.label(text="")
+            colL.label(text="Shift:")
+            colR.prop(camera, "shift_x", text="X")
+            colR.prop(camera, "shift_y", text="Y")
 
-       row = layout.row()
-       layout.label(text="Depth of Field:")
-       layout.prop(bpy.context.active_object, "autofocus")
+            row = layout.row()
+            layout.label(text="Depth of Field:")
+            layout.prop(bpy.context.active_object, "autofocus")
 
-       split = layout.split()
+            split = layout.split()
 
-       colL = split.column()
-       colR = split.column()
-       sub = colL
-       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
-#       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
-       sub.prop(bpy.context.active_object, "thea_pinhole")
-       sub = colR.row()
-       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
-#       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
-       sub.prop(bpy.context.active_object, "aperture")
+            colL = split.column()
+            colR = split.column()
+            sub = colL
+            sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+            #       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+            sub.prop(bpy.context.active_object, "thea_pinhole")
+            sub = colR.row()
+            sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+            #       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == False
+            sub.prop(bpy.context.active_object, "aperture")
 
-       split = layout.split()
+            split = layout.split()
 
-       colL = split.column()
-       colR = split.column()
-       sub = colL
+            colL = split.column()
+            colR = split.column()
+            sub = colL
 
-       sub.label(text="Distance:")
-       sub = colR
-       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
-       sub.prop(bpy.data.cameras[bpy.context.active_object.name], "dof_distance")
-       split = layout.split()
-#       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-       sub = colL
+            sub.label(text="Distance:")
+            sub = colR
+            sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+            sub.prop(bpy.data.cameras[bpy.context.active_object.name], "dof_distance")
+            split = layout.split()
+            #       row = layout.row()
+            colL = split.column()
+            colR = split.column()
+            sub = colL
 
-       sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
-       sub.prop(bpy.context.active_object,"thea_enableDOFpercentage")
-#       if (bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True):
-#           bpy.data.objects[bpy.context.active_object.name].aperture = False
-       sub = colR.row()
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True
-       sub.prop(bpy.context.active_object, "thea_DOFpercentage")
-       split = layout.split()
+            sub.enabled = bpy.data.objects[bpy.context.active_object.name].thea_pinhole == False
+            sub.prop(bpy.context.active_object,"thea_enableDOFpercentage")
+            #       if (bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True):
+            #           bpy.data.objects[bpy.context.active_object.name].aperture = False
+            sub = colR.row()
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_enableDOFpercentage == True
+            sub.prop(bpy.context.active_object, "thea_DOFpercentage")
+            split = layout.split()
 
-       col = split.column(align=True)
-       sub = col
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
-       sub.prop(bpy.context.active_object, "thea_zClippingNear")
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingNear == True
-       sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
+            col = split.column(align=True)
+            sub = col
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
+            sub.prop(bpy.context.active_object, "thea_zClippingNear")
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingNear == True
+            sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_start")
 
 
-       col = split.column(align=True)
-       sub = col
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
-       sub.prop(bpy.context.active_object, "thea_zClippingFar")
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingFar == True
-       sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
+            col = split.column(align=True)
+            sub = col
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == False
+            sub.prop(bpy.context.active_object, "thea_zClippingFar")
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_zClippingFar == True
+            sub.prop(bpy.data.cameras[bpy.context.active_object.name], "clip_end")
 
-       layout.prop(bpy.context.active_object, "thea_ZclipDOF")
-       sub = layout.split()
-       sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == True
-       sub.prop(bpy.context.active_object,"thea_ZclipDOFmargin")
+            layout.prop(bpy.context.active_object, "thea_ZclipDOF")
+            sub = layout.split()
+            sub.active = bpy.data.objects[bpy.context.active_object.name].thea_ZclipDOF == True
+            sub.prop(bpy.context.active_object,"thea_ZclipDOFmargin")
 
 
 class PARTICLE_PT_Thea(ParticleButtonsPanel, bpy.types.Panel):
@@ -3524,7 +4069,6 @@ class DATA_PT_thea_context_lamp(DataButtonsPanel, Panel):
 
         split = layout.split(percentage=0.65)
         if(lamp is not None):
-
             texture_count = len(lamp.texture_slots.keys())
 
             if ob:
@@ -3598,7 +4142,7 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
         if(lamp is not None):
             if (lamp.thea_TextureFilename==""):
                 row.prop(lamp, "color", text="")
-            row.prop(lamp, "thea_TextureFilename")
+            row.prop(lamp, "thea_TextureFilename", text="", icon='TEXTURE_DATA')
 
             split = layout.split()
             colL = split.column()
@@ -3608,7 +4152,7 @@ class DATA_PT_thea_Emittance(DataButtonsPanel, Panel):
                 sub.enabled = lamp.thea_enableProjector == False
                 sub.prop(lamp, "thea_enableIES")
             if lamp.type in {'SPOT'} and lamp.thea_enableIES:
-                colR.prop(lamp, "thea_IESFilename")
+                colR.prop(lamp, "thea_IESFilename", text="", icon='LAMP_DATA')
                 layout.prop(lamp, "thea_IESMultiplier")
 
             row = layout.row()

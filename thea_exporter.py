@@ -764,9 +764,9 @@ class BasicBSDF:
             self.translucentTexture.write(file,"Translucent")
         if self.reflectanceTexture:
             self.reflectanceTexture.write(file,"Reflectance 0")
-            if (self.reflectanceTexture.red>0 or self.reflectanceTexture.green>0 or self.reflectanceTexture.blue>0):
+#            if (self.reflectanceTexture.red>0 or self.reflectanceTexture.green>0 or self.reflectanceTexture.blue>0):
 #                refTex = RgbTexture(1,1,1)
-                self.reflect90Texture.write(file,"Reflectance 90")
+            self.reflect90Texture.write(file,"Reflectance 90")
 #                refTex.write(file,"Reflectance 90")
 #             else:
 #                 refTex = RgbTexture(0,0,0)
@@ -5366,6 +5366,8 @@ class XMLExporter:
                     bsdf.setReflectanceTexture(getTexture(type="Reflectance", component="thea_Basic"))
                     if getattr(mat.blenderMat,'thea_BasicReflectionCurve'):
                         bsdf.setcustomCurve(Reflection90CurveList(getattr(mat.blenderMat,'thea_BasicReflectionCurve'), getattr(mat.blenderMat,'thea_BasicReflectCurveList')))
+#                thea_globals.log.debug("Reflectance 90 Texture: %s - File: %s" % ((len(getattr(mat.blenderMat, 'thea_BasicReflect90Filename'))>1), getattr(mat.blenderMat, 'thea_BasicDiffuseFilename')))
+#                thea_globals.log.debug("Reflectance 90 Color: %s - File: %s" % ((((getattr(mat.blenderMat, 'thea_BasicReflect90Col')[0], getattr(mat.blenderMat, 'thea_BasicReflect90Col')[1], getattr(mat.blenderMat, 'thea_BasicReflect90Col')[2])) != (0,0,0)),(len(getattr(mat.blenderMat, 'thea_BasicReflect90Filename'))>1)))
                 if (((getattr(mat.blenderMat, 'thea_BasicReflect90Col')[0], getattr(mat.blenderMat, 'thea_BasicReflect90Col')[1], getattr(mat.blenderMat, 'thea_BasicReflect90Col')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicReflect90Filename'))>1:
                     bsdf.setReflect90Texture(getTexture(type="Reflect90", component="thea_Basic"))
                 if (((getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[0], getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[1], getattr(mat.blenderMat, 'thea_BasicTranslucentCol')[2])) != (0,0,0)) or len(getattr(mat.blenderMat, 'thea_BasicTranslucentFilename'))>1:

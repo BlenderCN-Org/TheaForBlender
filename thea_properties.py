@@ -2126,8 +2126,6 @@ def diffuseColorUpdated(self, context):
     materialUpdated(context)
 
 
-
-
 def materialFilenameUpdated(self, context, origin=""):
     '''Create texture and set it when one of the material filename properties are updated
 
@@ -2135,6 +2133,7 @@ def materialFilenameUpdated(self, context, origin=""):
         :param origin: filename parameter which has been updated
         :type origin: string
     '''
+
     thea_globals.log.debug("materialFilenameUpdated: %s, %s, %s, %s" % (self, context, origin, context.material.get(origin)))
     mat = context.material
     imgName = context.material.get(origin)
@@ -2161,6 +2160,11 @@ def materialFilenameUpdated(self, context, origin=""):
     else:
         img = bpy.data.images.load(imgName)
         tex = bpy.data.textures.new(name=texName, type='IMAGE')
+#        if (img.mode == 'RGBA'):
+#        thea_globals.log.debug("### Texture has alpha ###")
+#        thea_globals.log.debug("### Texture Type: %s - ALpha:###" % img.file_format)
+#        for i in range(0, len(bpy.data.images[img.name].pixels), 4):
+
         tex.image = img
         tex.name = texName
         slot = mat.texture_slots.add()
@@ -2296,6 +2300,33 @@ def updatePreviewScene(self, context):
 #     print("thea_globals.previewScene: ", thea_globals.previewScene)
 
 
+def getMaterialExtras(self, context):
+    '''Return extras list menu entries
+
+        :param context: context
+        :return: list of tuples (component, component, component, icon, i)
+        :rtype: [(str, str, str, str, int)]
+    '''
+    components = ("Coating", "Clipping", "Displacement", "Emittance", "Medium")
+    items = []
+    i=0
+    for component in components:
+        #icon="RADIOBUT_OFF"
+        icon="RADIOBUT_OFF" #"CHECKBOX_DEHLT"
+        if hasattr(bpy.context, 'active_object'):
+            if getattr(bpy.context.active_object.active_material, "thea_"+component):
+                #icon="RADIOBUT_ON"
+                icon="RADIOBUT_ON"# "CHECKBOX_HLT"
+        items.append((component, component, component, icon, i))
+        i+=1
+    return items
+
+
+Mat.thea_materialExtras = bpy.props.EnumProperty(
+                items=getMaterialExtras,
+                name="Material Extra's Menu",
+                description="Edit material extra's")
+
 Mat.thea_PreviewScenesMenu = bpy.props.EnumProperty(
                 items=getTheaPreviewScenesMenuItems(),
 #                CHANGED > Shorter name liek studio
@@ -2385,6 +2416,10 @@ Mat.thea_BasicDiffuseCol = bpy.props.FloatVectorProperty(
                 subtype="COLOR",
                 update=diffuseColorUpdated)
 
+Mat.thea_BasicDiffuseEnable = bpy.props.BoolProperty(
+                name = "Enable texture",
+                default = False,
+                description = "Enable diffuse Color texture file path")
 
 Mat.thea_BasicDiffuseFilename = bpy.props.StringProperty(
                   name = "Diffuse Color texture",
@@ -3622,6 +3657,12 @@ Mat.thea_ClippingSoft = bpy.props.BoolProperty(
                 default= False,
                 update=materialUpdated)
 
+Mat.thea_ClippingAuto = bpy.props.BoolProperty(
+                name="Auto clipping",
+                description="Auto clipping, sets clipping for PNG with alpha automatically",
+                default= False,
+                update=materialUpdated)
+
 Mat.thea_Emittance = bpy.props.BoolProperty(
                 name="Emittance",
                 description="Emittance",
@@ -3893,6 +3934,19 @@ Tex.thea_Emittance = bpy.props.BoolProperty(
                 name="Emittance",
                 description="Use with Emittance component",
                 default= False)
+
+#def updateToneMenu(self, context):
+#    from TheaForBlender.thea_operators import callToneMenu
+#    callToneMenu()
+#    bpy.ops.wm.call_tonemenu(origin="thea_BasicDiffuseFilename")
+#    layout.operator("wm.call_tonemenu", text= "", icon='SETTINGS')#.origin ='thea_'+label+"WeightFilename"
+
+Tex.thea_mappingtoneMenu = bpy.props.EnumProperty(
+                items=(('Mapping', 'Mapping', 'Mapping'),('Tone', 'Tone', 'Tone')),
+                name="Mapping - Tone Menu",
+                description="Choose to edit: texture mapping / toning")#,
+#                update=updateToneMenu)
+
 #CHANGED> Added better coordinates input
 Tex.thea_texture_coords = bpy.props.EnumProperty(
                 items=(('UV', 'UV', 'UV'),('Cubic', 'Cubic', 'Cubic'),('Cylindrical', 'Cylindrical', 'Cylindrical'),('Spherical', 'Spherical', 'Spherical'),('Flat', 'Flat', 'Flat'),('Front', 'Front', 'Front'),('Camera Map', 'Camera Map', 'Camera Map'),('Shrink Wrap', 'Shrink Wrap', 'Shrink Wrap'),('Cubic (Centered)', 'Cubic (Centered)', 'Cubic (Centered)'),('Flat (Centered)', 'Flat (Centered)', 'Flat (Centered)')),
@@ -5328,11 +5382,11 @@ def getMaterialComponents(self, context):
     i=0
     for component in components:
         #icon="RADIOBUT_OFF"
-        icon="CHECKBOX_DEHLT"
+        icon="RADIOBUT_OFF" #"CHECKBOX_DEHLT"
         if hasattr(bpy.context, 'active_object'):
             if getattr(bpy.context.active_object.active_material, "thea_"+component):
                 #icon="RADIOBUT_ON"
-                icon="CHECKBOX_HLT"
+                icon="RADIOBUT_ON"# "CHECKBOX_HLT"
         items.append((component, component, component, icon, i))
         i+=1
     return items
