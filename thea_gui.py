@@ -3551,23 +3551,20 @@ class RENDER_PT_theaPhysicalSky(WorldButtonsPanel, bpy.types.Panel):
        self.layout.prop(scene, "thea_EnvPSEnable", text="")
 
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       split = layout.split()
-       row = layout.row()
-       col = split.column()
-       if scene.thea_EnvPSEnable:
-          col.prop(scene,"thea_SkyTypeMenu")
-          col.prop(scene,"thea_EnvPSTurb")
-          col.prop(scene,"thea_EnvPSOzone")
-          col.prop(scene,"thea_EnvPSWatVap")
-          col.prop(scene,"thea_EnvPSTurbCo")
-          col.prop(scene,"thea_EnvPSWaveExp")
-#        CHANGED > Added Abledo, deleted double water vapor
-          col.prop(scene,"thea_EnvPSalbedo")
-#        CHANGED > Added manual reset for all input
-          row = layout.row()
-          col.operator("reset.sky", text="Reset Sky", icon='X')
+        layout = self.layout
+        scene = context.scene
+        split = layout.split()
+        col = split.column()
+        if scene.thea_EnvPSEnable:
+            col.prop(scene, "thea_SkyTypeMenu")
+            col.prop(scene, "thea_EnvPSTurb")
+            col.prop(scene, "thea_EnvPSOzone")
+            col.prop(scene, "thea_EnvPSWatVap")
+            col.prop(scene, "thea_EnvPSTurbCo")
+            col.prop(scene, "thea_EnvPSWaveExp")
+            col.prop(scene, "thea_EnvPSalbedo")
+            col.operator("reset.sky", text="Reset Sky", icon='X')
+
 
 class RENDER_PT_theaLocationTime(WorldButtonsPanel, bpy.types.Panel):
     bl_label = "Thea Location/Time"
@@ -3579,33 +3576,39 @@ class RENDER_PT_theaLocationTime(WorldButtonsPanel, bpy.types.Panel):
         return (engine in cls.COMPAT_ENGINES)
 
     def draw_header(self, context):
-       scene = context.scene
-       self.layout.prop(scene, "thea_locationEnable", text="")
+        scene = context.scene
+        self.layout.prop(scene, "thea_locationEnable", text="")
 
     def draw(self, context):
-       layout = self.layout
-       scene = context.scene
-       split = layout.split()
-       row = layout.row()
+        layout = self.layout
+        scene = context.scene
+        split = layout.split()
+        row = layout.row()
 
-#CHANGED> Added enable check for better sun control
-#       if scene.thea_locationEnable:
-           #colR = split.column()
-           #colR.operator("thea.update_loc", text="Update Lat/Long")
-       col = layout.column()
-       col.prop(scene,"thea_EnvLocationsMenu")
-#       colL = split.column()
-#       colL.label("")
-       colR = split.column()
-       colR.operator("thea.location_search", text="Search", icon="VIEWZOOM")
-       split = layout.split()
-       row = layout.row()
-       col = split.column()
-       col.prop(scene,"thea_EnvLat")
-       col.prop(scene,"thea_EnvLong")
-       col.prop(scene,"thea_EnvTZ")
-       col.prop(scene,"thea_EnvDate")
-       col.prop(scene,"thea_EnvTime")
+#        box = layout.box()
+#        box.label(getattr(scene, "thea_Envlocation"))
+        layout.operator("thea.location_search", text="Search", icon="VIEWZOOM")
+
+        split = layout.split(percentage=0.33)
+        colL = split.column()
+        colR = split.column()
+#        box = colR.box()
+#        colR = colR.box()
+        colL.label("Location:")
+        colR.label(getattr(scene, "thea_Envlocation"))
+#        colR.operator("thea.location_search", text="Search", icon="VIEWZOOM")
+
+#        colR.enabled = True
+#        col.prop(scene,"thea_EnvLocationsMenu")
+        #       colL = split.column()
+        #       colL.label("")
+        split = layout.split()
+        col = split.column()
+        col.prop(scene,"thea_EnvLat")
+        col.prop(scene,"thea_EnvLong")
+        col.prop(scene,"thea_EnvTZ")
+        col.prop(scene,"thea_EnvDate")
+        col.prop(scene,"thea_EnvTime")
 
 
 

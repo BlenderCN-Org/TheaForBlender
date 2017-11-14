@@ -1361,6 +1361,13 @@ Scene.thea_EnvLocationsMenu = bpy.props.EnumProperty(
                 default="3",
                 update=locationUpdated)
 
+Scene.thea_Envlocation = bpy.props.StringProperty(
+                maxlen=25,
+                default="",
+                name="Location:",
+                description="Environment Location",
+                update=worldUpdated)
+
 Scene.thea_Interface = bpy.props.EnumProperty(
                  name="Materials List",
                  description="Materials List",

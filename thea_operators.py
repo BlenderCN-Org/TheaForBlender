@@ -2489,6 +2489,8 @@ class thea_location_search(bpy.types.Operator):
 #        thea_globals.log.debug("*** IORmenu Items: %s" % item)
         try:
             setattr(bpy.data.scenes["Scene"],"thea_EnvLocationsMenu", item)
+            setattr(bpy.data.scenes["Scene"],"thea_Envlocation", getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][1])
+
 #            bpy.data.scenes[setattr(scene,"thea_EnvLocationsMenu", item)]
 #            bpy.data.scenes[setattr(scene,"thea_EnvLocationsMenu", item)]
         except:
