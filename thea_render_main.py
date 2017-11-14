@@ -4672,13 +4672,13 @@ def updateActiveMaterialColor():
         prevImageOb.outFile = outputImage
         prevImageOb.read(extMatFile)
         setattr(material, 'diffuse_color', prevImageOb.centerColor)
-    if extIBLFile:
-        prevImageOb = Preview()
-        tempDir = tempfile.gettempdir()
-        outputImage = os.path.join(tempDir, "matIBLPreview.bmp")
-        thea_globals.log.debug("TempDIr Preview: %s" % tempDir)
-        prevImageOb.outFile = outputImage
-        prevImageOb.read("/Users/romboutversluijs/Library/Application Support/Thea Render/Skies/HDR Haven/Skies/Rustig Koppie_8k_0deg_Toned-v1.sky.thea")
+#    if extIBLFile:
+#        prevImageOb = Preview()
+#        tempDir = tempfile.gettempdir()
+#        outputImage = os.path.join(tempDir, "matIBLPreview.bmp")
+#        thea_globals.log.debug("TempDIr Preview: %s" % tempDir)
+#        prevImageOb.outFile = outputImage
+#        prevImageOb.read("/Users/romboutversluijs/Library/Application Support/Thea Render/Skies/HDR Haven/Skies/Rustig Koppie_8k_0deg_Toned-v1.sky.thea")
 #        setattr(material, 'diffuse_color', prevImageOb.centerColor)
     return
 
