@@ -1119,7 +1119,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
                     layout.operator("update.curve_list")
 #                    layout.prop(mat, "thea_BasicReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_BasicReflectCurve"), "thea_BasicReflectCurve"), "mapping")
-                    layout.prop(mat, "thea_BasicReflectCurveList", text="CurveList")
+#                    layout.prop(mat, "thea_BasicReflectCurveList", text="CurveList")
 
 #------ Basic2
         if mat.thea_MaterialComponent == "Basic2":
