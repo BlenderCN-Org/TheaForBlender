@@ -2810,6 +2810,7 @@ class IMAGE_PT_EditExternally(bpy.types.Operator):
     bl_label = "Edit Externally"
     bl_description = "Edit texture in external editor"
 #
+    text = bpy.props.StringProperty()
 #    filepath = StringProperty(
 #            subtype='FILE_PATH',
 #            )
@@ -2887,7 +2888,9 @@ class IMAGE_PT_EditExternally(bpy.types.Operator):
         import os
         sd = context.space_data
         mat = bpy.context.material
-        imgName = bpy.context.object.active_material.active_texture.name #.context.material
+        texEdit = mat.texture_slots[self.text].texture
+#        imgName = bpy.context.object.active_material.active_texture.name #.context.material
+        imgName = mat.texture_slots[self.text].name #.context.material
         texName = imgName
         exists = False
 #        img = bpy.data.images.load(imgName)
@@ -2904,19 +2907,19 @@ class IMAGE_PT_EditExternally(bpy.types.Operator):
                 if imgName:
                     img = bpy.data.images.load(imgName)
                     tex.image = img
+                    tex = mat.texture_slots[text].texture
                 else:
                     print("removing texture: ", slot, tex)
                     mat.texture_slots[texName].texture = None
             except:
                 pass
         try:
-            image = tex.image
+            image = texEdit.image
         except AttributeError:
             self.report({'ERROR'}, "Context incorrect, image not found")
             return {'CANCELLED'}
 
         filepath = image.filepath
-
         filepath = bpy.path.abspath(filepath, library=image.library)
 
         self.filepath = os.path.normpath(filepath)
@@ -3010,4 +3013,19 @@ class callToneMenu(bpy.types.Operator):
         colL.prop(tex,"thea_TexClampMax")
 
         colL.separator()
-        colL.operator("edit.externally", text="Edit externally")
+        colL.operator("edit.externally", text="Edit externally").text = text
+
+
+from TheaForBlender.thea_properties import updateCurveMaterial #updates Curve list for reflectance 90
+
+
+class CURVELIST_PT_updateCurveList(bpy.types.Operator):
+    bl_idname = "update.curve_list"
+    bl_label = "Update Curve List"
+    bl_description = "Update Reflectance 90 curve list"
+
+    def execute(self, context):
+        mat = context.material
+#        mat.thea_BasicReflectionCurve = mat.thea_Basic2ReflectionCurve = mat.thea_GlossyReflectionCurve = mat.thea_Glossy2ReflectionCurve = True # update curve list
+        updateCurveMaterial(self, context)
+        return {'FINISHED'}

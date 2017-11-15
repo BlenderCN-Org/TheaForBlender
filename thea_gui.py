@@ -715,9 +715,10 @@ class MATERIAL_PT_Extras(MaterialButtonsPanel, bpy.types.Panel):
 
                     layout.prop(mat, "thea_CoatingReflectionCurve")
                     if mat.thea_CoatingReflectionCurve:
-                        layout.prop(mat, "thea_CoatingReflectCurve", text="Curve Name")
+                        layout.operator("update.curve_list")
+#                        layout.prop(mat, "thea_CoatingReflectCurve", text="Curve Name")
                         layout.template_curve_mapping(myCurveData(getattr(mat, "thea_CoatingReflectCurve"), "thea_CoatingReflectCurve"), "mapping")
-                        layout.prop(mat, "thea_CoatingReflectCurveList", text="CurveList")
+#                        layout.prop(mat, "thea_CoatingReflectCurveList", text="CurveList")
 
 
 #------ Clipping
@@ -1115,7 +1116,8 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 
                 layout.prop(mat, "thea_BasicReflectionCurve")
                 if mat.thea_BasicReflectionCurve:
-                    layout.prop(mat, "thea_BasicReflectCurve", text="Curve Name")
+                    layout.operator("update.curve_list")
+#                    layout.prop(mat, "thea_BasicReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_BasicReflectCurve"), "thea_BasicReflectCurve"), "mapping")
                     layout.prop(mat, "thea_BasicReflectCurveList", text="CurveList")
 
@@ -1223,9 +1225,10 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 
                 layout.prop(mat, "thea_Basic2ReflectionCurve")
                 if mat.thea_Basic2ReflectionCurve:
-                    layout.prop(mat, "thea_Basic2ReflectCurve", text="Curve Name")
+                    layout.operator("update.curve_list")
+#                    layout.prop(mat, "thea_Basic2ReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_Basic2ReflectCurve"), "thea_Basic2ReflectCurve"), "mapping")
-                    layout.prop(mat, "thea_Basic2ReflectCurveList", text="CurveList")
+#                    layout.prop(mat, "thea_Basic2ReflectCurveList", text="CurveList")
 
 #------ Glossy
         if mat.thea_MaterialComponent == "Glossy":
@@ -1359,7 +1362,8 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
                 sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_GlossyReflect90Filename"
                 layout.prop(mat, "thea_GlossyReflectionCurve")
                 if mat.thea_GlossyReflectionCurve:
-                    layout.prop(mat, "thea_GlossyReflectCurve", text="Curve Name")
+                    layout.operator("update.curve_list")
+#                    layout.prop(mat, "thea_GlossyReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_GlossyReflectCurve"), "thea_GlossyReflectCurve"), "mapping")
                     layout.prop(mat, "thea_GlossyReflectCurveList", text="CurveList")
 
@@ -1495,9 +1499,10 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 
                 layout.prop(mat, "thea_Glossy2ReflectionCurve")
                 if mat.thea_Glossy2ReflectionCurve:
-                    layout.prop(mat, "thea_Glossy2ReflectCurve", text="Curve Name")
+                    layout.operator("update.curve_list")
+#                    layout.prop(mat, "thea_Glossy2ReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_Glossy2ReflectCurve"), "thea_Glossy2ReflectCurve"), "mapping")
-                    layout.prop(mat, "thea_Glossy2ReflectCurveList", text="CurveList")
+#                    layout.prop(mat, "thea_Glossy2ReflectCurveList", text="CurveList")
 
 
 #------ SSS
@@ -1589,9 +1594,10 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
 
                 layout.prop(mat, "thea_SSSReflectionCurve")
                 if mat.thea_SSSReflectionCurve:
-                    layout.prop(mat, "thea_SSSReflectCurve", text="Curve Name")
+                    layout.operator("update.curve_list")
+#                    layout.prop(mat, "thea_SSSReflectCurve", text="Curve Name")
                     layout.template_curve_mapping(myCurveData(getattr(mat, "thea_SSSReflectCurve"), "thea_SSSReflectCurve"), "mapping")
-                    layout.prop(mat, "thea_SSSReflectCurveList", text="CurveList")
+#                    layout.prop(mat, "thea_SSSReflectCurveList", text="CurveList")
 
 #------ Thinfilm
         if mat.thea_MaterialComponent == "ThinFilm":
@@ -1607,23 +1613,22 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
                 row.prop(mat, "thea_ThinFilmTransmittanceFilename", text="", icon='TEXTURE_DATA')
             else:
                 row.prop(mat, "thea_ThinFilmTransmittanceFilename", text="Transmittance", icon='TEXTURE_DATA')
-                sub = row.row()
+            sub = row.row()
             sub.active = (len(mat.thea_ThinFilmTransmittanceFilename) > 1) == True
             sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ThinFilmTransmittanceFilename"
 
-#            col.prop(mat, "thea_ThinFilmTransmittanceCol")
             split = layout.split()
             row = layout.row()
             col = split.column()
             col.prop(mat, "thea_ThinFilmIOR")
-#            CHANGED > Added inactive state to ThinFilm  THickness
+
             row = layout.row()
             row.prop(mat, "thea_ThinFilmInterference")
-            col = layout.column()
-            sub = col.row(align=False)
-            sub.active = mat.thea_ThinFilmInterference == True
-            sub.prop(mat, "thea_ThinFilmThickness")
-            sub.prop(mat, "thea_ThinFilmThicknessFilename", text="", icon='TEXTURE_DATA')
+            row = layout.row()
+#            sub = col.row(align=False)
+            row.active = mat.thea_ThinFilmInterference == True
+            row.prop(mat, "thea_ThinFilmThickness")
+            row.prop(mat, "thea_ThinFilmThicknessFilename", text="", icon='TEXTURE_DATA')
             sub = row.row()
             sub.active = (len(mat.thea_ThinFilmThicknessFilename) > 1) == True
             sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ThinFilmThicknessFilename"

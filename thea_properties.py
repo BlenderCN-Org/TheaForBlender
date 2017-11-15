@@ -2124,6 +2124,7 @@ def materialUpdated(self, context):
     else:
         mat.use_object_color = True
 
+    updateCurveMaterial(self, context)
 
 def diffuseColorUpdated(self, context):
     '''Update diffuse color
@@ -2270,6 +2271,7 @@ def materialFilenameUpdated(self, context, origin=""):
         thea_globals.materialUpdatesNumber += 1
     mat.thea_MaterialLayoutVersion = 2.0;
     thea_globals.materialUpdate = True
+    updateCurveMaterial(self, context)
     #materialUpdated(context)
 
 
@@ -2643,6 +2645,27 @@ Mat.thea_BasicMicroRoughnessHeight = bpy.props.FloatProperty(
                 update=materialUpdated)
 
 
+def updateCurveMaterial(self, context):
+    mat = context.material
+#    def myfunction(input, a=False, b=False, c=False, d=False):
+#    if filter(None,[a, b, c, d]) != [True]:
+#        print("Please specify only one of 'a', 'b', 'c', 'd'.)")
+    checkItems  = ("thea_BasicReflectionCurve", "thea_Basic2ReflectionCurve", "thea_GlossyReflectionCurve", "thea_Glossy2ReflectionCurve",  "thea_CoatingReflectionCurve", "thea_SSSReflectionCurve")
+    for item in checkItems:
+        try:
+            if mat[item]:
+                setattr(mat, item, True)
+            else:
+                pass
+
+        except:
+            pass
+#    try:
+#        mat.thea_BasicReflectionCurve = mat.thea_Basic2ReflectionCurve = mat.theaGlossyReflectionCurve = mat.thea_Glossy2ReflectionCurve = mat.thea_SSSReflectionCurve = mat.thea_CoatingReflectionCurve = True # update curve list manual
+#    except:
+#        pass
+
+
 def CustomCurveUpdate(self, context, origin=""):
     mat = context.material
     mat.use_nodes = True
@@ -2650,9 +2673,6 @@ def CustomCurveUpdate(self, context, origin=""):
     curveName = mat.name
     nodes = mat.node_tree.nodes
 
-#    for mat_node in nodes:
-#        if mat_node.name != curveName+"_"+origin:
-#            nodes.remove(mat_node)
     if curveName+"_"+origin not in mat.node_tree.nodes:
         cn = nodes.new('ShaderNodeRGBCurve')
         nodes['RGB Curves'].name = curveName+"_"+origin
@@ -2681,7 +2701,7 @@ def CustomCurveUpdate(self, context, origin=""):
     if origin == "thea_CoatingReflectCurve":
         setattr(mat,"thea_CoatingReflectCurveList", points)
         setattr(mat,"thea_CoatingReflectCurve", curveName+"_"+origin)
-#    thea_globals.log.debug("Curve points mat: %s" % points)
+
 
 Mat.thea_BasicReflectionCurve = bpy.props.BoolProperty(
                 name="Custom Reflection Curve",
