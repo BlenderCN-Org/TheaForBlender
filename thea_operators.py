@@ -3026,6 +3026,6 @@ class CURVELIST_PT_updateCurveList(bpy.types.Operator):
 
     def execute(self, context):
         mat = context.material
-#        mat.thea_BasicReflectionCurve = mat.thea_Basic2ReflectionCurve = mat.thea_GlossyReflectionCurve = mat.thea_Glossy2ReflectionCurve = True # update curve list
         updateCurveMaterial(self, context)
+
         return {'FINISHED'}

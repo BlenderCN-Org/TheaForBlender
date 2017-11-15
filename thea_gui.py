@@ -1633,9 +1633,7 @@ class MATERIAL_PT_Component(MaterialButtonsPanel, bpy.types.Panel):
             sub.active = (len(mat.thea_ThinFilmThicknessFilename) > 1) == True
             sub.operator("wm.call_tonemenu", text="", icon='SETTINGS').origin = "thea_ThinFilmThicknessFilename"
 
-#            col.prop(mat, "thea_ThinFilmThickness")
             row = layout.row()
-
             row.label(text="Structure")
 #           CHANGED > Was given the name of glossy
             col = layout.column()
