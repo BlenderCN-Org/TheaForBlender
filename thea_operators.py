@@ -2484,17 +2484,20 @@ class thea_location_search(bpy.types.Operator):
 
     def execute(self, context):
         mat = context.material
+        scene = context.scene
 #        self.report({'INFO'}, "Selected: %s" % self.my_enum)
         item = self.my_locations
+#        for sceneName in
 #        thea_globals.log.debug("*** IORmenu Items: %s" % item)
-        try:
-            setattr(bpy.data.scenes["Scene"],"thea_EnvLocationsMenu", item)
-            setattr(bpy.data.scenes["Scene"],"thea_Envlocation", getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][1])
+#        try:
+#        setattr(bpy.data.scenes["Scene"],"thea_EnvLocationsMenu", item)
+        setattr(scene,"thea_EnvLocationsMenu", item)
+        setattr(scene,"thea_Envlocation", getLocMenu()[int(getattr(bpy.context.scene, "thea_EnvLocationsMenu"))][1])
 
 #            bpy.data.scenes[setattr(scene,"thea_EnvLocationsMenu", item)]
 #            bpy.data.scenes[setattr(scene,"thea_EnvLocationsMenu", item)]
-        except:
-            pass
+#        except:
+#            pass
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -3027,5 +3030,5 @@ class CURVELIST_PT_updateCurveList(bpy.types.Operator):
     def execute(self, context):
         mat = context.material
         updateCurveMaterial(self, context)
-
         return {'FINISHED'}
+

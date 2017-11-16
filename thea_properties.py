@@ -3777,13 +3777,21 @@ Mat.thea_EmittanceAmbientLevel = bpy.props.FloatProperty(
                 subtype='PERCENTAGE',
                 update=materialUpdated)
 
+#Mat.thea_extMat = bpy.props.StringProperty(
+#                       maxlen=500,
+#                       default="",
+#                       name="Thea material file",
+#                       description="Thea material file",
+#                       subtype='FILE_PATH',
+#                update=materialUpdated)
+
 Mat.thea_extMat = bpy.props.StringProperty(
-                       maxlen=500,
-                       default="",
-                       name="Thea material file",
-                       description="Thea material file",
-                       subtype='FILE_PATH',
+                maxlen=500,
+                default="",
+                name="Thea material file",
+                description="Thea material file",
                 update=materialUpdated)
+
 
 Mat.thea_Medium = bpy.props.BoolProperty(
                 name="Medium",

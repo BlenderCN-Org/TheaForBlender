@@ -1876,28 +1876,32 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
         return ((thea_globals.showMatGui) or extMat) and (engine in cls.COMPAT_ENGINES)
 
     def draw(self, context):
-       missing_Materials = []
-       layout = self.layout
-       scene = context.scene
-       mat = context.material
-       split = layout.split()
-       row = layout.row()
-       colL = split.column()
-       colR = split.column()
-       colL.operator("thea.thea_material_editor", text="Edit in Thea")
-       colR.operator("thea.delete_material_link", text="Delete link")
-       split = layout.split()
-       row = layout.row()
-       col = split.column()
-       col.prop(mat, "thea_extMat")
+        missing_Materials = []
+        layout = self.layout
+        scene = context.scene
+        mat = context.material
+        split = layout.split()
+        row = layout.row()
+        colL = split.column()
+        colR = split.column()
+        colL.operator("thea.thea_material_editor", text="Edit in Thea")
+        colR.operator("thea.delete_material_link", text="Delete link")
+        split = layout.split()
+#        col.prop(mat, "thea_extMat")
+        row = layout.row(align=True)
+        row.prop(mat, "thea_extMat", text="External mat file")
+        row.operator("open.thea_files", text="", icon='FILESEL')
+
+
 # CHANGED > ADDED BETTER FILE CHECK
-       try:
+        try:
            if (os.path.exists(os.path.abspath(bpy.path.abspath(bpy.context.active_object.active_material.get('thea_extMat')))))==False:
+                col = split.column()
                 colR = split.column()
-#                row = layout.row()
+        #                row = layout.row()
                 colR.label(text="Missing link!", icon='ERROR')
                 if getattr(mat, "thea_extMat"):
-#                    row = layout.row()
+        #                    row = layout.row()
                     layout.operator("thea.check_thea_mat")
                 if missing_Materials:
                     thea_globals.log.debug("missing materials: %s" % missing_Materials)
@@ -1905,10 +1909,10 @@ class MATERIAL_PT_theaEditMaterial(MaterialButtonsPanel, bpy.types.Panel):
                         row = col.row(align=True)
                         row.alignment = "LEFT"
                         row.label(text=mis[0], icon="IMAGE_DATA")
-       except:
+        except:
                 pass
-#       split = layout.split()
-       if len(getattr(mat, "thea_extMat"))>5:
+        #       split = layout.split()
+        if len(getattr(mat, "thea_extMat"))>5:
            if not thea_render_main.isMaterialLinkLocal(getattr(mat, "thea_extMat")):
                 if os.path.exists(os.path.abspath(bpy.path.abspath(getattr(mat, "thea_extMat")))):
                     row = layout.row()
@@ -4392,3 +4396,22 @@ class DATA_PT_thea_spot(DataButtonsPanel, Panel):
             sub.prop(lamp, "halo_step", text="Step")
 
 
+
+from bpy_extras.io_utils import (ImportHelper)
+
+
+class FILE_SN_open_thea(bpy.types.Operator, ImportHelper):
+    """Open thea files"""
+    bl_idname = "open.thea_files"
+    bl_label = "Open mat.thea files"
+
+#    filename_ext = "*.scn.thea; *.mat.thea"
+    filter_glob = StringProperty(
+            default="*.mat.thea",
+#            default="*.png;*.jpeg;*.jpg;*.tiff")#,
+            options={'HIDDEN'},)
+
+    def execute(self, context):
+        mat = context.material
+        setattr(mat, "thea_extMat", self.filepath)
+        return {'FINISHED'}
