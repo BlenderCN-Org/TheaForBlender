@@ -11,7 +11,7 @@ In addition, we have taken the decision to release the plugin under GPL (open so
 Code documentation can be found at: <b>[github page](https://grakoczy.github.io/TheaForBlender/)</b>
 
 
-## Project contains following python modules:
+### Project contains following python modules:
 
 - thea_exporter: XML class definitions responsible for writting scene into xml format
 - thea_globals: Global variables, logger and functions to read/write the config file
@@ -30,7 +30,7 @@ Code documentation can be found at: <b>[github page](https://grakoczy.github.io/
 - the RemoteDarkroom as this part is not released under GPL license.
 
 
-## System Requirements
+### System Requirements
 
 | **OS** | **Blender** | **UVlayout** |
 | ------------- | ------------- | ------------- |
@@ -39,7 +39,7 @@ Code documentation can be found at: <b>[github page](https://grakoczy.github.io/
 | Linux | Not Tested | Not Tested |
 
 
-## Installation Process
+### Installation Process
 
 1. Download the <b>[latest release](http://thearender.com/forum/viewforum.php?f=69)</b> or clone the repository into a directory of your convenience.
 2. If you downloaded the zip file.
@@ -53,12 +53,7 @@ Code documentation can be found at: <b>[github page](https://grakoczy.github.io/
 > Official plugin is available here: <b>[Thea Render Forum](http://www.thearender.com/forum/viewtopic.php?f=69&t=19184)</b>
 
 
-## Official Blender Section Thea Render Forum
-
-<b>[Thea Render Forum](http://thearender.com/forum/viewforum.php?f=59)</b>
-
-
-## Changelog
+### Changelog
 
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
@@ -67,6 +62,11 @@ Code documentation can be found at: <b>[github page](https://grakoczy.github.io/
 | 0.5.2 | 13.06.2017 | • Fix<br>- Fix for crash while updating objects in IR mode.
 | 0.5.1 | 06.06.2017 | • Fix<br>- Disabled IR start delay until it's working as expected.<br><br>• Add<br>- Strand option for linked materials.
 | 0.5.0 | 26.05.2017 | • Fix<br>- Fixed Mask ID, wasn’t showing correct for multi path.<br><br>• Add<br>- Added new warning for missing or faulty linked materials (IR & production mode).<br>- Added new warning for Border render active (IR render).
+
+
+### Official Blender Section Thea Render Forum
+
+<b>[Thea Render Forum](http://thearender.com/forum/viewforum.php?f=59)</b>
 
 
 <!--
