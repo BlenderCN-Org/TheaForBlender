@@ -11,6 +11,10 @@ In addition, we have taken the decision to release the plugin under GPL (open so
 Code documentation can be found at: <b>[github page](https://grakoczy.github.io/TheaForBlender/)</b>
 
 
+## What it doesn't contain:
+- the RemoteDarkroom as this part is not released under GPL license.
+
+
 ### Project contains following python modules:
 
 - thea_exporter: XML class definitions responsible for writting scene into xml format
@@ -24,10 +28,6 @@ Code documentation can be found at: <b>[github page](https://grakoczy.github.io/
 - locations.txt file with geographic locations
 - License dir with the licenses
 - docs dir with auto generated documentation
-
-
-## What it doesn't contain:
-- the RemoteDarkroom as this part is not released under GPL license.
 
 
 ### System Requirements
