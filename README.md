@@ -2,7 +2,7 @@
 
 >Welcome to my Fork TheaForBlender repository.
 
-<b>[Thea Render](https://www.thearender.com)</b> is an exceptional quality external rendering solution that is now integrated on <b>[Blender](https://www.blender.org)</b> as tight as possible. Features such as interactive rendering, materials editing, instancing support make it possible to work inside <b>[Blender](https://www.blender.org)</b> creating astonishing results with a smooth workflow between <b>[Blender](https://www.blender.org)</b> and <b>[Thea Render](https://www.thearender.com)</b>.
+<b>[Thea Render](https://www.thearender.com)</b> is an exceptional quality external rendering solution that is now integrated on <b>[Blender](https://www.blender.org)</b> as tight as possible. Features such as interactive rendering, materials editing, instancing support make it possible to work inside <b>[Blender](https://www.blender.org)</b> creating astonishing results with a smooth workflow between Blender and Thea Render.
 
 !['Example Renders'](https://github.com/schroef/TheaForBlender/blob/master/wiki/images/header_theaforblender.jpg)
 
@@ -32,10 +32,10 @@ In addition, we have taken the decision to release the plugin under GPL (open so
 
 ### System Requirements
 
-| **OS** | **Blender** | **UVlayout** |
+| **OS** | **Blender** | **Thea Render** |
 | ------------- | ------------- | ------------- |
-| OSX | Blender 2.77 | All Versions |
-| Windows | Blender 2.77 | All Versions |
+| OSX | Blender 2.77 | 1.5.09.1462 |
+| Windows | Blender 2.77 | 1.5.09.1462 |
 | Linux | Not Tested | Not Tested |
 
 
