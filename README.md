@@ -55,7 +55,7 @@ In addition, we have taken the decision to release the plugin under GPL (open so
 
 ### Changelog
 
-View complete <b>[change log](https://github.com/schroef/TheaForBlender/wiki/Change-Log)</b>, below is last added log.
+View complete <b>[change log](https://github.com/schroef/TheaForBlender/wiki/Change-Log)</b>, below is last added log.<br>
 | **Version** | **Date** | **Change log** |
 | ------------- | ------------- | ------------- |
 | 0.6.0 | 10.08.2017 | • Add<br>- Made new panel menu align better. i think i will run over all panels and make them more compact.<br>  The new panel design have items grouped better together. Makes more it view much easier.
