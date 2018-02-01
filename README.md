@@ -1,6 +1,6 @@
 # TheaForBlender
 
->Welcome to the TheaForBlender repository.
+>Welcome to my Fork TheaForBlender repository.
 
 <b>[Thea Render](https://www.thearender.com)</b> is an exceptional quality external rendering solution that is now integrated on <b>[Blender](https://www.blender.org)</b> as tight as possible. Features such as interactive rendering, materials editing, instancing support make it possible to work inside <b>[Blender](https://www.blender.org)</b> creating astonishing results with a smooth workflow between <b>[Blender](https://www.blender.org)</b> and <b>[Thea Render](https://www.thearender.com)</b>.
 
@@ -41,7 +41,7 @@ In addition, we have taken the decision to release the plugin under GPL (open so
 
 ### Installation Process
 
-1. Download the <b>[latest release](http://thearender.com/forum/viewforum.php?f=69)</b> or clone the repository into a directory of your convenience.
+1. Download the <b>[latest Offical Release](http://thearender.com/forum/viewforum.php?f=69)</b> or use my <b>[latest Fork Release](https://github.com/schroef/TheaForBlender/releases/)</b>
 2. If you downloaded the zip file.
 3. Open Blender.
 4. Go to File -> User Preferences -> Addons.
