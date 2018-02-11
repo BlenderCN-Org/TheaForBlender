@@ -1,6 +1,6 @@
 # TheaForBlender
 
->Welcome to my Fork TheaForBlender repository.
+>forked from <b>[grakoczy/TheaForBlender](https://github.com/grakoczy/TheaForBlender)</b>
 
 <b>[Thea Render](https://www.thearender.com)</b> is an exceptional quality external rendering solution that is now integrated on <b>[Blender](https://www.blender.org)</b> as tight as possible. Features such as interactive rendering, materials editing, instancing support make it possible to work inside Blender creating astonishing results with a smooth workflow between Blender and Thea Render.
 
