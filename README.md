@@ -4,7 +4,7 @@
 
 <b>[Thea Render](https://www.thearender.com)</b> is an exceptional quality external rendering solution that is now integrated on <b>[Blender](https://www.blender.org)</b> as tight as possible. Features such as interactive rendering, materials editing, instancing support make it possible to work inside Blender creating astonishing results with a smooth workflow between Blender and Thea Render.
 
-!['Example Renders'](https://github.com/schroef/TheaForBlender/blob/master/wiki/images/header_theaforblender.jpg)
+!['Example Renders'](images/header_theaforblender.jpg)
 
 In addition, we have taken the decision to release the plugin under GPL (open source) that, we believe, fits the spirit of Blender development itself, meaning the plugin is free of charge (Thea Studio license is required).
 
